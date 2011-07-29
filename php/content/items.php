@@ -1,0 +1,110 @@
+<!-- css -->
+<link href="list.css" rel="stylesheet" />
+<!-- data -->
+<script type="text/javascript">
+	var g_serialized = null;
+	var g_argString = "";
+</script>
+
+<?php
+
+if( isset($_GET['items']) && $_GET['items'] ) {
+	
+	//
+	// replace '_' by ';'
+	$args = str_replace( '_', ';', $_GET['items']);
+	$order = isset($_GET['o']) ? str_replace( '_', ';', $_GET['o']) : "";
+	$page = isset($_GET['p']) ? (int) $_GET['p'] : 1;
+	
+	echo "
+<script type=\"text/javascript\">
+	g_serialized = ". json_encode(get_items( 
+		$args,
+		"",
+		$order,
+		$page,
+		null 
+	)).";
+	g_argString = ".json_encode($args).";
+</script>"; 
+
+}
+
+?>
+
+<script type="text/javascript">
+	var g_item = null;
+	var tt = new TooltipImpl();
+	function g_onLoad() {
+	
+		if( g_serialized ) {
+		
+			var il = new ItemList();
+			
+			il.showStaticLinks(true);
+			
+			new ItemListDeserializer().deserialize( il , g_serialized );
+			
+			if( g_argString ) {
+			
+				il.setArgumentString(g_argString);
+				
+				il.gui.showFilter( true );
+			}
+			
+			document.getElementById('list_parent').appendChild(il.gui.node);
+			
+			il.addListener( 'show_tooltip', new Handler(
+				function( itm ) {
+					g_showItemTooltip( itm.id );
+				}, window
+			));
+			
+			il.addListener( 'move_tooltip', new Handler(
+				function() {
+					g_moveTooltip();
+				}, window
+			));
+			
+			il.addListener( 'hide_tooltip', new Handler(
+				function() {
+					g_hideTooltip();
+				}, window
+			));
+			
+			il.addListener( 'update', new Handler(
+				function( list ) {
+					var tmp = ListBackEndProxy.getQueryObject(list);
+					//
+					// Pretty print: replace ; by _ as _ is not encoded
+					window.location.search = TextIO.queryString({ 
+						'items' : 	tmp['a'].replace( /\;/g, '_'), 
+						'p' : 		tmp['p'], 
+						'o': 		tmp['o'].replace( /\;/g, '_') });
+				}, window
+			));
+		}
+	}
+</script>
+
+<?php
+
+	$g_content = "
+<div class='dbi_w'>
+<div class='dbi_header'>
+	<div class='dbi_search_c'>
+		<form onsubmit='document.getElementById(\"dbi_submit\").value = \"name.wlike.\" + Tools.removeDots(document.getElementById(\"dbi_search\").value) + \"_\";' action='?' method='GET'>
+			<input class='input' id='dbi_search'/>
+			<input type='hidden' name='items' id='dbi_submit' />
+		</form>
+	</div>
+	<div class='dbi_search_c'>
+		<span class='dbi_search_label'>Search</span>
+	</div>
+	<div style='clear: both;'></div>
+</div>
+<div id='list_parent'>
+</div>
+</div>";
+
+?>
