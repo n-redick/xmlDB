@@ -41,6 +41,7 @@ function forum_get_new_posts( $count, $exclude, $use_exclude_as_include = false 
 		$post =  mysql_fetch_assoc(mysql_query("select * from forum_post where postID = ".(int)$record['id']));
 		$user =  mysql_fetch_assoc(mysql_query("select * from user where userID = ".(int)$post['userID']));
 		$topic =  mysql_fetch_assoc(mysql_query("select * from forum_topic where topicID = ".(int)$post['topicID']));
+		$forum = mysql_fetch_assoc(mysql_query("select * from forum_subforum where subforumID = ".(int)$topic['subforumID']));
 		$ret[$n]['topicId'] = (int)$topic['topicID'];
 		$ret[$n]['title'] = $topic['title'];
 		$ret[$n]['flag'] = (int)$topic['flag'];
@@ -51,6 +52,8 @@ function forum_get_new_posts( $count, $exclude, $use_exclude_as_include = false 
 		$ret[$n]['created'] = $post['created'];
 		$ret[$n]['locked'] = (int)$topic['locked'];
 		$ret[$n]['posts'] = (int)$record['posts'];
+		$ret[$n]['forum'] = $forum['title'];
+		$ret[$n]['forumId'] = $forum['subforumID'];
 		$ret[$n]['page'] = ceil((float)$record['posts'] / (float)$GLOBALS['posts_per_page']);
 		$n++;
 	}

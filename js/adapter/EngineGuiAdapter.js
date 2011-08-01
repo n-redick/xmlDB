@@ -7,17 +7,29 @@
 function EngineGuiAdapter( engine, gui ) {
 
 	var leftClickHandler = new Handler( this.__onItemSlotLeftClick, this );
+	var onClassChangeHandler = new Handler( this.__updateClass, this );
 	
 	this.engine = engine;
 	this.gui = gui;
 	this.characterObserver = new CharacterObserver();
 	this.sheetObserver = new CharacterSheetObserver();
 	
-	this.gui.characterSheet.addObserver(this.sheetObserver);
+	this.storedItemFilters = [];
+	
+	for( var i=0; i<Inventory.SLOTS; i++ ) {
+		this.storedItemFilters[i] = "";
+	}
 	
 	this.sheetObserver.onItemLeftClick = function(slot, index) {
 		leftClickHandler.notify( [slot, index ]);
 	};
+	
+	
+	this.characterObserver.onClassChange = function(newClass) {
+		onClassChangeHandler.notify( [newClass] );
+	};
+	
+	this.gui.characterSheet.addObserver(this.sheetObserver);
 	
 //	for( var i=0; i< 19; i++ ) {
 //		gui.characterSheet.slots[i].addListener( 'left_click', leftClickHandler );
@@ -38,6 +50,12 @@ function EngineGuiAdapter( engine, gui ) {
 	this.itemList.addListener( 'update', new Handler(	
 		function( list ) {
 			new ListBackEndProxy("php/interface/get_items.php").update(this.itemList);
+			
+			if( this.slot != -1 ) {
+				this.storedItemFilters[this.slot] = this.itemList.getArgumentString();
+				//
+				// TODO: propagation of common attributes like quality etc.
+			}
 		}, this
 	));
 	
@@ -69,6 +87,7 @@ EngineGuiAdapter.prototype = {
 	socket: -1,
 	adapter: null,
 	characterObserver: null,
+	storedItemFilters: [],
 	/**
 	 * @param {Character} character
 	 */
@@ -80,14 +99,23 @@ EngineGuiAdapter.prototype = {
 
 		this.adapter = new CharacterCharacterSheetAdapater( character, this.gui.characterSheet );
 		
+		this.__updateClass( character.chrClass );
+		
 		character.addObserver(this.characterObserver);
 	},
+	__updateClass: function( newClass ) {
+		var newArg = (newClass != null ? "usablebyclass.eq."+(1<<(newClass.id-1))+";" : "");
+		this.itemList.replaceArgument('usablebyclass', newArg);
+		
+		this.__replaceArgumentInStoredFilter('usablebyclass', newArg);
+	},
 	__onItemSlotLeftClick: function( slot, index ) {
+		
 		if( index == 0 ) {
 			this.gui.characterSheet.selectSlot(slot);
 
 			var cc = this.engine.getCurrentCharacter();
-			var args = "";
+			var args =  this.storedItemFilters[slot];
 			
 			sl = cc.chardevSlotToBlizzardSlotMask(slot);
 			icl = cc.chardevSlotToItemClass(slot);
@@ -155,7 +183,7 @@ EngineGuiAdapter.prototype = {
 			Tooltip.showLoading();
 		}
 		catch( e ) {
-			
+			Tooltip.showError(e);
 		}
 	},
 	__onImportCallback: function( character, exception ) {
@@ -176,6 +204,15 @@ EngineGuiAdapter.prototype = {
 			this.gui.folder.show(Gui.TAB_CHARACTER_SHEET);
 			
 			Tooltip.enable();
+		}
+	},
+	/**
+	 * @param {string} variable
+	 * @param {string} replace
+	 */
+	__replaceArgumentInStoredFilter: function( variable, replace ) {
+		for( var i=0; i<INV_ITEMS; i++ ) {
+			this.storedItemFilters[i] = this.storedItemFilters[i].replace(new RegExp("\\b"+variable+"\\.\\w+\\.[^;]+;","g"), "") + replace ;
 		}
 	}
 };

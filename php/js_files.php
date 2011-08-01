@@ -101,18 +101,15 @@
 		array( "js/gui/list/filter/", "SingleSelectFilter.js"),
 		array( "js/gui/list/filter/", "MultiselectFilter.js"),
 		
-		array( "js/gui/list/", "AbstractDeserializer.js"),
 		array( "js/gui/list/", "List.js"),
 		array( "js/gui/list/", "ListGui.js"),
 		array( "js/gui/list/", "ListBackEndProxy.js"),
 		
 		array( "js/gui/list/item_list/", "ItemList.js"),
 		array( "js/gui/list/item_list/", "ItemListGui.js"),
-		array( "js/gui/list/item_list/", "ItemListDeserializer.js"),
 		
 		array( "js/gui/list/profile_list/", "ProfileList.js"),
 		array( "js/gui/list/profile_list/", "ProfileListGui.js"),
-		array( "js/gui/list/profile_list/", "ProfileListDeserializer.js"),
 		
 		
 	);

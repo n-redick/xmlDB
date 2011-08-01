@@ -64,7 +64,7 @@ a:hover { text-decoration: underline;}
 .ix_main_menu { float: left; width: 500px; margin-top: 44px; }
 .ix_mm_entry{ float: left;}
 
-.ix_mm_link{ line-height: 24px; font-size: 13px; display: block; padding: 0px 20px; color: #008090; font-weight: bold; text-decoration: none; background-image: url(images/site/mm_bg.png); border: 1px solid #000000; margin-left: -1px; }
+.ix_mm_link{ line-height: 24px; font-size: 13px; display: block; padding: 0px 20px; color: #808080; font-weight: bold; text-decoration: none; background-image: url(images/site/mm_bg.png); border: 1px solid #000000; margin-left: -1px; }
 .ix_mm_link:hover{color: #FFCC33; text-decoration: none;}
 
 .ix_mm_link_active { background-color: #f0f0f0; color: #EBB000; background-image: url(images/site/mm_bg_active.png); border-color: #f0f0f0; }
@@ -221,6 +221,9 @@ a:hover { text-decoration: underline;}
 .dbi_search_c{ float: right; }
 .dbi_w { padding: 10px; }
 .dbi_search_label {font-size: 14px; margin-right: 10px; color: #808080;}
+.dbi_search_label_large {font-family: georgia, serif; font-size: 20px; text-align:center}
+.dbi_search_large {font-family: georgia, serif; font-size: 16px; text-align:center; padding: 10px 0;}
+.dbi_search_input_large { width: 200px; }
 
 
 .cr_w { padding: 10px; }

@@ -1638,16 +1638,33 @@ function get_items( $arguments, $flags, $order, $page, $weights ) {
 							$q = " AND ( i.`ItemClass`!=2 OR i.`ItemSubClass` NOT IN (13,15,10) )";
 							break;
 						case 4:
-							$q = " AND ( i.`ItemClass`!=2 OR i.`ItemSubClass` NOT IN (4,5) )";
+							$q = " AND ( i.`ItemClass`!=2 OR i.`ItemSubClass` NOT IN (4,5))";
 							break;
 						case 32:
 							$q = " AND ( i.`ItemClass`!=2 OR i.`ItemSubClass` NOT IN (13,15,10) )";
 							break;
+						case 16:
+							break;
 						case 128:
-							$q = " AND ( i.`ItemClass`!=2 OR i.`ItemSubClass` NOT IN (0,1,4,5,6,8,13) )";
+							$q = " AND ( i.`ItemClass`!=2 OR i.`ItemSubClass` NOT IN (0,1,4,5,6,8,13))";
 							break;
 						default:
 							$q = "";
+					}
+					switch($cl_id) {
+						case 4:
+						case 64:
+							$q = " AND ( i.`ItemClass`!=4 OR i.`ItemSubClass` NOT IN (4))";
+							break;
+						case 8:
+						case 1024:
+							$q = " AND ( i.`ItemClass`!=4 OR i.`ItemSubClass` NOT IN (3,4))";
+							break;
+						case 16:
+						case 128:
+						case 256:
+							$q = " AND ( i.`ItemClass`!=4 OR i.`ItemSubClass` NOT IN (2,3,4))";
+							break;
 					}
 					$where .= ( $where ? " AND " : "" ) . "(" . $cl_c ."&'". mysql_real_escape_string($match[3])."' OR ". $cl_c . "<='0' )".$q;
 				}

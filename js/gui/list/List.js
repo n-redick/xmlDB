@@ -79,9 +79,11 @@ List.prototype = {
 	},
 	nextPage: function() {
 		this.__setPage( this.page + 1 );
+		this.__update();
 	},
 	prevPage: function() {
 		this.__setPage( this.page - 1 );
+		this.__update();
 	},
 	__setPage: function( page ) {
 		if( page < 0 || page > this.maxPage ) {
@@ -91,8 +93,6 @@ List.prototype = {
 		this.page = page;
 		
 		this.gui.updatePages( this.page, this.maxPage);
-		
-		this.__update();
 	},
 	update: function() {
 		this.__setPage(1);
@@ -155,5 +155,11 @@ List.prototype = {
 			this.setMaxPage( Math.ceil( data[0][0]/data[0][1] ) );
 			this.gui.deserialize( data );
 		}
+	},
+	replaceArgument: function( variable, replace ) {
+		var tmp = this.filterMgr.getArgumentString(); 
+		tmp = tmp.replace(new RegExp("\b"+variable+"\\.\\w+\\.[^;]+;"),"") + replace ;
+		this.filterMgr.setArgumentString(tmp);
+		this.update();
 	}
 };

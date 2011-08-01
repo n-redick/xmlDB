@@ -43,6 +43,8 @@ Inventory.validInventorySlots = [			1,							//0 head
 											[28,26,25,15]				//18 ranged/relic
 ];
 
+Inventory.SLOTS = 19;
+
 Inventory.prototype = {
 	eventMgr: null,
 	items : [],

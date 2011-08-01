@@ -3,6 +3,7 @@ function EngineImpl() { /***/ }
 EngineImpl.prototype = {
 	characterMgr: null,
 	eventMgr: null,
+	adapter: null,
 	addListener: function ( event, handler ) {
 		this.eventMgr.addListener( event, handler );
 	},
@@ -12,7 +13,8 @@ EngineImpl.prototype = {
 		
 		if( settings.isPlanner ) {
 			var gui = new Gui();
-			new EngineGuiAdapter( this, gui );
+			//
+			this.adapter = new EngineGuiAdapter( this, gui );
 			//
 			//
 			this.characterMgr = new CharacterManager();

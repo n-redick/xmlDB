@@ -20,9 +20,9 @@
 			<div class="ne_title'. ($i!=0 ? '_old' : '' ) .'">&raquo; '.$news[$i]['title'].'</div>
 			<div class="ne_header">
 					By <span class="'
-						.$user_role_to_css_class[$news[$i]['creatorRole']].'">'.$news[$i]['creator']
-					.'</span> posted '
-					.date("M jS Y \a\\t  g:i A",(int)$news[$i]['created'])
+						.$user_role_to_css_class[$news[$i]['creatorRole']].'">'.$news[$i]['creator'].
+					'</span> posted '.
+					date("M jS Y \a\\t  g:i A",(int)$news[$i]['created'])
 				.'
 			</div>
 			
@@ -51,7 +51,13 @@
 	{
 		$g_content .= '
 					<div class="fo_recent' . ( $i == (count($new)-1) ? '_last' : '' ) . ( $i % 2 == 0 ? " fo_cell_bg1" : " fo_cell_bg2" ) . '">
-						<div class="forum_time">Posted by <span class="'.$user_role_to_css_class[$new[$i]['role']].'">'.$new[$i]['name'].'</span> '.date("M jS Y \a\\t g:i A",(int)$new[$i]['created']).' in</div>
+						<div class="forum_time">Posted by 
+							<span class="'.$user_role_to_css_class[$new[$i]['role']].'">'.
+								$new[$i]['name'].
+							'</span> in <a class="fo_header_subforum_link" href="?forum=' . $new[$i]['forumId'] . '">'.
+							shorten($new[$i]['forum'], 20).
+							'<a>, '.
+							date("M jS Y g:i A",(int)$new[$i]['created']).' in</div>
 						<div>'.forum_topic_link( $new[$i]['flag'], $new[$i]['locked'], $new[$i]['topicId'], $new[$i]['title'], $new[$i]['posts'], $new[$i]['page'], 60 ).'</div>
 					</div>';
 	}

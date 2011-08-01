@@ -8,6 +8,8 @@
 
 <?php
 
+$il_show = false;
+
 if( isset($_GET['items']) && $_GET['items'] ) {
 	
 	//
@@ -29,6 +31,7 @@ if( isset($_GET['items']) && $_GET['items'] ) {
 	g_argString = ".json_encode($args).";
 </script>"; 
 
+	$il_show = true;
 }
 
 ?>
@@ -95,14 +98,18 @@ if( isset($_GET['items']) && $_GET['items'] ) {
 
 <?php
 
+$search_form = "
+		<form onsubmit='document.getElementById(\"dbi_submit\").value = \"name.wlike.\" + Tools.removeDots(document.getElementById(\"dbi_search\").value) + \"_\";' action='?' method='GET'>
+			<input class='input" .( $il_show ? "" : " dbi_search_input_large" ) . "' id='dbi_search' />
+			<input type='hidden' name='items' id='dbi_submit' />
+		</form>";
+
+if( $il_show ) {
 	$g_content = "
 <div class='dbi_w'>
 <div class='dbi_header'>
 	<div class='dbi_search_c'>
-		<form onsubmit='document.getElementById(\"dbi_submit\").value = \"name.wlike.\" + Tools.removeDots(document.getElementById(\"dbi_search\").value) + \"_\";' action='?' method='GET'>
-			<input class='input' id='dbi_search'/>
-			<input type='hidden' name='items' id='dbi_submit' />
-		</form>
+		".$search_form."
 	</div>
 	<div class='dbi_search_c'>
 		<span class='dbi_search_label'>Search</span>
@@ -112,5 +119,14 @@ if( isset($_GET['items']) && $_GET['items'] ) {
 <div id='list_parent'>
 </div>
 </div>";
+}
+else {
 
+	$g_content = "
+<div class='dbi_w'>
+<div class='dbi_search_label_large'>Search</div>
+<div class='dbi_search_large'>".$search_form."</div>
+</div>";
+
+}
 ?>
