@@ -1626,6 +1626,10 @@ function get_items( $arguments, $flags, $order, $page, $weights ) {
 				if( $operator != EQ ) {
 					$GLOBALS["g_error"] = "Operator ".$match[2]." is not supported";
 				}
+				else if( (int)$match[3] == 0 ) {
+					$cl_c = 's.`ChrClassMask`';
+					$where .= ( $where ? " AND " : "" ) . "(" . $cl_c . " = 0 OR (" . $cl_c . " & 1535) = 1535 )";
+				}
 				else if( ((int)$match[3] & 2047) == 0 ) {
 					$GLOBALS["g_error"] = "Value ".$match[3]." is not a valid character class mask";
 				}

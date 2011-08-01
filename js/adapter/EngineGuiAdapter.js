@@ -104,7 +104,7 @@ EngineGuiAdapter.prototype = {
 		character.addObserver(this.characterObserver);
 	},
 	__updateClass: function( newClass ) {
-		var newArg = (newClass != null ? "usablebyclass.eq."+(1<<(newClass.id-1))+";" : "");
+		var newArg = (newClass != null ? "usablebyclass.eq."+(1<<(newClass.id-1))+";" : "usablebyclass.eq.0;");
 		this.itemList.replaceArgument('usablebyclass', newArg);
 		
 		this.__replaceArgumentInStoredFilter('usablebyclass', newArg);

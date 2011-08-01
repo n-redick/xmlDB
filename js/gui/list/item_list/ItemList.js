@@ -1,4 +1,5 @@
 var FILTER_CLASS_OPTIONS = {};
+FILTER_CLASS_OPTIONS["Any class"] = 0;
 FILTER_CLASS_OPTIONS[locale['a_class'][0]] = 1;
 FILTER_CLASS_OPTIONS[locale['a_class'][1]] = 2;
 FILTER_CLASS_OPTIONS[locale['a_class'][2]] = 4;
