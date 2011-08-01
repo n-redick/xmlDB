@@ -21,11 +21,12 @@ var CHR_RACE_ORDER = [[1,3,4,7,11,22],[2,5,6,8,10,9]];
 
 /**
  * @constructor
+ * @param {CharacterSheet} characterSheet
  * @returns {RaceClassSelector}
  */
-function RaceClassSelector() {
+function RaceClassSelector( characterSheet ) {
 	
-	this.eventMgr = new EventManager(["race_select", "class_select"]);
+	this.characterSheet = characterSheet;
 	
 	var layoutGrid = new StaticGrid(1,2);
 	var layoutGrid2 = new StaticGrid( 7, 2 );
@@ -92,7 +93,6 @@ function RaceClassSelector() {
 }
 
 RaceClassSelector.prototype = {
-	eventMgr: null,
 	node : null,
 	selectRace : null,
 	selectClass : null,
@@ -104,6 +104,7 @@ RaceClassSelector.prototype = {
 	classChangeHandler : null,
 	chrRaceId: -1, 
 	chrClassId: -1,
+	characterSheet: null,
 	
 	__onMouse : function( type, over ) {
 		if( type ) {
@@ -112,9 +113,6 @@ RaceClassSelector.prototype = {
 		else {
 			this.chrRace.layers[2].style.backgroundPosition = over != 1 ? "0px 0px" : "48px 0px";
 		}
-	},
-	addListener: function( event, handler ) {
-		this.eventMgr.addListener(event, handler);
 	},
 	update : function( chrRaceId, chrClassId ) {
 		this.chrRaceId = chrRaceId;
@@ -155,11 +153,11 @@ RaceClassSelector.prototype = {
 	},
 	
 	__onClassIconClick : function( chrClassId ) {
-		this.eventMgr.fire("class_select", [chrClassId] );
+		this.characterSheet.selectedClass( chrClassId );
 	},
 	
 	__onRaceIconClick : function( chrRaceId ) {
-		this.eventMgr.fire("race_select", [chrRaceId] );
+		this.characterSheet.selectedRace( chrRaceId );
 	},
 	
 	showClassSelector : function( ) {

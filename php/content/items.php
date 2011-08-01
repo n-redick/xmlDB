@@ -25,6 +25,7 @@ if( isset($_GET['items']) && $_GET['items'] ) {
 		$page,
 		null 
 	)).";
+	g_page = ".$page.";
 	g_argString = ".json_encode($args).";
 </script>"; 
 
@@ -43,11 +44,11 @@ if( isset($_GET['items']) && $_GET['items'] ) {
 			
 			il.showStaticLinks(true);
 			
-			new ItemListDeserializer().deserialize( il , g_serialized );
+			il.setData( g_serialized );
 			
 			if( g_argString ) {
 			
-				il.setArgumentString(g_argString);
+				il.set(g_argString, "", "", g_page);
 				
 				il.gui.showFilter( true );
 			}
@@ -73,14 +74,19 @@ if( isset($_GET['items']) && $_GET['items'] ) {
 			));
 			
 			il.addListener( 'update', new Handler(
+				
 				function( list ) {
+					new ListBackEndProxy("php/interface/get_items.php").update(list);
+					/*
 					var tmp = ListBackEndProxy.getQueryObject(list);
-					//
-					// Pretty print: replace ; by _ as _ is not encoded
-					window.location.search = TextIO.queryString({ 
+					var query = TextIO.queryString({ 
 						'items' : 	tmp['a'].replace( /\;/g, '_'), 
 						'p' : 		tmp['p'], 
 						'o': 		tmp['o'].replace( /\;/g, '_') });
+					//
+					// Pretty print: replace ; by _ as _ is not encoded
+					window.location.search = query;
+					*/
 				}, window
 			));
 		}

@@ -1,12 +1,12 @@
-function MultiSelectFilter( variable, value, options ) {
-	AbstractFilter.call( this, variable );
+function MultiSelectFilter( name, variable, value, options ) {
+	AbstractFilter.call( this, name, variable );
 	
 	this.select = MultiSelect.fromObject(options);
 	
 	if( value != null ) {
 		this.select.select(value);
 	}
-	
+	this.node.className = 'fi_multi_select';
 	this.node.appendChild(this.select.node);
 }
 

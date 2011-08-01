@@ -1,12 +1,14 @@
 function Gui() {
 	this.characterSheet = new CharacterSheet();
 	
+	this.eventMgr = new EventManager(['import', 'save', 'update']);
+	
 	var div, form, formGrid, pGrid, tsFolder, i, d1,d2,d3;
-	var sheetGrid = new StaticGrid(1,2); sheetGrid.setVerticalAlign(SG_VALIGN_TOP);
+	var sheetGrid = new StaticGrid(1,2); sheetGrid.setVerticalAlign(StaticGrid.VALIGN_TOP);
 	var gemTab = document.createElement('div');
 	var talentTab = document.createElement('div');
 	var enchantTab = document.createElement('div');
-	this.node = document.createElement("div");
+	this.node = document.createElement("div"); this.node.className = 'gui_p';
 	this.sheetParent = document.createElement("div"); this.sheetParent.className = "cs_sheet_p";
 	this.talentsParent = document.createElement("div");
 	this.overviewParent = document.createElement("div");
@@ -44,16 +46,16 @@ function Gui() {
 	);
 
 	d1 = document.createElement("div");
-	d1.className = 'lp_t';
+	d1.className = 'gui_lp_menu';
 	d1.appendChild(this.csFolder.menu);
 	
 	d2 = document.createElement("div");
-	d2.className = 'lp_m';
+	d2.className = 'gui_lp_content';
 	d2.appendChild(this.csFolder.node);
 	
 	
-	sheetGrid.cols[0].style.width = "343px";
-	sheetGrid.cols[1].style.width = "637px";
+	sheetGrid.cols[0].style.width = "300px";
+	sheetGrid.cols[1].style.width = "660px";
 	sheetGrid.cells[0][0].appendChild(this.sheetParent);
 	sheetGrid.cells[0][1].appendChild(d1);
 	sheetGrid.cells[0][1].appendChild(d2);
@@ -235,9 +237,57 @@ function Gui() {
 	}
 }
 
+Gui.TAB_ITEMS = 0;
+Gui.TAB_GEMS = 1;
+Gui.TAB_ENCHANTS = 2;
+Gui.TAB_REFORGE = 3;
+Gui.TAB_SETS = 4;
+Gui.TAB_BUFFS = 5;
+
+Gui.TAB_CHARACTER_SHEET = 0;
+Gui.TAB_OVERVIEW = 2;
+Gui.TAB_SAVE = 4;
+
 Gui.prototype = {
+	characterSheetProxy: null,
 	characterSheet: null,
-	__onImportSubmit: function(){},
+	eventMgr: null,
+	folder: null,
+	addListener: function( event, handler ) {
+		this.eventMgr.addListener(event, handler);
+	},
+	__onImportSubmit: function(){
+		var name = this.importName.value;
+		var server = this.importServer.value;
+		
+		if( name == "" || name.length < 2 ) {
+			Tooltip.showError("The character name is empty or too short!");
+			return;
+		}
+		if( server == "" ) {
+			Tooltip.showError("The server name is empty or too short!");
+			return;
+		}
+		
+		this.eventMgr.fire('import', [name, server, parseInt(this.importRegion.getSelected(),10)]);
+	},
 	__onSave: function(){},
-	__onUpdate: function(){}
+	__onUpdate: function(){},
+	/**
+	 * @param {CharacterProxy} characterProxy
+	 */
+	setCharacterProxy: function(characterProxy) {
+		this.characterSheetProxy.setCharacterProxy(characterProxy);
+	},
+	/**
+	 * @param {ItemListGui} itemListGui
+	 */
+	initLists: function( itemListGui ) {
+
+//		Tools.setChild(this.sheetParent, character._sheet._node);
+		Tools.setChild(this.itemsParent, itemListGui.node);
+//		Tools.setChild(this.gemsParent, character._gemList._node);
+//		Tools.setChild(this.setsParent, character._setList._node);
+//		Tools.setChild(this.enchantsParent, character._enchantList._node);
+	}
 };

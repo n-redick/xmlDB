@@ -1,6 +1,5 @@
 /**
  * @constructor
- * @param {Character} character
  * @returns {BuffBar}
  */
 function BuffBar () {
@@ -30,7 +29,6 @@ BuffBar.prototype = {
 	 * @param {ActiveBuff} b
 	 */
 	__showBuff : function( activeBuff ) {
-		// TODO Use some css dude
 		var d = document.createElement('img');
 		d.className = 'bb_buff';
 		d.src = 'images/icons/small/'+activeBuff.icon+'.png';

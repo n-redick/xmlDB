@@ -253,7 +253,7 @@ var Chardev = {
 					document.getElementById('topic_submit').disabled = false;
 				}
 				else{
-					document.getElementById('topic_form').onsubmit = new Function('');
+					document.getElementById('topic_form').onsubmit = function() {/***/};
 					document.getElementById('topic_form').action = '?f&topic='+arr[1];
 					document.getElementById('topic_form').submit();
 				}
@@ -304,7 +304,7 @@ var Chardev = {
 					document.getElementById('reply_submit').disabled = false;
 				}
 				else{
-					document.getElementById('reply_form').onsubmit = new Function('');
+					document.getElementById('reply_form').onsubmit = function() {/***/};
 					document.getElementById('reply_form').action = '?f&topic='+_tid+'&page='+Math.ceil(arr[1]/_posts)+"#bottom";
 					document.getElementById('reply_form').submit();
 				}
@@ -339,7 +339,7 @@ var Chardev = {
 					document.getElementById('edit_submit').disabled = false;
 				}
 				else{
-					document.getElementById('edit_form').onsubmit = new Function('');
+					document.getElementById('edit_form').onsubmit = function() {/***/};
 					document.getElementById('edit_form').action = '?f&topic='+_tid+'&page='+_page+'#p'+_id;
 					document.getElementById('edit_form').submit();
 				}

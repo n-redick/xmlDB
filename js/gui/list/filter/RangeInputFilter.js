@@ -1,5 +1,5 @@
-function RangeInputFilter( variable, value ) {
-	AbstractFilter.call( this, variable );
+function RangeInputFilter( name, variable, value ) {
+	AbstractFilter.call( this, name, variable );
 
 	this.inputMin = document.createElement("input"); 
 	this.inputMin.className = 'input fi_in_min';

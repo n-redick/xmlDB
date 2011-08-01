@@ -5,8 +5,8 @@
  * @param type
  * @returns {InputFilter}
  */
-function InputFilter( variable, operator, value, type ) {
-	AbstractFilter.call( this, variable );
+function InputFilter( name, variable, operator, value, type ) {
+	AbstractFilter.call( this, name, variable );
 	
 	this.valueType = type;
 
@@ -27,7 +27,8 @@ function InputFilter( variable, operator, value, type ) {
 	if( operator != null ) {
 		this.operatorSelect.select(operator);
 	}
-	
+
+	this.node.appendChild(this.operatorSelect.node);
 	this.node.appendChild(this.input);
 	this.node.className = "fi_p";
 }

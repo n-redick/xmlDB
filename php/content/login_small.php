@@ -37,5 +37,3 @@
 		<a href="?user=<?php echo $_SESSION['user_id']; ?>" class='ix_self_link'><?php echo $_SESSION['user_name']; ?></a>
 	</div>
 </form>
-
-<div style="clear:both"></div>

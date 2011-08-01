@@ -2,12 +2,16 @@
  * @constructor
  */
 function Character() {
-	this.eventMgr = new EventManager([
-      'class_change', 'race_change', 
-      'level_change', 'character_loaded', 
-      'stats_change', 'profession_change', 
-      'profession_level_change', 'preview_stats_change'
-	]);
+//	this.eventMgr = new EventManager([
+//		'class_change', 'race_change', 
+//		'level_change', 'character_loaded', 
+//		'stats_change', 'preview_stats_change', 
+//		'profession_level_change', 'profession_change',
+//		//
+//		// propagated events
+//		'item_added', 'item_removed', 'items_swapped'
+//	]);
+	this.eventMgr = new CharacterEventManager();
 	
 	this.primaryProfessions = [null, null];
 	this.stats = new Stats(this);
@@ -20,9 +24,14 @@ function Character() {
 	var calculateStats = new Handler(this.calculateStats, this);
 	var calculatePreviewStats = new Handler(this.calculatePreviewStats, this);
 	
-	this.inventory.addListener( 'item_added', calculateStats);
+	this.inventory.addListener( 'item_added',  calculateStats);
 	this.inventory.addListener( 'item_removed', calculateStats);
 	this.inventory.addListener( 'items_swapped', calculateStats);
+	
+	
+//	this.inventory.addPropagator( 'item_added',  this.eventMgr);
+//	this.inventory.addPropagator( 'item_removed', this.eventMgr);
+//	this.inventory.addPropagator( 'items_swapped', this.eventMgr);
 
 	this.inventory.addListener( 'preview_set', calculatePreviewStats);
 	this.inventory.addListener( 'preview_removed', calculatePreviewStats);
@@ -37,6 +46,7 @@ Character.MAX_LEVEL = 85;
 
 Character.prototype = {
 	eventMgr: null,
+	
 	chrRace: null,
 	chrClass: null,
 	level: Character.MAX_LEVEL,
@@ -47,8 +57,17 @@ Character.prototype = {
 	previewStats: null,
 	auras: null,
 	__lastSaved: null,
-	addListener: function( event, handler ) {
-		this.eventMgr.addListener( event, handler );
+	/**
+	 * @param {CharacterObserver} observer
+	 */
+	addObserver: function( observer ) {
+		this.eventMgr.addObserver(observer);
+	},
+	/**
+	 * @param {CharacterObserver} observer
+	 */
+	removeObserver: function( observer ) {
+		this.eventMgr.removeObserver(observer);
 	},
 	setLevel : function( level ) {		
 		if (level >= this.getMinLevel() && level <= MAX_LEVEL ) {
@@ -64,6 +83,7 @@ Character.prototype = {
 				if( 0 == GameInfo.getMaximumProfessionLevel(this.primaryProfessions[i].id, this.level) ) {
 					this.primaryProfessions[i] = null;
 				}
+				this.primaryProfessions[i].setLevel(this.level);
 			}
 		}
 		else {
@@ -72,7 +92,7 @@ Character.prototype = {
 
 		this.calculateStats();
 		
-		this.eventMgr.fire('level_change', [level]);
+		this.eventMgr.fireLevelChange(level);
 	},
 	/**
 	 * @param {CharacterClass} chrClass
@@ -106,7 +126,7 @@ Character.prototype = {
 		
 		this.calculateStats();
 		
-		this.eventMgr.fire("class_change", [chrClass]);
+		this.eventMgr.fireClassChange(chrClass);
 	},
 	/**
 	 * @param {CharacterRace} chrRace
@@ -124,18 +144,18 @@ Character.prototype = {
 		
 		this.calculateStats();
 		
-		this.eventMgr.fire("race_change", [chrRace]);
+		this.eventMgr.fireRaceChange(chrRace);
 	},
 	serialise : function() {
-		
+		//TODO serialise character
 	},
 	calculateStats: function() {
 		this.stats.calculate( false, false );
-		this.eventMgr.fire('stats_change', [this.stats]);
+		this.eventMgr.fireStatsChange(this.stats);
 	},
 	calculatePreviewStats: function() {
-		this.stats.calculate( true, false );
-		this.eventMgr.fire('preview_stats_change', [this.stats]);
+		this.previewStats.calculate( true, false );
+		this.eventMgr.firePreviewStatsChange(this.previewStats);
 	},
 	//
 	//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -162,7 +182,116 @@ Character.prototype = {
 	fitsItemClassRequirements: function( itm ) {
 		return itm.chrClassMask == 0 || 
 			(itm.chrClassMask&(1535)) == 1535
-			|| ( itm.chrClassMask&(1<<(this.chrClass.id-1))) != 0; 
+			|| this.chrClass != null && ( itm.chrClassMask&(1<<(this.chrClass.id-1))) != 0; 
+	},
+	/**
+	 * @public
+	 * @param {number} slot
+	 * @returns {number} blizzard slot mask
+	 */
+	chardevSlotToBlizzardSlotMask: function( slot ) {
+		switch( slot ) {
+		case 0: return 1<<1;
+		case 1: return 1<<2;
+		case 2: return 1<<3;
+		case 3: return 1<<16;
+		case 4: return 1<<20|1<<5;
+		case 5: return 1<<4;
+		case 6: return 1<<19;
+		case 7: return 1<<9;
+		case 8: return 1<<10;
+		case 9: return 1<<6;
+		case 10: return 1<<7;
+		case 11: return 1<<8;
+		case 12: return 1<<11;
+		case 13: return 1<<11;
+		case 14: return 1<<12;
+		case 15: return 1<<12;
+		case 16: 
+			if( this.chrClass != null ) {
+				switch( this.chrClass.id ) {
+				case ROGUE	: return 1<<21|1<<13;
+				default: return 1<<21|1<<17|1<<13;
+				}
+			}
+			return 1<<21|1<<13;
+		case 17: 
+			if( this.chrClass != null ) {
+				switch( this.chrClass.id ) {
+				case WARRIOR	: return 1<<23|1<<14| ( this.chrClass.talents.selectedTree == 1 ? 1<<13|1<<22 : 0 ) | ( this.canDualWieldTwoHandedWeapons() ? 1<<17 : 0 );
+				case PALADIN	: return 1<<23|1<<14;
+				case HUNTER 	: return 1<<23|1<<22|1<<13;
+				case ROGUE		: return 1<<23|1<<22|1<<13;
+				case DEATHKNIGHT: return 1<<23|1<<22|1<<13;
+				case SHAMAN		: return 1<<23|1<<14| ( this.chrClass.talents.selectedTree == 1 ? 1<<13|1<<22 : 0 );
+				default			: return 1<<23;
+				}
+			}
+			return 1<<23;
+		}
+		return 0;
+	},
+	getDefaultArmorMask: function() {
+		var defaultMask = 1<<0|1<<1|1<<2|1<<3|1<<4;
+		if( this.chrClass != null ) {
+			switch( this.chrClass.id ) {
+			case 1: defaultMask = this.level >= 40 ? 1<<4 : 1<<3; break;
+			case 2: defaultMask = this.level >= 40 ? 1<<4 : 1<<3; break;
+			case 3: defaultMask = this.level >= 40 ? 1<<3 : 1<<2; break;
+			case 4: defaultMask = 1<<2; break;
+			case 5: defaultMask = 1<<1; break;
+			case 6: defaultMask = 1<<4; break;
+			case 7: defaultMask = this.level >= 40 ? 1<<3 : 1<<2; break;
+			case 8: defaultMask = 1<<1; break;
+			case 9: defaultMask = 1<<1; break;
+			case 11: defaultMask = 1<<2; break;
+			}
+		}
+		return defaultMask;
+	},
+	chardevSlotToItemClass: function( slot ) {	
+		switch( slot ) {
+		case 0:
+		case 2:
+		case 4:
+		case 7:
+		case 8:
+		case 9:
+		case 10:
+		case 11:
+			return [4,this.getDefaultArmorMask()];
+		case 3: 
+			return [4,1<<1];
+		case 5: 
+		case 6: 
+			return [4,1<<0|1<<1];
+		case 1:
+		case 12:
+		case 13:
+		case 14:
+		case 15:
+			return [4,1<<0];
+		case 18:
+			if( this.chrClass != null ) {
+				switch( this.chrClass.id ) {
+				case WARLOCK:
+				case MAGE:
+				case PRIEST:
+					return [2,1<<19];
+				case WARRIOR:
+				case HUNTER:
+				case ROGUE:
+					return [2,1<<2|1<<3|1<<16|1<<18];
+				case PALADIN:
+				case SHAMAN:
+				case DEATHKNIGHT:
+				case DRUID:
+					return [4,1<<11];
+				}
+			}
+			return [100,1];
+		}
+		return [-1,0];
 	},
 	getArmorMask: function() {
 		if( this.chrClass != null ) {
@@ -231,7 +360,7 @@ Character.prototype = {
 
 		this.calculateStats();
 		
-		this.eventMgr.fire('profession_change', [index, this.primaryProfessions[index]]);
+		this.eventMgr.fireProfessionChange(index, this.primaryProfessions[index]);
 	},
 	setProfessionLevel: function( index, level ) {
 		
@@ -239,7 +368,7 @@ Character.prototype = {
 		
 		this.calculateStats();
 		
-		this.eventMgr.fire('profession_level_change', [index, level]);
+		this.eventMgr.fireProfessionChange(index, this.primaryProfessions[index].level);
 		
 	},
 	hasBlacksmithingSocket : function(slot)
@@ -359,6 +488,11 @@ Character.prototype = {
 			this.auras.addBuff(bs[i]);
 		}
 	},
+	isWeaponSlot: function( slot ) {
+		return slot == 16 || 
+			slot == 17 && this.chrClass != null && GameInfo.canDualWield( this.chrClass.id ) || 
+			slot == 18 && this.chrClass != null && ( 1<<this.chrClass.id & (1<<WARRIOR|1<<ROGUE|1<<HUNTER|1<<PRIEST|1<<MAGE|1<<WARLOCK)) != 0;
+	},
 	//
 	//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 	//
@@ -448,7 +582,7 @@ Character.prototype = {
 					itm.addEnchant( new SpellItemEnchantment( profile[1][i][4] ) );
 				}
 				/*random properties, apply before reforging!*/
-				if( profile[1][i][6] != 0 ) {
+				if( profile[1][i][6] != null && profile[1][i][6] != 0 ) {
 					itm.setRandomEnchantment(profile[1][i][6]);
 				}
 				if( profile[1][i][5] && profile[1][i][5][0] != -1 && profile[1][i][5][1] != -1 ) {
@@ -486,13 +620,16 @@ Character.prototype = {
 		// TODO
 		//this.lastSaved = this.toArray();
 		
-		this.eventMgr.fire("character_loaded", [this]);
+		this.eventMgr.fireCharacterLoaded( this );
 	},
 	getMinLevel: function(){
 		if( this.chrClass != null && this.chrClass.id == DEATHKNIGHT ) {
 			return 55;
 		}
 		return 1;
+	},
+	toArray: function() {
+		//TODO implement toArray
 	}
 };
 /**

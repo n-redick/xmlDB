@@ -34,8 +34,20 @@ function InvalidItemException( itm, cause ) {
 	this.itm = itm;
 }
 InvalidItemException.prototype = {
-		cause: null,
-		itm: null
+	cause: null,
+	itm: null,
+	toString: function() {
+		switch( this.cause ) {
+		case InvalidItemException. CAUSE_WRONG_CHARACTER_CLASS:
+			return "You do not match the class requirement to wear this item!";
+		case InvalidItemException.CAUSE_WRONG_ITEM_CLASS:
+			return "You do not match the requirement to wear this item!";
+		case InvalidItemException.CAUSE_UNIQUE:
+			return "You are already wearing this item!";
+		default:
+			return "Unable to equip "+itm.name+" due to unknown reason!";
+		}
+	}
 };
 InvalidItemException.CAUSE_WRONG_CHARACTER_CLASS = 0;
 InvalidItemException.CAUSE_WRONG_ITEM_CLASS = 1;

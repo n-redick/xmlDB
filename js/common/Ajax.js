@@ -104,7 +104,7 @@ Ajax.defaultCallbackHandler = function( response, handler, args , callbackOnErro
 		}
 		else
 		{
-			throw new BadResponseException( AjaxException.BAD_RESPONSE_CODE, response );
+			throw new BadResponseException( response );
 		}
 	}
 };
@@ -167,6 +167,9 @@ function XMLHttpException() {
 function GenericAjaxException( message ) {
 	this.message = message;
 }
-BadResponseException.prototype = {
-	message : null
+GenericAjaxException.prototype = {
+	message : null,
+	toString: function() {
+		return this.message;
+	}
 };

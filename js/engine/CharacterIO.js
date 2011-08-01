@@ -12,31 +12,36 @@ var CharacterIO = new Object();
  */
 CharacterIO._readCharacter_callback = function( request, handler )
 {
-	var character 	= null;
-	var errorMessage	= "";
-	if (request.status == 200) 
-	{
-		if (!request.getResponseHeader("error")) 
+	var character = null;
+	var exception = null;
+	try {
+		if (request.status == 200) 
 		{
-			try
+			if (!request.getResponseHeader("error")) 
 			{
-				character = eval('(' + request.responseText + ')');
+				try
+				{
+					character = eval('(' + request.responseText + ')');
+				}
+				catch( e )
+				{
+					Tools.rethrow(e);
+				}
 			}
-			catch( e )
+			else
 			{
-				Tools.rethrow(e);
+				throw new GenericAjaxException( request.responseText );
 			}
 		}
 		else
 		{
-			throw new GenericAjaxException( request.responseText );
+			throw new BadResponseException( request ); 
 		}
 	}
-	else
-	{
-		throw new BadResponseException( request ); 
+	catch( e ) {
+		exception = e;
 	}
-	handler.notify([character, errorMessage]);
+	handler.notify([character, exception]);
 };
 
 /**

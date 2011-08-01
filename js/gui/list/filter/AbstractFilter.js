@@ -1,5 +1,6 @@
-function AbstractFilter( variable ) {
+function AbstractFilter( name, variable ) {
 	this.variable = variable;
+	this.name = name;
 	this.node = document.createElement("div");
 }
 
@@ -7,10 +8,9 @@ AbstractFilter.OPERATOR_OPTIONS_NUMERIC = [['gt','&gt;'],['ge','&ge;'],['lt','&l
 AbstractFilter.OPERATOR_OPTIONS_STRING = [['wlike','is']];
 AbstractFilter.OPERATOR_OPTIONS_NUMERIC_EUQAL = [['eq','=']];
 
-AbstractFilter.prototype.node = null;
-AbstractFilter.prototype.variable;
-
-AbstractFilter.prototype.getOperatorSelect = function( valueType ) {
+AbstractFilter.prototype = {
+	node: null, variable: "", name: "",
+	getOperatorSelect: function( valueType ) {
 	var tmp;
 	switch( valueType ) {
 	case InputFilterData.TYPE_STRING_SIMPLE:
@@ -23,14 +23,16 @@ AbstractFilter.prototype.getOperatorSelect = function( valueType ) {
 		break;
 	case InputFilterData.TYPE_NUMERIC:
 		tmp = new SingleSelect(AbstractFilter.OPERATOR_OPTIONS_NUMERIC);
+		break;
 	default:
 		throw new Error("Unable to create operator select for "+valueType+"!");
 	}
 	return tmp;
-};
-/**
- * @returns {string}
- */
-AbstractFilter.prototype.getArgumentString = function() {
-	throw new CalledAbstractMethodException( "AbstractFilter", "getArgumentString");
+	},
+	/**
+	 * @return {string}
+	 */
+	getArgumentString: function() {
+		throw new CalledAbstractMethodException( "AbstractFilter", "getArgumentString");
+	}
 };

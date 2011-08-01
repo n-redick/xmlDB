@@ -116,7 +116,7 @@ CharacterClass.prototype = {
 			this.shape = null;
 		}
 
-		this.eventMgr.fire('shapeform_change', this.shape);
+		this.eventMgr.fire('shapeform_change', {'shape': this.shape} );
 		
 	},
 	setPresence: function( presenceId ) {
@@ -124,7 +124,7 @@ CharacterClass.prototype = {
 			
 			this.presence = null;
 			
-			this.eventMgr.fire('presence_change', null);
+			this.eventMgr.fire('presence_change', {'presence': null});
 		}
 		else {
 			for( var i=0; i<this.presences.length; i++ ) {
@@ -133,7 +133,7 @@ CharacterClass.prototype = {
 					
 					this.presence = new Buff( this.presences[i], 1 );
 					
-					this.eventMgr.fire('presence_change', this.presence);
+					this.eventMgr.fire('presence_change', {'presence': this.presence});
 					
 					return;
 				}
@@ -299,7 +299,7 @@ CharacterClass.prototype = {
 		}
 		
 		this.glyphs[type][n] = glyph;
-		this.eventMgr.fire('glyph_added', glyph);
+		this.eventMgr.fire('glyph_added', { 'glyph': glyph });
 	},
 	/**
 	 * @param {number} type
@@ -307,7 +307,7 @@ CharacterClass.prototype = {
 	 */
 	removeGlyph: function( type, index ) {
 		this.glyphs[type][index] = null;
-		this.eventMgr.fire('glyph_removed');
+		this.eventMgr.fire( 'glyph_removed', null );
 	}
 };
 /**

@@ -1,6 +1,5 @@
 /**
  * @constructor
- * @param {Character} character
  * @returns {ShapeSelector}
  */
 function ShapeSelector() {

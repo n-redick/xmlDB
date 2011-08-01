@@ -1,11 +1,8 @@
 function CharacterSheet() {
-	this.eventMgr = new EventManager([
-		"level_select", "profession_select", "profession_level_select", "show_stat_tooltip"                              
-	]);
-	
-	var grid, i, j, div, div2, div3, slotGrid, wpnGrid;
+	this.eventMgr = new CharacterSheetEventManager(); 
+	var grid, i, j, div, div2, slotGrid, wpnGrid;
 	//
-	this.raceClassSelector = new RaceClassSelector();
+	this.raceClassSelector = new RaceClassSelector( this );
 	this.shapeSelector = new ShapeSelector();
 	this.presenceSelector = new PresenceSelector();
 	this.buffBar = new BuffBar();
@@ -38,7 +35,7 @@ function CharacterSheet() {
 	//
 	//
 	grid = new StaticGrid(1,2); 
-	grid.setVerticalAlign(SG_VALIGN_TOP);
+	grid.setVerticalAlign(StaticGrid.VALIGN_TOP);
 	grid.node.className = "cs_m_grid";
 	grid.cols[0].width = "180px";
 	grid.cols[1].width = "160px";
@@ -60,7 +57,7 @@ function CharacterSheet() {
 	slotGrid = new StaticGrid(8,2);
 	this.slots = [];
 	for( i = 0; i < INV_ITEMS; i++ ) {
-		this.slots[i] = new ItemSlot(i);
+		this.slots[i] = new ItemSlot( this, i );
 	}
 	for( i = 0; i < 8; i++ ) {
 		slotGrid.cells[i][0].style.paddingRight = "8px";
@@ -87,7 +84,6 @@ function CharacterSheet() {
 	//
 	//#########################################################################
 	//
-	var statTooltipHandler = new Handler(this.__onShowStatTooltip, this);
 	this.stats = [];
 	this.statCollapsables = [];
 	
@@ -102,8 +98,7 @@ function CharacterSheet() {
 		div.appendChild(document.createTextNode(locale['CS_StatGroups'][i]));
 		this.statCollapsables[i].header.appendChild(div);
 		for( j=0; j<locale['CS_Stats'][i].length; j++ ) {
-			this.stats[i][j] = new Stat(i,j);
-			this.stats[i][j].addListener('show_tooltip', statTooltipHandler)
+			this.stats[i][j] = new Stat( this, i,j);
 			this.statCollapsables[i].content.appendChild(this.stats[i][j].node);
 		}
 		this.statCollapsables[i].node.className = 'cs_st_p';
@@ -168,11 +163,15 @@ CharacterSheet.prototype = {
 	professionsParent: null,
 	professionSelects: [],
 	professionLevelSelects: [],
-	addListener: function( event, handler ) {
-		this.eventMgr.addListener( event, handler );
+	
+	addObserver: function( observer ) {
+		this.eventMgr.addObserver(observer);
+	},
+	removeObserver: function( observer ) {
+		this.eventMgr.removeObserver(observer);
 	},
 	__onShowStatTooltip: function( group, index, node ) {
-		this.eventMgr.fire('show_stat_tooltip', [group, index, node]);
+		this.eventMgr.fireStatTooltipShow(group, index, node);
 	},
 	__buildProfessionSelects: function() {
 		var opts, i;
@@ -199,19 +198,19 @@ CharacterSheet.prototype = {
 		}
 	},
 	__onProfessionChange: function( professionIndex ) {
-		this.eventMgr.fire("profession_select", [
+		this.eventMgr.fireProfessionSelect(
 			professionIndex,
 			parseInt(this.professionSelects[professionIndex].getValue(), 10)
-		]);
+		);
 	},
 	__onProfessionLevelChange: function( professionIndex ) {
-		this.eventMgr.fire("profession_level_select", [
+		this.eventMgr.fireProfessionLevelSelect(
 			professionIndex,
 			parseInt(this.professionLevelSelects[professionIndex].getValue(), 10)
-		]);
+		);
 	},
 	__onLevelChange: function() {
-		this.eventMgr.fire("level_select", [parseInt( this.level.options[this.level.selectedIndex].value, 10 )]);
+		this.eventMgr.fireLevelSelect(parseInt( this.level.options[this.level.selectedIndex].value, 10 ));
 	},
 	/**
 	 * @param {number} level
@@ -295,6 +294,39 @@ CharacterSheet.prototype = {
 				this.professionLevelSelects[professionIndex].node.style.display = "none";
 			}
 		}
+	},
+	selectSlot: function( slot ) {
+		if ( slot != -1 ) {
+			this.slots[slot].select();
+		}
+		if ( this.selectedSlot != -1 && this.selectedSlot != slot ) {
+			this.slots[this.selectedSlot].deselect();
+		}
+		this.selectedSlot = slot;
+	},
+	selectedClass: function( raceId ) {
+		this.eventMgr.fireClassSelect(raceId);
+	},
+	selectedRace: function( raceId ) {
+		this.eventMgr.fireRaceSelect(raceId);
+	},
+	leftClickItem: function( slot, index ) {
+		this.eventMgr.fireItemLeftClick(slot, index);
+	},
+	rightClickItem: function( slot, index ) {
+		this.eventMgr.fireItemRightClick(slot, index);
+	},
+	showSlotTooltip: function( slot, index ) {
+		this.eventMgr.fireItemTooltipShow(slot, index);
+	},
+	hideSlotTooltip: function( slot, index ) {
+		this.eventMgr.fireItemTooltipHide(slot, index);
+	},
+	showStatTooltip: function( group, index, node ) {
+		this.eventMgr.fireStatTooltipShow(group, index, node);
+	},
+	hideStatTooltip: function( group, index, node ) {
+		this.eventMgr.fireStatTooltipHide(group, index, node);
 	}
 };
 

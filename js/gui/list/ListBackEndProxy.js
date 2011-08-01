@@ -26,6 +26,7 @@ ListBackEndProxy.getQueryObject = function( list ) {
 
 ListBackEndProxy.prototype.callback = function( data, list, url ) {
 	if( url != this.requestURL ) {
+		return;
 	}
 	
 	list.setData( data );

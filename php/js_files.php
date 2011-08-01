@@ -12,6 +12,7 @@
 		array( "js/common/", "Tools.js"),
 		array( "js/common/", "GameInfo.js"),
 		array( "js/common/", "LinkedList.js"),
+		array( "js/common/", "GenericEventManager.js"),
 		array( "js/common/extern/", "json2.js"),
 		array( "js/common/extern/", "md5.js"),
 
@@ -49,8 +50,11 @@
 		array( "js/engine/container/", "Glyphs.js"),
 		array( "js/engine/container/", "Inventory.js"),
 		array( "js/engine/container/", "Talents.js"),
+		array( "js/engine/container/", "CharacterManager.js"),
 		
 		array( "js/engine/character/", "Character.js"),
+		array( "js/engine/character/", "CharacterObserver.js"),
+		array( "js/engine/character/", "CharacterEventManager.js"),
 		array( "js/engine/character/", "CharacterRace.js"),
 		array( "js/engine/character/", "CharacterClass.js"),
 		array( "js/engine/character/", "Stats.js"),
@@ -68,6 +72,8 @@
 		
 		array( "js/gui/character_sheet/", "BuffBar.js"),
 		array( "js/gui/character_sheet/", "CharacterSheet.js"),
+		array( "js/gui/character_sheet/", "CharacterSheetObserver.js"),
+		array( "js/gui/character_sheet/", "CharacterSheetEventManager.js"),
 		array( "js/gui/character_sheet/", "ItemSlot.js"),
 		array( "js/gui/character_sheet/", "PresenceSelector.js"),
 		array( "js/gui/character_sheet/", "RaceClassSelector.js"),
@@ -75,6 +81,7 @@
 		array( "js/gui/character_sheet/", "Stat.js"),
 		
 		array( "js/gui/widgets/", "SingleSelect.js"),
+		array( "js/gui/widgets/", "MultiSelect.js"),
 		array( "js/gui/widgets/", "StaticGrid.js"),
 		array( "js/gui/widgets/", "Collapsable.js"),
 		array( "js/gui/widgets/", "LayeredDiv.js"),
@@ -83,8 +90,8 @@
 		array( "js/gui/widgets/", "StackedDiv.js"),
 		
 		
-		array( "js/adapter/", "CharacterProxy.js"),
-		array( "js/adapter/", "CharacterSheetProxy.js"),
+		array( "js/adapter/", "CharacterCharacterSheetAdapter.js"),
+		array( "js/adapter/", "EngineGuiAdapter.js"),
 		
 		array( "js/gui/list/filter/", "AbstractFilter.js"),
 		array( "js/gui/list/filter/", "FilterData.js"),
@@ -96,9 +103,17 @@
 		
 		array( "js/gui/list/", "AbstractDeserializer.js"),
 		array( "js/gui/list/", "List.js"),
-		array( "js/gui/list/", "ItemList.js"),
-		array( "js/gui/list/", "ListBackEndProxy.js"),
 		array( "js/gui/list/", "ListGui.js"),
+		array( "js/gui/list/", "ListBackEndProxy.js"),
+		
+		array( "js/gui/list/item_list/", "ItemList.js"),
+		array( "js/gui/list/item_list/", "ItemListGui.js"),
+		array( "js/gui/list/item_list/", "ItemListDeserializer.js"),
+		
+		array( "js/gui/list/profile_list/", "ProfileList.js"),
+		array( "js/gui/list/profile_list/", "ProfileListGui.js"),
+		array( "js/gui/list/profile_list/", "ProfileListDeserializer.js"),
+		
 		
 	);
 ?>

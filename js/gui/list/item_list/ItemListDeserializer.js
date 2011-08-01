@@ -1,42 +1,7 @@
-function ItemList() {
-	
-	var filterData = [
-		new InputFilterData( 'name', InputFilterData.TYPE_STRING_SIMPLE ),
-		new RangeInputFilterData( 'level' )
-	];
-//	
-//	var deserializer = new ItemListDeserializer();
-//	var backEnd = new ListBackEndProxy("php/interface/get_items.php"); 
-	
-	List.call( 
-		this,
-		filterData,
-		new ListGui(this)
-	);
-	
-	this.order = ItemList.ORDER_ILVL;
-	
-	this.eventMgr.registerEvents(['show_tooltip', 'hide_tooltip', 'move_tooltip', 'click']);
-}
-
-ItemList.ORDER_NAME = 'name';
-ItemList.ORDER_ILVL = 'level';
-ItemList.ORDER_TYPE = 'itemclass';
-ItemList.ORDER_DPS =  'dps';
-ItemList.ORDER_SPEED = "delay";
-ItemList.ORDER_SLOT = "slot";
-ItemList.ORDER_SCORE = "weightedscore";
-
-
-ItemList.prototype = new List();
-ItemList.prototype.staticLinks = false;
-ItemList.prototype.addListener= function( event, handler ) {
-	this.eventMgr.addListener(event, handler);
-};
-ItemList.prototype.showStaticLinks = function( b ) {
-	this.staticLinks = b;
-};
-
+/**
+ * @constructor
+ * @returns {ItemListDeserializer}
+ */
 function ItemListDeserializer() {
 	AbstractDeserializer.call( this );
 }
@@ -61,6 +26,7 @@ ItemListDeserializer.prototype.deserialize = function( list, data ) {
 	//var cmpItemScore = this.compareItem ? this.compareItem.getStatWeightBasedScore( this.statWeights ) : 0;
 	if( data.length < 2 ) {
 		list.gui.setContent(null);
+		list.setMaxPage(0);
 	}
 	else {
 		grid = new StaticGrid(
@@ -74,7 +40,9 @@ ItemListDeserializer.prototype.deserialize = function( list, data ) {
 		//
 		//this.updatePages( Math.ceil( data[0][0]/data[0][1] ) );
 		
-		grid.cols[0].width = "32px";
+		list.setMaxPage( Math.ceil( data[0][0]/data[0][1] ) );
+		
+		grid.cols[0].width = "24px";
 		
 		// skip icon
 		column++;
@@ -145,7 +113,7 @@ ItemListDeserializer.prototype.deserialize = function( list, data ) {
 			
 //			}
 			grid.cells[i][column].className = cellStyle;
-			grid.cells[i][column++].innerHTML = "<div style='background-image:url(images/icons/half/" + tmp.icon + ".png)' class='il_icon' ></div>";
+			grid.cells[i][column++].innerHTML = "<div style='background-image:url(images/icons/small/" + tmp.icon + ".png)' class='il_icon' ></div>";
 
 			grid.cells[i][column].className = cellStyle;
 			

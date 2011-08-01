@@ -290,6 +290,8 @@
 	$locale['F_DPS'] = "DPS"; 
 	$locale['F_Name'] = "Name"; 
 	$locale['F_Speed'] = "Speed";
+	$locale['F_UsableBy'] = "Usable by";
+	$locale['F_GemReqItemLevel'] = "Required Item Level by Gem";
 	// Options
 	$locale['F_Yes'] = "Yes";
 	$locale['F_No'] = "No";

@@ -6,12 +6,13 @@ var II_DIMS = [[38,5,5],[16,0,0],[16,0,32],[16,32,32],[16,32,0]];
 
 /**
  * @constructor
+ * @param {CharacterSheet} characterSheet
  * @param {number} slot
  * @returns {ItemSlot}
  */
-function ItemSlot(slot)
+function ItemSlot( characterSheet, slot)
 {
-	this.eventMgr = new EventManager(['show_tooltip', 'hide_tooltip', 'right_click', 'left_click']);
+	this.characterSheet = characterSheet;
 	this.node = document.createElement("div");
 	this.iconDivs = [];
 	this.borderDivs = [];
@@ -93,16 +94,13 @@ ItemSlot.prototype = {
 	node: null, iconDivs: [], borderDivs: [], 
 	highlightDivs: [], icons: [], slot: -1, 
 	quality: -1, selected: false,
-	eventMgr: null,
-	addListener: function( event, handler ) {
-		this.eventMgr.addListener(event, handler);
-	},
+	characterSheet: null,
 	/**
 	 * @param {number} slot
 	 * @param {number} index
 	 */
 	__onMouseOver: function(index) { 
-		this.eventMgr.fire('show_tooltip', [this.slot, index]); 
+		this.characterSheet.showSlotTooltip( this.slot, index ); 
 	},
 	/**
 	 * @param {number} slot
@@ -126,13 +124,13 @@ ItemSlot.prototype = {
 		this.borderDivs[index].style.zIndex = 3 * (5 - index) - 1;
 		this.highlightDivs[index].style.zIndex = 3 * (5 - index);
 
-		this.eventMgr.fire('hide_tooltip', [this.slot, index]); 
+		this.characterSheet.hideSlotTooltip( this.slot, index ); 
 	},
 	__onClick: function(index) {
-		this.eventMgr.fire("left_click", [this.slot, index]);
+		this.characterSheet.leftClickItem( this.slot, index ); 
 	},
 	__onContextMenu: function(index) {
-		this.eventMgr.fire("right_click", [this.slot, index]);
+		this.characterSheet.rightClickItem( this.slot, index ); 
 	},
 	setVisibility: function(visible) {
 		this.node.style.display = (visible?"block":"none");

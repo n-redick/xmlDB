@@ -3,15 +3,19 @@
  * @param {string} str
  * @returns {XMLHttpRequest}
  */
-function ActiveXObject( str ) {
-	
-}
+function ActiveXObject( str ) { /***/ }
 
 /**
- * @param {Object} obj
+ * @param {any} obj
  * @param {any} any
  */
-Function.prototype.apply = function( obj, any ) {};
+Function.prototype.apply = function( obj, any ) { /***/ };
+
+/**
+ * @param {any} obj
+ * @param {any} any
+ */
+Function.prototype.call = function( obj, any ) { /***/ };
 
 var locale = {};
 
@@ -22,3 +26,8 @@ var JSON = {
 };
 
 function MD5( any ) { return ""; }
+/**
+ * @param {string} str
+ * @returns {HTMLElement}
+ */
+document.createElement = function( str ) { return null;};

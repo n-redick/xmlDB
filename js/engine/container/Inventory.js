@@ -62,6 +62,9 @@ Inventory.prototype = {
 	addListener: function( event, handler ){
 		this.eventMgr.addListener(event, handler);
 	},
+	addPropagator: function( event, handler ){
+		this.eventMgr.addPropagator(event, handler);
+	},
 	/**
 	 * @param {number} slot
 	 */

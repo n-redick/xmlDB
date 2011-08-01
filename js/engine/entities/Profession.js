@@ -23,8 +23,6 @@ function Profession(character, serialized) {
 	this.character = character;
 
 	this.setLevel(GameInfo.getMaximumProfessionLevel(this.id, character.level));
-	
-	character.addListener("level_change", new Handler( function(){ this.setLevel(this.level); }, this ));
 }
 
 Profession.prototype = {

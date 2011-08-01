@@ -1,5 +1,5 @@
-function SingleSelectFilter( variable, value, options ) {
-	AbstractFilter.call( this, variable );
+function SingleSelectFilter( name, variable, value, options ) {
+	AbstractFilter.call( this, name, variable );
 	
 	this.select = SingleSelect.fromObject(options);
 	

@@ -27,13 +27,14 @@ var ST_TYPE = [
 
 /**
  * @constructor
+ * @param {CharacterSheet} characterSheet
  * @param {number} group
  * @param {number} index
  * @returns {Stat}
  */
-function Stat( group, index ) 
+function Stat( characterSheet, group, index ) 
 {
-	this.eventMgr = new EventManager(["show_tooltip"]);
+	this.characterSheet = characterSheet;
 	this.group = group;
 	this.index = index;
 	var div = document.createElement("div");
@@ -48,17 +49,18 @@ function Stat( group, index )
 	this.valueNode = document.createElement('span');
 	this.valueNode.className = 'stat_table_stat_span';
 	this.valueNode.innerHTML = 0;
+	
 	div.appendChild(this.compareNode);
 	div.appendChild(this.valueNode);
 	// TODO: 
-	Listener.add(this.node,"mouseover",this.eventMgr.fire , this.eventMgr, ["show_tooltip", [group, index, this.node]]);
+	Listener.add(this.node,"mouseover",this.__onShowTooltip , this, []);
+	Listener.add(this.node,"mouseout",this.__onHideTooltip , this, []);
 	this.node.onmouseout = function(){Tooltip.hide();};
 	
 	this.flags = ST_TYPE[this.group][this.index];
 }
 
 Stat.prototype = {
-	eventMgr: null,
 	group: -1, 
 	index: -1, 
 	name: "", 
@@ -68,6 +70,13 @@ Stat.prototype = {
 	compare: 0, 
 	valueNode: null, 
 	flags: 0,
+	characterSheet: null,
+	__onShowTooltip: function() {
+		this.characterSheet.showStatTooltip( this.group, this.index, this.node );
+	},
+	__onHideTooltip: function() {
+		this.characterSheet.hideStatTooltip( this.group, this.index, this.node );
+	},
 	//
 	//#########################################################################
 	//
@@ -75,9 +84,6 @@ Stat.prototype = {
 	//
 	//#########################################################################
 	//
-	addListener: function( event, handler ) {
-		this.eventMgr.addListener(event, handler);
-	},
 	setValue: function( value ){
 		this.value = value;
 	

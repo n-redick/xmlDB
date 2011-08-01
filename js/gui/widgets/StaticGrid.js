@@ -1,6 +1,3 @@
-/** @const */ var SG_VALIGN_TOP = 'top';
-/** @const */ var SG_VALIGN_MIDDLE = 'middle';
-/** @const */ var SG_VALIGN_BOTTOM = 'bottom';
 /**
  * @constructor
  * @param {number} rows
@@ -8,7 +5,6 @@
  * @returns {StaticGrid}
  */
 function StaticGrid( rows, cols ){
-	var colGrp = document.createElement('colgroup');
 	var i,j;
 	// table
 	this.node = document.createElement("table");
@@ -17,12 +13,14 @@ function StaticGrid( rows, cols ){
 	
 	this.rows = new Array(rows);
 	this.cells = new Array(rows);
+	
+	this.colGrp = document.createElement('colgroup');
 	this.cols = new Array(cols);
 
-	this.node.appendChild(colGrp);
+	this.node.appendChild(this.colGrp);
 	for( j = 0; j < cols; j++ ){
 		this.cols[j] = document.createElement('col');
-		colGrp.appendChild(this.cols[j]);
+		this.colGrp.appendChild(this.cols[j]);
 	}
 	// body
 	this.tbody = document.createElement("tbody");
@@ -41,8 +39,12 @@ function StaticGrid( rows, cols ){
     }
 };
 
+StaticGrid.VALIGN_TOP = 'top';
+StaticGrid.VALIGN_MIDDLE = 'middle';
+StaticGrid.VALIGN_BOTTOM = 'bottom';
+
 StaticGrid.prototype = {
-	cells: [], rows: [], cols: [], node: null, tbody: null, vAlign: "",
+	cells: [], rows: [], cols: [], node: null, tbody: null, vAlign: "", colGrp: null,
 	setVerticalAlign: function ( vAlign ) {
 		var i,j;
 		this.vAlign = vAlign;
@@ -63,6 +65,20 @@ StaticGrid.prototype = {
 		}
 		this.tbody.appendChild(this.rows[row]);
 		return row;
+	},
+	addCol: function() {
+		var col = this.cols.length;
+		var rows = this.rows.length;
+		this.cols[col] = document.createElement('col');
+		this.colGrp.appendChild(this.cols[col]);
+		
+		for( var i=0; i<rows; i++ ) {
+			this.cells[i][col] = document.createElement("td");
+			this.cells[i][col].vAlign = this.vAlign;
+			this.rows[i].appendChild( this.cells[i][col] );
+		}
+		
+		return col;
 	},
 	addJoinedRow: function() {
 		var row = this.rows.length, td = null, i;
