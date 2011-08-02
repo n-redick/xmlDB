@@ -2296,7 +2296,7 @@ function get_battlenet_profile( $numRegion, $server, $name, &$error )
 		case ARMORY_IMPORT_REGION_CN: $region = cpa_client::REGION_CN; break;
 	}
 
-	$client = new cpa_client( null, null );
+	$client = new cpa_client( BNET_PRIVATE_KEY, BNET_PUBLIC_KEY );
 
 	$cp_json = $client->get_profile( 
 		$name, 

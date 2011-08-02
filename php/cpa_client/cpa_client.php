@@ -21,13 +21,28 @@ class cpa_client {
 	const PROFILE_PETS = 'pets';
 	const PROFILE_ACHIEVEMENTS = 'achievements';
 	const PROFILE_PROGRESSION = 'progression';
+	
+	const PROTOCOL_HTTP = "http";
+	const PROTOCOL_HTTPS = "https";
 
-	private $public_key = null;
-	private $private_key = null;
+	protected $public_key = null;
+	protected $private_key = null;
+	protected $protocol = cpa_client::PROTOCOL_HTTPS;
 
 	public function __construct( $private_key, $public_key ) {
 		$this->private_key = $private_key;
 		$this->public_key = $public_key;
+	}
+	
+	public function set_protocol( $protocol ) {
+		switch( $protocol ) {
+			case cpa_client::PROTOCOL_HTTP:
+			case cpa_client::PROTOCOL_HTTPS:
+				$this->protocol = $protocol;
+				break;
+			default:
+				throw new Exception("Invalid protocol: ".$protocol."!");
+		}
 	}
 	
 	public function get_item( $itemID ) {
@@ -37,8 +52,9 @@ class cpa_client {
 		}
 	
 		return $this->request( 
-			'http://eu.battle.net', 
-			'/api/wow/data/item/' . (int) $itemID 
+			$this->protocol.'://eu.battle.net', 
+			'/api/wow/data/item/' . (int) $itemID,
+			''
 		);
 	}
 	
@@ -75,12 +91,12 @@ class cpa_client {
 		}
 	
 		return $this->request( 
-			'http://' . $region . '.battle.net', 
+			$this->protocol.'://' . $region . '.battle.net', 
 			'/api/wow/character/' . 
 				$this->encodeServer($server) . 
 				'/' . 
-				$this->encodeName($name) .
-				'?fields=' . implode( ',', $fields )
+				$this->encodeName($name),
+			'?fields=' . implode( ',', $fields )
 		);
 	}
 	
@@ -94,24 +110,24 @@ class cpa_client {
 	
 	private function create_signature( $url, $method, $date_string ) {
 		
-		$string = $method + "\n" + $date_string + "\n" + $url + "\n";
-	
-		return hash_hmac('sha1', $this->private_key, $string);
+		$string = $method . "\n" . $date_string . "\n" . $url .	"\n";
+		
+		return base64_encode(hash_hmac('sha1', $string, $this->private_key, true));
 	}
 	
-	private function request( $host, $url ) {
+	private function request( $host, $url, $query ) {
 		if(  $this->private_key != null && $this->public_key != null ) {
-			return $this->signed_request( $url );
+			return $this->signed_request( $host, $url, $query );
 		}
 		else {
 			return file_get_contents(
-				$host . $url
+				$host . $url . $query
 			);
 		}
 	}
 	
-	private function signed_request( $host, $url ) {
-		$date_string = date(DATE_RFC822);
+	private function signed_request( $host, $url, $query ) {
+		$date_string = gmdate("D, d M Y H:i:s T");
 	
 		$signature = $this->create_signature( $url, "GET", $date_string );
 		
@@ -119,12 +135,13 @@ class cpa_client {
 			'http'=>array(
 				'method'=>"GET",
 				'header'=>"Date: " . $date_string . "\r\n" .
-					"Authorization: BNET " . $this->public_key . ":" . $signature . " \r\n"
+					"Authorization: BNET " . 
+					$this->public_key . ":" . $signature . " \r\n"
 		));
 
 		$context = stream_context_create($opts);
 
-		return file_get_contents( $host . $url, false, $context);
+		return file_get_contents( $host . $url . $query, false, $context);
 	}
 }
 
