@@ -33,17 +33,41 @@
 			}
 		}
 	}
+	function imagetobrighter($im)
+	{
+		$img_width  = imageSX($im);
+		$img_height = imageSY($im);
+		
+		for ($y = 0; $y <$img_height; $y++) {
+			for ($x = 0; $x <$img_width; $x++) {	
+				$rgb = imagecolorat($im, $x, $y);
+				$red   = ($rgb >> 16) & 0xFF;
+				$green = ($rgb >> 8)  & 0xFF;
+				$blue  = $rgb & 0xFF;
+				$gray = min(round((.299*$red + .587*$green + .114*$blue)*1.5 + 0x20), 0xff);
+				
+				//echo ">>".$rgb."\n";
+				
+				$grayColor = $gray << 16 | $gray << 8 | $gray | (($rgb>>24)<<24);
+				
+				//echo "<<".$grayColor."\n";
+				// set the pixel color
+				imagesetpixel ($im, $x, $y, $grayColor);
+			}
+		}
+	}
 
 	set_time_limit(0);
 	
 	$sz_dir = "./../../images/icons/";
+	$sz_dir = "C:/_projekte/chardev master/website 8.2/images/site/race_class/";
 	if(!is_dir($sz_dir)) die;
 	$dir = opendir($sz_dir);
 	$n = 0;
 	$im;
 	$im2;
 	while($file = readdir($dir)){
-		if( !preg_match('/\.png$/', $file) ) {
+		if( !preg_match('/^\d+\.png$/', $file) ) {
 			continue;
 		}
 		//echo $sz_dir.$file."@".ceil(filesize($sz_dir.$file));
@@ -59,6 +83,7 @@
 		$im3 = imagecreatetruecolor(54,54);
 		$im4 = imagecreatetruecolor(32,32);
 		$im5 = imagecreatetruecolor(14,14);
+		$im6 = imagecreatetruecolor(38,38);
 		
 /*
 		imagecopyresampled($im,$res , 0,0,5,5,48,48,54,54);
@@ -102,7 +127,7 @@
 		imagealphablending($im5, false);
 		imagesavealpha($im5, true);
 		imagepng($im5,$sz_dir."g/gem/".strtolower($file));
-*/		
+
 		
 		imagecopyresampled($im,$res , 0,0,5,5,48,48,54,54);
 		imagecopyresampled($im2,$res , 0,0,5,5,24,24,54,54);
@@ -139,5 +164,13 @@
 		imagealphablending($im5, false);
 		imagesavealpha($im5, true);
 		imagepng($im5,$sz_dir."r/gem/".strtolower($file));
+		*/		
+		
+		$im6 = imagecreatetruecolor(34,34);
+		imagecopyresampled($im6,$res , 0,0,5,5,34,34,54,54);
+		//imagetobrighter($res);
+		imagealphablending($im6, false);
+		imagesavealpha($im6, true);
+		imagepng($im6,$sz_dir."/resized_".strtolower($file));
 	}
 ?>

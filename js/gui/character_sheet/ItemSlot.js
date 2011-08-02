@@ -85,7 +85,7 @@ function ItemSlot( characterSheet, slot)
 			this.highlightDivs[i].style.display = "none";
 		}
 		else {
-			this.icons[i].src = "images/charsheet/"+this.slot+".jpg";
+			this.icons[i].src = "images/charsheet/slots/slot_"+this.slot+".jpg";
 		}
 	}
 }
@@ -162,7 +162,7 @@ ItemSlot.prototype = {
 				else {
 					this.node.style.backgroundImage = "url(images/site/item_border.png)";
 				}
-				this.icons[i].src = "images/charsheet/"+this.slot+".jpg";
+				this.icons[i].src = "images/charsheet/slots/slot_"+this.slot+".jpg";
 			}
 			else {
 				

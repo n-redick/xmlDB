@@ -34,6 +34,6 @@
 	</div>
 	<div class='ix_login_input_container' >
 		<div class='ix_login_note'>You are logged in as</div>
-		<a href="?user=<?php echo $_SESSION['user_id']; ?>" class='ix_self_link'><?php echo $_SESSION['user_name']; ?></a>
+		<a href="?user=<?php echo isset($_SESSION['user_id']) ? $_SESSION['user_id'] : ""; ?>" class='ix_self_link'><?php echo $_SESSION['user_name']; ?></a>
 	</div>
 </form>

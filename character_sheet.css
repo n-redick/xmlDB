@@ -477,7 +477,7 @@
 }
 
 .rcs_shadow {
-	background: url(images/site/item_slot_shadow.png) 6px 6px no-repeat;
+/*	background: url(images/site/item_slot_shadow.png) 6px 6px no-repeat; */
 	height: 48px;
 	width: 48px;
 	top: 0px;
@@ -532,14 +532,14 @@
 }
 
 .rcs_icon_s {
-	width: 36px;
-	height: 36px;
+	width: 34px;
+	height: 34px;
 }
 
 .rcs_icon_l {
-	width: 36px;
-	height: 36px;
-	padding: 6px;
+	width: 34px;
+	height: 34px;
+	padding: 7px;
 }
 
 .rcs_event_l {
@@ -552,6 +552,13 @@
 
 .rcs_border {
 	background: url(images/site/rc_border.png) 0px 0px;
+	width: 48px;
+	height: 48px;
+	top: 0px;
+	left: 0px;
+}
+
+.rcs_class_border {
 	width: 48px;
 	height: 48px;
 	top: 0px;
