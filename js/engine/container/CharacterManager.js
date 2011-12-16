@@ -4,25 +4,20 @@
  */
 function CharacterManager( ) {
 	this.characters = [];
-	this.eventMgr = new EventManager(['character_change']);
+	this.eventMgr = new GenericSubject();
+	this.eventMgr.registerEvent('character_change',['character']);
 }
 
 CharacterManager.prototype = {
 	characters: [],
 	eventMgr: null,
 	cursor: -1,
-	addListener: function( event, handler) { 
-		this.eventMgr.addListener( event, handler );
-	},
-	addPropagator: function( event, handler) { 
-		this.eventMgr.addPropagator( event, handler );
-	},
 	addCharacter: function( character ) {
 		this.characters.push( character );
 		
 		this.cursor = this.characters.length - 1;
 		
-		this.eventMgr.fire( 'character_change', [character] );
+		this.eventMgr.fire( 'character_change', {'character': character} );
 	},
 
 	removeCharacter: function( character ) {

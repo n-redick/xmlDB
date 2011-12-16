@@ -229,8 +229,8 @@ function g_calculateCastTime( castTimeStart, castTimeEnd, intervals, level ) {
 
 var g_items = null;
 var g_spells = null;
-// epic: 8040C0
-/** @const */ var g_color = new Array("#999999","#FFFFFF","#00DD00","#4080F0","#C080FF","#DD6600","#E5CC80","#E5CC80");
+// epic: 8040C0 B090E0
+/** @const */ var g_color = new Array("#bbbbbb","#FFFFFF","#00DD00","#40A0FF","#DD80FF","#FF8000","#E5CC80","#E5CC80");
 
 /** @const */ var CALC_RATINGS = 40;
 /** @const */ var MH = 0;

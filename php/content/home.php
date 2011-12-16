@@ -17,7 +17,7 @@
 	{
 		$g_content .=
 			'
-			<div class="ne_title'. ($i!=0 ? '_old' : '' ) .'">&raquo; '.$news[$i]['title'].'</div>
+			<div class="ne_title'. ($i!=0 ? '_old' : '' ) .'">'.$news[$i]['title'].'</div>
 			<div class="ne_header">
 					By <span class="'
 						.$user_role_to_css_class[$news[$i]['creatorRole']].'">'.$news[$i]['creator'].
@@ -30,7 +30,7 @@
 			'.($i==0?$news[$i]['content']:shorten($news[$i]['content_plain'],100).'&nbsp<a class="ne_read_more" href="?topic='.(int)$news[$i]['topicId'].'">read more</a>').'
 			</div>
 			<div class="ne_cl'.($i!=0 ? ' ne_cl_old' : '' ).'">
-				<a href="?topic='.(int)$news[$i]['topicId'].'">'.(($news[$i]['posts']-1)<=0?'No Comments':($news[$i]['posts']-1).' Comments').'</a>
+				<a class="fo_comment_link" href="?topic='.(int)$news[$i]['topicId'].'">'.(($news[$i]['posts']-1)<=0?'No Comments':($news[$i]['posts']-1).' Comments').'</a>
 			</div>';
 	}
 	if( 0 == count($news) )
@@ -51,13 +51,14 @@
 	{
 		$g_content .= '
 					<div class="fo_recent' . ( $i == (count($new)-1) ? '_last' : '' ) . ( $i % 2 == 0 ? " fo_cell_bg1" : " fo_cell_bg2" ) . '">
-						<div class="forum_time">Posted by 
-							<span class="'.$user_role_to_css_class[$new[$i]['role']].'">'.
+						<div class="forum_time"><span class="'.$user_role_to_css_class[$new[$i]['role']].'">'.
 								$new[$i]['name'].
-							'</span> in <a class="fo_header_subforum_link" href="?forum=' . $new[$i]['forumId'] . '">'.
+							'</span> '.
+							date("M jS Y g:i A",(int)$new[$i]['created']).
+							' in <a class="fo_header_subforum_link" href="?forum=' . $new[$i]['forumId'] . '">'.
 							shorten($new[$i]['forum'], 20).
-							'<a>, '.
-							date("M jS Y g:i A",(int)$new[$i]['created']).' in</div>
+							'<a>'.
+							'</div>
 						<div>'.forum_topic_link( $new[$i]['flag'], $new[$i]['locked'], $new[$i]['topicId'], $new[$i]['title'], $new[$i]['posts'], $new[$i]['page'], 60 ).'</div>
 					</div>';
 	}

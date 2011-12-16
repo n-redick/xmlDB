@@ -5,16 +5,10 @@
  */
 function Inventory( character )
 {
-	this.eventMgr = new EventManager([
-		"item_added", 
-		"item_removed", 
-		"items_swapped",
-		"preview_set",
-		"preview_removed"
-	]);
 	this.items = new Array(INV_ITEMS);					
 	this.gemCount = [0,0,0,0,0];
 	this.character = character;
+	this.reforgePreview = null;
 	
 	for(var i=0;i<this.items.length;i++)
 	{
@@ -46,7 +40,6 @@ Inventory.validInventorySlots = [			1,							//0 head
 Inventory.SLOTS = 19;
 
 Inventory.prototype = {
-	eventMgr: null,
 	items : [],
 	validInventorySlots : [],
 	
@@ -57,16 +50,11 @@ Inventory.prototype = {
 	oldGemRef : null,
 	enchantPreview : false,
 	enchantPreviewRef : null,
+	reforgePreview: {},
 	
 	gemCount : [],
 	canDualWieldTwoHanders : false,
 	character : null,
-	addListener: function( event, handler ){
-		this.eventMgr.addListener(event, handler);
-	},
-	addPropagator: function( event, handler ){
-		this.eventMgr.addPropagator(event, handler);
-	},
 	/**
 	 * @param {number} slot
 	 */
@@ -95,6 +83,21 @@ Inventory.prototype = {
 			this.__shiftLeft(16);
 		}
 	},
+	setReforgePreview: function( slot, reduce, add ) {
+		var itm = this.items[slot][0];
+		
+		if( itm ) {
+			this.removePreview();
+			
+			this.reforgePreview = { 'slot': slot, 'oldReduced': itm.reducedStat, 'oldAdded': itm.addedStat };
+
+			itm.restore();
+			if( reduce != -1 ) {
+				itm.reforge( reduce, add );
+			}
+		}
+		
+	},
 	// FIXME if the gem is changed while the preview is active, the gem is later removed with the preview
 	// this is fixed by removing all previews if an item/gem is equipped, see Engine
 	/**
@@ -116,8 +119,6 @@ Inventory.prototype = {
 		}
 		this.previewSlot = slot;
 		this.previewSocket = socket;
-		
-		this.eventMgr.fire("preview_set", []);
 	},
 	
 	/**
@@ -132,14 +133,12 @@ Inventory.prototype = {
 		
 		if( enchantSpell != null && enchantSpell.effects[0] != null && enchantSpell.effects[0].secondaryEffect ) {
 			enchant = enchantSpell.effects[0].secondaryEffect;
-		};
+		}
 		
 		this.enchantPreviewRef = enchant;
 		this.oldEnchantRef = this.items[slot][0].addEnchant(enchant);
 		this.previewSlot = slot;
 		this.enchantPreview = true;
-		
-		this.eventMgr.fire("preview_set", []);
 	},
 	
 	/***/
@@ -154,14 +153,21 @@ Inventory.prototype = {
 				this.items[this.previewSlot][0].addEnchant( this.oldEnchantRef );
 			}
 		}
+		if( this.reforgePreview ) {
+			var itm = this.items[this.reforgePreview['slot']][0];
+
+			itm.restore();
+			if( this.reforgePreview['oldReduced'] != -1 ) {
+				itm.reforge(this.reforgePreview['oldReduced'], this.reforgePreview['oldAdded']);
+			}
+			this.reforgePreview = null;
+		}
 		this.oldEnchantRef = null;
 		this.previewItem = null;
 		this.previewSlot = -1;
 		this.previewSocket = -1;
 		this.enchantPreview = false;
 		this.enchantPreviewRef = null;
-
-		this.eventMgr.fire("preview_removed", []);
 	},
 	
 	/**
@@ -211,8 +217,6 @@ Inventory.prototype = {
 			}
 			
 		}
-		
-		this.eventMgr.fire('item_added', [slot]);
 		
 		return valid;
 	},
@@ -269,7 +273,6 @@ Inventory.prototype = {
 		if(this.items[slot][0] != null){
 			this.__shiftLeft(slot);
 		}
-		this.eventMgr.fire('item_removed', [slot]);
 	},
 	
 	/**
@@ -284,7 +287,6 @@ Inventory.prototype = {
 			this.items[slot][0] = this.items[slot][index];
 			this.items[slot][index] = tmp;
 		}
-		this.eventMgr.fire('items_swapped', [slot]);
 	},
 	
 	/**
@@ -293,7 +295,7 @@ Inventory.prototype = {
 	 */
 	get : function(slot)
 	{
-		if( this.previewSlot == slot && this.previewItem != null )
+		if( this.previewSlot == slot && this.previewSocket == -1 && this.previewItem != null )
 		{
 			return this.previewItem;	
 		}
@@ -413,7 +415,7 @@ Inventory.prototype = {
 			if( this.items[i][0] ) {
 				this.items[i][0].restore();
 			}
-		};
+		}
 	},
 	reforgeFromArray : function( refArr ) {
 		this.restoreAllItems();
@@ -436,7 +438,7 @@ Inventory.prototype = {
 			if( this.items[i][0] ) {
 				arr.push([this.items[i][0].addedStat,this.items[i][0].reducedStat]);
 			}
-		};
+		}
 		return arr;
 	},
 	

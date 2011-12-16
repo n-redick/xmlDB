@@ -33,49 +33,45 @@
 	var tt = new TooltipImpl();
 	function g_onLoad() {
 			
-		var pl = new ProfileList();
-		
-		document.getElementById('list_parent').appendChild(pl.gui.node);
-		
-		pl.addListener( 'update', new Handler(
+		var il = new ProfileList();
 				
-			function( list ) {
-				new ListBackEndProxy("php/interface/profiles/get_profiles.php").update(list);
-			}, window
-		));
-	
-		if( g_serialized ) {
+		il.setData( g_serialized );
+		
+		if( g_argString ) {
+		
+			il.set(g_argString, "", "", g_page);
 			
-			//pl.showStaticLinks(true);
-			
-			pl.setData( g_serialized );
-			
-			if( g_argString ) {
-			
-				pl.set(g_argString, "", "", g_page);
-				
-				//pl.gui.showFilter( true );
-			}
-			/*
-			pl.addListener( 'show_tooltip', new Handler(
-				function( itm ) {
-					g_showItemTooltip( itm.id );
-				}, window
-			));
-			
-			pl.addListener( 'move_tooltip', new Handler(
-				function() {
-					g_moveTooltip();
-				}, window
-			));
-			
-			pl.addListener( 'hide_tooltip', new Handler(
-				function() {
-					g_hideTooltip();
-				}, window
-			));
-			*/
+			il.gui.showFilter( true );
 		}
+		
+		DOM.append('list_parent', il.gui.node);
+		
+		var ilHandler = new Handler(function( e ){
+			if( e.is('show_tooltip') ) {
+				//g_showItemTooltip( e.get('entity').id );
+			}
+			else if( e.is('move_tooltip') ) {
+				//g_moveTooltip();
+			}
+			else if( e.is('hide_tooltip') ) {
+				//g_hideTooltip();
+			}
+			else if( e.is('update') ) {
+				window.location.search = TextIO.queryString({ 
+					'profiles': il.getArgumentString().replace(/\;/g,"_"), 
+					'p': il.page, 
+					'o': il.order+"."+(il.orderDirection==List.ORDER_ASC?'asc':'desc')+"_" });
+			}
+		}, this);
+		
+		var ilObserver = new GenericObserver([
+			'show_tooltip',
+			'move_tooltip',
+			'hide_tooltip',
+			'update',
+		], ilHandler);
+		
+		il.addObserver(ilObserver);
 	}
 </script>
 

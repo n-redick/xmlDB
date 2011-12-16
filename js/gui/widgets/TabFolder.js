@@ -18,9 +18,19 @@ function TabFolder( childNodes, linkNames, cssClass ) {
 }
 TabFolder.prototype = {
 	menu: null, node: null, shown: 0, __menu: null, __folder: null,
+	onChangeHandler: null,
+	setOnChangeHandler: function( handler ) {
+		this.onChangeHandler = handler;
+	},
 	show: function( index ) {
+		var old = this.shown;
+		
 		this.shown = index;
 		this.__folder.show(index);
 		this.__menu.select(index);
+		
+		if( this.onChangeHandler ) {
+			this.onChangeHandler.notify( [index, old] );
+		}
 	}
 };

@@ -27,12 +27,13 @@ AbstractFilter.prototype = {
 	default:
 		throw new Error("Unable to create operator select for "+valueType+"!");
 	}
+	tmp.node.className = 'fi_op_select';
 	return tmp;
 	},
 	/**
 	 * @return {string}
 	 */
 	getArgumentString: function() {
-		throw new CalledAbstractMethodException( "AbstractFilter", "getArgumentString");
+		throw new NotImplementedException( "AbstractFilter", "getArgumentString");
 	}
 };

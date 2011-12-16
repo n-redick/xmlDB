@@ -204,5 +204,8 @@ var GameInfo = {
 		default: 
 			return false;
 		}
+	},
+	getAvailabelGlyphSlots: function( level ) {
+		return level < 25 ? 0 : (level < 50 ? 1 : (level < 75 ? 2 : 3));
 	}
 };

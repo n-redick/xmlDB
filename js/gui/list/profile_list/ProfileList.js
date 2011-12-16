@@ -2,7 +2,6 @@ function ProfileList() {
 	List.call( 
 		this,
 		new ProfileListGui(List.toCategories(ProfileList.FILTER_DATA)),
-		new ProfileListDeserializer(),
 		List.toPlainFilterData(ProfileList.FILTER_DATA),
 		['ismine'],
 		ProfileList.ORDER_ID

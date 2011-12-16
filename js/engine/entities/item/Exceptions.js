@@ -1,5 +1,7 @@
 /**
  * @param {Item} itm
+ * @param {number} red
+ * @param {number} add
  * @param {number} cause
  * @returns {InvalidReforgeException}
  */
@@ -45,7 +47,7 @@ InvalidItemException.prototype = {
 		case InvalidItemException.CAUSE_UNIQUE:
 			return "You are already wearing this item!";
 		default:
-			return "Unable to equip "+itm.name+" due to unknown reason!";
+			return "Unable to equip "+this.itm.name+" due to unknown reason!";
 		}
 	}
 };

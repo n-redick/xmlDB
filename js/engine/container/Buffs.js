@@ -47,30 +47,63 @@
 
 /**
  * @constructor;
- * @returns {Buffs}
  */
 function Buffs() {
 	this.buffs = new Object();
-	this.eventMgr = new EventManager([
-		"buff_added",
-		"buff_removed",
-		"buff_stack_change",
-		"internal_buff_added",
-		"internal_buff_removed"
-	]);
+	this.eventMgr = new GenericSubject();
+	this.eventMgr.registerEvent('change', ['silent']);
+	this.eventMgr.registerEvent('remove_buff', ['buff','silent']);
+	this.eventMgr.registerEvent('remove_stack', ['buff','silent']);
 }
+
+
+Buffs.getAvailableBuffs = function( handler, characterScope ) {
+	Ajax.request('php/interface/get_buffs.php', new Handler(function( response ) {		
+		try {
+			var obj = Ajax.getResponseObject(response);
+			var r = {};
+			
+			for( var k in obj ) {
+				r[k] = [];
+				for( var j=0; j<obj[k].length; j++ ) {
+					
+					if( k === "Food" ) {
+						var i = new Item(obj[k][j]);
+						ItemCache.set(i);
+						var ab = AvailableBuff.fromItem(i, characterScope);
+						if( ab ) {
+							r[k].push(ab);
+						}
+					}
+					else {
+						var s = new Spell(obj[k][j]);
+						SpellCache.set(s);
+						r[k].push(AvailableBuff.fromSpell(s, characterScope));
+					}
+				}
+			}
+			handler.notify([r,null]);
+		}
+		catch( e ) {
+			handler.notify([null,e]);
+		}
+	}, this), []);
+},
 
 Buffs.prototype = {
 	/** @type {Object} */
 	buffs : {},
 	professionBuffIds : [],
+	addObserver: function(observer) {
+		this.eventMgr.addObserver(observer);
+	},
 	/**
 	 * @param {Buff} buff
 	 */
 	set : function( buff ) {
 		this.buffs[buff.spell.id] = buff;
 		//
-		this.eventMgr.fire('buff_added', buff.spell.id);
+		this.eventMgr.fire('change', {'silent': false});
 		
 	},
 	setProfessionBuffs : function( spellIds ) {
@@ -89,17 +122,16 @@ Buffs.prototype = {
 			b.addStack();
 		}
 		//
-		this.eventMgr.fire('buff_stack_change', spell.id);
+		this.eventMgr.fire('change', {'silent': false});
 	},
-	
 	addInternal: function( spellId, isUnremovable, isDummy ) {
-		SpellCache.asyncGet( spellId, new Handler( this.add, this ), [spellId, isUnremovable, true, true, isDummy, Buff.NO_ELIXIR] );
+		SpellCache.asyncGet( spellId, new Handler( this._add, this ), [spellId, isUnremovable, true, true, isDummy, Buff.NO_ELIXIR] );
 	},
 	/**
 	 * @param {number} spellId
 	 */
 	add : function( spellId, self ) {
-		SpellCache.asyncGet( spellId, new Handler( this.add, this ), [spellId, false, false, self, false, Buff.NO_ELIXIR] );
+		SpellCache.asyncGet( spellId, new Handler( this._add, this ), [spellId, false, false, self, false, Buff.NO_ELIXIR] );
 	},
 	/**
 	 * @param {number} spellId
@@ -257,12 +289,7 @@ Buffs.prototype = {
 			}
 		}
 		//
-		if( internal ) {
-			this.eventMgr.fire('internal_buff_added', buff.spell.id);
-		}
-		else {
-			this.eventMgr.fire('buff_added', buff.spell.id);
-		}
+		this.eventMgr.fire('change', {'silent': internal ? true : false });
 	},
 	/**
 	 * 
@@ -293,17 +320,14 @@ Buffs.prototype = {
 		}
 		if( this.buffs[spellId] && this.buffs[spellId].stacks > 1 ) {
 			this.buffs[spellId].removeStack();
+			this.eventMgr.fire('remove_stack', {'buff': this.buffs[spellId],'silent': internal ? true : false});
 		}
 		else {
+			var buff = this.buffs[spellId];
 			delete this.buffs[spellId];
+			this.eventMgr.fire('remove_buff', {'buff': buff,'silent': internal ? true : false});
 		}
 		//
-		if( internal ) {
-			this.eventMgr.fire( 'internal_buff_removed', spellId );
-		}
-		else {
-			this.eventMgr.fire( 'buff_removed', spellId );
-		}
 	},
 	/**
 	 * @param {Array} spellIds
@@ -325,7 +349,6 @@ Buffs.prototype = {
 /**
  * @constructor
  * @param spellId
- * @returns {MorePowerfulBuffException}
  */
 function MorePowerfulBuffException( spellId ) {
 	this.spellId = spellId;

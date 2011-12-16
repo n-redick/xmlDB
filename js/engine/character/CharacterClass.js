@@ -1,15 +1,14 @@
 /**
  * @constructor
  * @param serialized
- * @returns {CharacterClass}
  */
 function CharacterClass( serialized ) {
-	this.eventMgr = new EventManager([
-		'shapeform_change',
-		'presence_change',
-		'glyph_added',
-		'glyph_removed',
-	]);
+	this.eventMgr = new GenericSubject();
+	this.eventMgr.registerEvent('shapeform_change', ['new_shape','old_shape']);
+	this.eventMgr.registerEvent('presence_change', ['new_presence','old_presence']);
+	this.eventMgr.registerEvent('glyph_added', ['glyph']);
+	this.eventMgr.registerEvent('glyph_removed', ['glyph']);
+	//
 	var i,j=0;
 	this.serialized = serialized;
 	this.stats = new Array();
@@ -26,10 +25,10 @@ function CharacterClass( serialized ) {
 	for( i=0;i<serialized[4].length;i++){
 		this.classSpells[i] = new SkillLineAbility(serialized[4][i]);
 	}
-	this.availableGlyphs = [[],[],[]];
+	this.availableGlyphs = [];
 	for( j=0;j<serialized[5].length;j++) {
 		for( i=0;i<serialized[5][j].length;i++){
-			this.availableGlyphs[j][i] = new Glyph(serialized[5][j][i]);
+			this.availableGlyphs.push(new Glyph(serialized[5][j][i]));
 		}
 	}
 	if( serialized[6] ) {
@@ -81,11 +80,23 @@ CharacterClass.prototype = {
 	//
 	//#########################################################################
 	//
+	addPropagator: function( event, propagator ) {
+		this.eventMgr.addPropagator(event, propagator);
+	},
+	removePropagator: function( event, propagator ) {
+		this.eventMgr.removePropagator(event, propagator);
+	},
+	addObserver: function( observer ) {
+		this.eventMgr.addObserver(observer);
+	},
+	removeObserver: function( observer ) {
+		this.eventMgr.removeObserver(observer);
+	},
 	setLevel: function( level ) {
 		this.level = level;
 		this.talents.setLevel(level);
 		
-		this.availableGlyphSlots = level < 25 ? 0 : (level < 50 ? 1 : (level < 75 ? 2 : 3));
+		this.availableGlyphSlots = GameInfo.getAvailabelGlyphSlots(level);
 		
 		for( var i=this.availableGlyphSlots; i<3; i++ ) {
 			this.glyphs[0][i] = null;
@@ -101,22 +112,22 @@ CharacterClass.prototype = {
 	//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 	//
 	setShapeform: function( shapeform ) {
-		
-		this.shapeForm = shapeform;
-		if( this.shapeForm != 0 ) {
+		var oldShape = this.shape;
+		this.shapeform = shapeform;
+		if( this.shapeform != 0 ) {
 			
 			if( this.shapesRef[this.shapeform] ) {
 				this.shape = this.shapesRef[this.shapeform];
 			}
 			else {
-				throw new InvalidShapeformException( shapeform );
+				throw new IllegalArgumentException();
 			}
 		}
 		else {
 			this.shape = null;
 		}
 
-		this.eventMgr.fire('shapeform_change', {'shape': this.shape} );
+		this.eventMgr.fire('shapeform_change', {'new_shape': this.shape, 'old_shape': oldShape} );
 		
 	},
 	setPresence: function( presenceId ) {
@@ -275,30 +286,27 @@ CharacterClass.prototype = {
 	//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 	//
 	/**
-	 * @param {number} type
 	 * @param {Glyph} glyph
 	 */
-	addGlyph: function( type, glyph ) {
+	addGlyph: function( glyph ) {
 		var i, n = -1;
 		if( this.availableGlyphSlots == 0  ) {
 			throw new GlyphAddException(GlyphAddException.CAUSE_CHARACTER_LEVEL, glyph);
 		}
-		if( glyph != null ) {
-			for( i=0; i<this.availableGlyphSlots; i++ ) {
-				if( this.glyphs[type][i] == null ) {
-					n = n == -1 ? i : n;
-					continue;
-				}
-				if( this.glyphs[type][i].id == glyph.id ) {
-					throw new GlyphAddException(GlyphAddException.CAUSE_DUPLICATE, glyph);
-				}
+		for( i=0; i<this.availableGlyphSlots; i++ ) {
+			if( this.glyphs[glyph.type][i] == null ) {
+				n = n == -1 ? i : n;
+				continue;
+			}
+			if( this.glyphs[glyph.type][i].id == glyph.id ) {
+				throw new GlyphAddException(GlyphAddException.CAUSE_DUPLICATE, glyph);
 			}
 		}
 		if( n==-1 ) {
 			throw new GlyphAddException(GlyphAddException.CAUSE_NO_SLOTS_LEFT, glyph);
 		}
 		
-		this.glyphs[type][n] = glyph;
+		this.glyphs[glyph.type][n] = glyph;
 		this.eventMgr.fire('glyph_added', { 'glyph': glyph });
 	},
 	/**
@@ -312,24 +320,27 @@ CharacterClass.prototype = {
 };
 /**
  * @constructor
- * @param cause
- * @returns {GlyphAddException}
+ * @param {number} cause
+ * @param {Glyph} glyph
  */
 function GlyphAddException( cause, glyph ) {
 	this.cause = cause;
 }
 GlyphAddException.prototype = {
-	cause: 0
+	cause: 0,
+	toString: function()  {
+		switch( this.cause ) {
+		case GlyphAddException.CAUSE_CHARACTER_LEVEL: 
+			return "Unable to add Glyph, there are no empty slots available!";
+		case GlyphAddException.CAUSE_DUPLICATE: 
+			return "Unable to add Glyph, this Glyph is already in use!";
+		case GlyphAddException.CAUSE_NO_SLOTS_LEFT:
+			return "Unable to add Glyph, there are no empty slots available!";
+		default: 
+			return "Unable to add Glyph, due to unknown reasons!";
+		}
+	}
 };
 GlyphAddException.CAUSE_CHARACTER_LEVEL = 0;
-GlyphAddException.CAUSE_DUPLICATE = 0;
-GlyphAddException.CAUSE_NO_SLOTS_LEFT = 0;
-/**
- * @constructor
- */
-function InvalidShapeformException( shapeform ) {
-	this.shapeform = shapeform;
-}
-InvalidShapeformException.prototype = {
-	shapeform: null
-};
+GlyphAddException.CAUSE_DUPLICATE = 1;
+GlyphAddException.CAUSE_NO_SLOTS_LEFT = 2;

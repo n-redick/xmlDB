@@ -1,7 +1,7 @@
 <?php
 
-include '../../common.php';
-include '../../db.php';
+require_once '../../common.php';
+require_once '../../db.php';
 
 session_start();
 
@@ -108,7 +108,7 @@ function save_character_profile( $serialized, $profile_id, &$error ) {
 	));
 	
 	if( $duplicate_record ) {
-		$error = "Duplicate character profile found!<br /><a target='_blank' href='?profile=".$duplicate_record['ID']."'>Click here to view</a>";
+		$error = "Duplicate character profile found!<br /><a class='sa_duplicate_link' target='_blank' href='?profile=".$duplicate_record['ID']."'>Click here to view</a>";
 	}
 	else {
 	

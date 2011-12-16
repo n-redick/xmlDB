@@ -1,19 +1,4 @@
-<!-- css -->
 <link href="talent_sheet.css" rel="stylesheet" />
-<link href="tooltip.css" rel="stylesheet" />
-<!-- gui lib -->
-<script src="js/gui_lib/LayeredDiv.js" type="text/javascript"></script>
-<script src="js/gui_lib/StaticGrid.js" type="text/javascript"></script>
-<script src="js/gui_lib/StackedDiv.js" type="text/javascript"></script>
-<!-- chardev lib 8.0 -->
-<script src="js/chardev_lib/Tools.js" type="text/javascript"></script>
-<script src="js/chardev_lib/Listener.js" type="text/javascript"></script>
-<script src="js/chardev_lib/Engine.js" type="text/javascript"></script>
-<script src="js/chardev_lib/Tooltip.js" type="text/javascript"></script>
-<script src="js/chardev_lib/Spell.js" type="text/javascript"></script>
-<script src="js/chardev_lib/Talent.js" type="text/javascript"></script>
-<script src="js/chardev_lib/Talents.js" type="text/javascript"></script>
-<script src="js/chardev_lib/gui/TalentIcon.js" type="text/javascript"></script>
 <!-- data -->
 <script type="text/javascript">
 	var g_serialized = null;
@@ -28,25 +13,22 @@
 <script type="text/javascript">
 	function g_onLoad() {
 		var talents = null;
+		var talentsGui = null;
+		var character = null;
 		if(g_serialized) {
 			talents = new Talents(2,g_serialized,false);
-			Tools.setChild(document.getElementById('talent_parent'),talents.getNode());
-			talents.update();
+			talentsGui = new TalentsGui();
+			character = new Character();
+			
+			new TalentsAdapter( talents, talentsGui, character );
+			
+			DOM.set(document.getElementById('talent_parent'),talentsGui.node);
 		}
 	}
 </script>
 
 <?php 
 
-	$g_content = "
-	".$template_forum_bg_t."
-	<table style='width:750px'>
-		<tr>
-			<td>
-				<div id='talent_parent'><h3 style='text-align:center'>Loading...</h3></div>
-			</td>
-		</tr>
-	</table>
-	".$template_forum_bg_b;
+	$g_content = "<div class='content_wrapper'><div class='content_header'>Talent Planner</div><div id='talent_parent'><div class='loading'>Loading...</div></div></div>";
 
 ?>

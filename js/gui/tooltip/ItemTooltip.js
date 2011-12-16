@@ -121,7 +121,7 @@ var ItemTooltip = {
 		//
 		//
 		//
-		html = "<table cellpadding='0px' cellspacing='0px' class='tooltip_table'>";
+		html = "<table cellpadding='0px' cellspacing='0px' class='tooltip_table tt_item'>";
 		
 		html += Tools.addTr1("<div class='tooltip_title' style='color:"+g_color[itm.quality]+"; white-space:nowrap;'>"+itm.name+"</div>");
 		
@@ -323,7 +323,7 @@ var ItemTooltip = {
 			else {
 				html += Tools.addTr1(
 					"<span class='"+
-					(chrLevel>=itm.requiredCharacterLevel?"white":"red")+
+					(chrLevel>=itm.requiredCharacterLevel?"":"red")+
 					"'>"+TextIO.sprintf1(locale['reqLevel'],itm.requiredCharacterLevel)+
 					"</span>"
 				);
@@ -346,7 +346,7 @@ var ItemTooltip = {
 		
 		for ( i = 0; i < 5; i++) {
 			if ( itm.spells[i] != null ) {
-				var spellDesc = itm.spells[i].getDescription();
+				var spellDesc = itm.spells[i].getDescription(character);
 				var cd = "";
 				var trigger = "";
 				if ( spellDesc ) {
@@ -369,7 +369,7 @@ var ItemTooltip = {
 					html += Tools.addTr1(
 						"<span class='green'>" + trigger + ": " + 
 						( g_settings.isPlanner ? "" : "<a class='tooltip_spell_desc_link' href='?spell="+itm.spells[i].id+"'>" )+
-						TextIO.parse(spellDesc,character).join("<br/>") + " " +
+						spellDesc.join("<br/>") + " " +
 						( g_settings.isPlanner ? "" : "</a>" ) + 
 						cd + "</span>"  
 					);
@@ -388,7 +388,7 @@ var ItemTooltip = {
 			for ( i = 0; i < 5; i++) 
 			{
 				var color = "#888888";
-				if (itm.gemProperties.enchant.isConditionActive(i,( character != null ? character.inventory.gemCount : null ))) 
+				if (itm.gemProperties.enchant.isConditionActive(i,( character != null ? character.getGemCount() : null ))) 
 				{
 					color = "#FFFFFF";
 				}
@@ -467,9 +467,9 @@ var ItemTooltip = {
 				
 				if ( character != null ) 
 				{
-					for ( i = 0; i < 20; i++) 
+					for ( i = 0; i < Inventory.SLOTS; i++) 
 					{
-						tmp = character.inventory.get(i);
+						tmp = character.getEquippedItem( i, 0 );
 						
 						if ( tmp != null && tmp.itemSet != null && tmp.itemSet.id == itm.itemSet.id ) 
 						{
@@ -503,7 +503,7 @@ var ItemTooltip = {
 							"<div class='" + (equipped>=req ? "tooltip_set_bonus_active" : "tooltip_set_bonus_inactive") + "'>" + 
 							"(" + req + ") " + locale['Set'] + ": " +
 							( g_settings.isPlanner ? "" : "<a class='tooltip_spell_desc_link' href='?spell="+itm.itemSet.bonuses[i].id+"'>" ) +
-							TextIO.parse(itm.itemSet.bonuses[i].getDescription(),character) + 
+							TextIO.nl2br(itm.itemSet.bonuses[i].getDescription(character)) + 
 							( g_settings.isPlanner ? "" : "</a>" ) + 
 							"</div>");
 					}

@@ -52,6 +52,6 @@ Overlay.prototype.center = function( node ) {
 
 Overlay.prototype.showDisabled = function( node ) {
 	this.disable();
-	Tools.setChild(this._overlay,node);
+	DOM.set(this._overlay,node);
 	this.center(node);
 };

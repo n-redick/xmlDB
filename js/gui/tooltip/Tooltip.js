@@ -15,9 +15,36 @@ TooltipImpl.prototype = {
 	errorShown: false,
 	errorNode: null,
 	x: 0, y: 0,
+	__layoutGrid: null,
+	hideTooltip: false,
+	hidable: false,
 	//
 	//
 	//
+	setHidable: function(b) {
+		this.hidable = b;
+	},
+	setParent: function( node ) {
+		this.content = document.createElement("div");
+		this.div = document.createElement("div");
+		this.div.className = "tooltip_div";
+		
+		var sg = new StaticGrid(3,3);
+		sg.cells[0][0].innerHTML = "<div class='tt_bg_lt'></div>";
+		sg.cells[0][1].className = 'tt_bg_t';
+		sg.cells[0][2].innerHTML = "<div class='tt_bg_rt'></div>";
+		sg.cells[1][0].className = 'tt_bg_l';
+		sg.cells[1][1].appendChild(this.content); this.content.className = 'tt_bg';
+		sg.cells[1][2].className = 'tt_bg_r';
+		sg.cells[2][0].innerHTML = "<div class='tt_bg_lb'></div>";
+		sg.cells[2][1].className = 'tt_bg_b';
+		sg.cells[2][2].innerHTML = "<div class='tt_bg_rb'></div>";
+
+		this.__layoutGrid = sg;
+		
+		this.div.appendChild(sg.node);
+		node.appendChild(this.div);
+	},
 	__createDiv : function() {
 		this.content = document.createElement("div");
 		this.div = document.createElement("div");
@@ -34,6 +61,8 @@ TooltipImpl.prototype = {
 		sg.cells[2][1].className = 'tt_bg_b';
 		sg.cells[2][2].innerHTML = "<div class='tt_bg_rb'></div>";
 		
+		this.__layoutGrid = sg;
+		
 		this.div.appendChild(sg.node);
 		document.body.appendChild(this.div);
 	},
@@ -41,14 +70,17 @@ TooltipImpl.prototype = {
 		if( this.div == null ){
 			this.__createDiv();
 		}
-
+		
 		this.div.style.width = "";
 		this.div.style.whiteSpace = "nowrap";
 		this.content.innerHTML = html;
 		this.div.style.display = "block";
 		
-		if( this.div.offsetWidth > TT_MAX_SIZE ) {
+		if( this.__layoutGrid.node.offsetWidth > TT_MAX_SIZE ) {
 			this.__setTooltipSize(TT_MAX_SIZE);
+		}
+		else {
+			this.div.style.width = this.__layoutGrid.node.offsetWidth + "px";
 		}
 	},
 	__setTooltipSize: function( size ) {
@@ -89,8 +121,8 @@ TooltipImpl.prototype = {
 		var lBody = document.body.scrollLeft;
 		var tBody = document.body.scrollTop;
 		
-		node.style.marginLeft = Math.max(0, lBody + ((size[0] - wNode) >> 1) ) + "px";
-		node.style.marginTop = Math.max(0, tBody + ((size[1] - hNode ) >> 1) ) + "px";
+		node.style.marginLeft = Math.max(0, lBody + (size[0]/2 - wNode/2)) + "px";
+		node.style.marginTop = Math.max(0, tBody + (size[1]/3 - hNode/2)) + "px";
 	},
 	__disable: function() {
 		if( this.overlay == null ) {
@@ -130,6 +162,14 @@ TooltipImpl.prototype = {
 		if( event.keyCode == 27 && this.disabled ) {
 			this.enable();
 		}
+		if( event.keyCode == 17 ) {
+			this.hideTooltip = true;
+		}
+	},
+	handleKeyUp: function( event ) {
+		if( event.keyCode == 17 ) {
+			this.hideTooltip = false;
+		}
 	},
 	//
 	//
@@ -137,10 +177,17 @@ TooltipImpl.prototype = {
 	//
 	//
 	initialise: function() {
-		Listener.add(document.body,"mousemove",Tooltip.handleMove, Tooltip, null );
-		Listener.add(document.body,"keydown",Tooltip.handleKeyDown, Tooltip, null );
+		Listener.add( window,"mousemove",Tooltip.handleMove, Tooltip, null );
+		Listener.add( window,"keydown",Tooltip.handleKeyDown, Tooltip, null );
+		Listener.add( window,"keyup",Tooltip.handleKeyUp, Tooltip, null );
 	},
 	showSlot: function(html,caller) {	
+		
+		if( this.hideTooltip && this.hidable ) {
+			this.hideTooltip = false;
+			return;
+		}
+		
 		var pos = this.__getPosition(caller);
 		this.__showTooltip(html);		
 		pos = this.__improvePosition(pos[0] + pos[2] + 10,pos[1]);
@@ -154,7 +201,7 @@ TooltipImpl.prototype = {
 	},
 	showDisabled: function( node ) {
 		this.__disable();
-		Tools.setChild( this.overlay, node);
+		DOM.set( this.overlay, node);
 		this.__center(node);
 	},
 	enable: function() {
@@ -164,7 +211,10 @@ TooltipImpl.prototype = {
 		this.errorShown = false;
 	},
 	showError: function( str ) {		
-		var e = "<span class=\"tt_error_msg\">"+str+"</span>";
+		var e = "<div class=\"tt_error_msg\">" +
+					"<div class=\"tt_error_msg_title\">Error</div>" +
+					"<div class=\"tt_error_msg_content\">"+str+"</div>" +
+				"</div>";
 		
 		if( this.errorShown ) {
 			this.errorNode.innerHTML = e + "<br />" + this.errorNode.innerHTML;
@@ -193,15 +243,47 @@ TooltipImpl.prototype = {
 			this.__setTooltipSize(300);
 		}
 	},
+	showTalent: function( html, tree, row, col, node ) {
+		var pos = this.__getPosition(node);
+		
+		this.__showTooltip(html);
+		
+		this.__setTooltipSize(250);
+		
+		if (tree == 1 && col > 1 || tree == 2 ) {
+			this.div.style.left = (pos[0] - this.div.offsetWidth - 10) + "px";
+		}
+		else {
+			this.div.style.left = (pos[0] + pos[2] + 10) + "px";
+		}
+		if (row > 5) {
+			this.div.style.top = (pos[1] + pos[3] - this.div.offsetHeight )+"px";
+		}
+		else {
+			this.div.style.top = (pos[1])+"px";
+		}
+	},
 	showMovable: function( html ) {
+		
+		if( this.hideTooltip && this.hidable ) {
+			this.hideTooltip = false;
+			return;
+		}
+		
 		this.__showTooltip(html);
 		this.move();
 	},
 	show: function( html ) {
+		
+		if( this.hideTooltip && this.hidable ) {
+			this.hideTooltip = false;
+			return;
+		}
+		
 		this.__showTooltip(html);
 	}
 };
-var Tooltip = new TooltipImpl();
+var Tooltip = new TooltipImpl(); Tooltip.setHidable(true);
 //
 //#############################################################################
 //

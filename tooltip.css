@@ -7,12 +7,14 @@
 {
 	margin-left:10px;
 	color:#999999;
+	line-height: 150%;
 }
 
 .tooltip_set_item_active
 {
 	margin-left:10px;
 	color:#FFFF99;
+	line-height: 150%;
 }
 
 .tooltip_set_bonus_spacing
@@ -58,17 +60,28 @@
 .tooltip_div{
 	position:absolute;
 	color: #EEEEEE;
-	line-height:150%;
+	line-height:125%;
 	z-index:10;
 }
 
+.fixed_tooltip_div{
+	position:relative;
+	color: #EEEEEE;
+	z-index:10;
+	font-size: 11px;
+	line-height:120%;
+	margin: 0 auto;
+}
+
 .tooltip_title {
-	font-size:14px;
+	font-size:15px;
 }
 
 .tooltip_table{
 	width:100%;
 }
+
+.tt_item {padding: 3px 2px ;}
 
 .tooltip_talent_rank{
 	font-size:12px;
@@ -89,7 +102,7 @@
 }
 
 .tooltip_spell_description{
-	color:#DDBB00;
+	color:#FFCC33;
 }
 
 .tooltip_random_property
@@ -165,7 +178,7 @@
 .tt_overlay {
 	position: absolute;
 	display: none;
-	background-image: url(images/tooltip/bg.png);
+	background-image:url(images/site/disable_light.png);
 	z-index: 10000000;
 }
 
@@ -197,7 +210,7 @@
 	padding-left: 41px;
 	height: 31px;
 	line-height: 31px;
-	color: #EEEEEE;
+	color: #808080;
 }
 
 .tt_default_c
@@ -209,12 +222,22 @@
 	overflow: scroll;
 	background-color: #000000;
 }
-
+.tt_error_msg_title {
+	margin-bottom: 10px;
+	font-size: 20px;
+	font-weight: bold;
+}
+.tt_error_msg_content {
+}
 .tt_error_msg
 {
-	font-size: 24px;
-	font-family: Georgia, serif;
-	color: #CC3300;
+	text-align:left;
+	color: #C03300;
+	padding: 10px;
+	border: 1px solid #444040;
+	background-color: #262323;
+	margin: 0 auto;
+	display: inline-block;
 }
 
 .tt_msg
@@ -238,6 +261,7 @@
 
 .tt_close_notice 
 {
+	color: #808080;
 	font-size: 12px;
 	font-family: Tahoma, sans-serif;
 }
@@ -283,6 +307,7 @@
 	width: 100%;
 	padding-top: 10px;
 }
+.tt_note{color: #808080;x padding-top: 2px; text-align:center;}
 
 .tt_miss_g {
 	text-align: left;

@@ -1,5 +1,6 @@
 /**
  * @constructor
+ * 
  * @param {Array} serialized
  * @returns {Spell}
  */
@@ -98,11 +99,12 @@ Spell.prototype = {
 		//	TODO
 		//
 		runecost : 0,
-		getDescription : function(){
+		getDescription : function( characterScope ){
 			var desc = this.bustedDesc;
 			var match;
 			var cTime, eValue;
 			var mod;
+			
 			// replace scaling effect variables $m and $M
 			while( ( match = desc.match(/\$(s|m|M)\(-?(\d+),(-?\d+),(-?\d+),(-?\d+),(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)\)/i)) != null ) {
 				mod = parseFloat(match[8]);
@@ -123,7 +125,7 @@ Spell.prototype = {
 			while( ( match = desc.match(/\$time\((-?\d+(?:\.\d+)?)\)/i)) ) {
 				desc = desc.replace(match[0],TextIO.timeToString(match[1]));
 			}
-			return desc.replace(/\$pl/ig,this.level);
+			return TextIO.parse(desc.replace(/\$pl/ig,this.level), characterScope);
 		},
 		setLevel : function(level) {
 			var cTime, eValue, i;
@@ -162,7 +164,7 @@ Spell.prototype = {
 		/** @returns {Spell} */
 		clone : function(){ return new Spell(this.serialized);},
 		/** @returns {string} */
-		toString : function(){ return "Spell ["+this.id+"]: "+this.getDescription();},
+		toString : function(){ return "Spell ["+this.id+"]: "+this.getDescription(null);},
 		/** @returns {number} */
 		serialize : function(){return this.id;},
 		getStatWeightBasedScore : function( weights ) {

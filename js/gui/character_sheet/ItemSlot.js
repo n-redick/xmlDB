@@ -2,8 +2,6 @@
  * @author LeMartin
  */
 
-var II_DIMS = [[38,5,5],[16,0,0],[16,0,32],[16,32,32],[16,32,0]];
-
 /**
  * @constructor
  * @param {CharacterSheet} characterSheet
@@ -12,196 +10,197 @@ var II_DIMS = [[38,5,5],[16,0,0],[16,0,32],[16,32,32],[16,32,0]];
  */
 function ItemSlot( characterSheet, slot)
 {
+	var i;
+	
 	this.characterSheet = characterSheet;
 	this.node = document.createElement("div");
-	this.iconDivs = [];
-	this.borderDivs = [];
-	this.highlightDivs = [];
 	this.icons = [];
-	this.onLeftClickHandler = null;
 	this.slot = slot;
-	//
-	//	LISTENER
-	//
 	
-	var size = 32;
-	var top = 0;
-	var left = 0;
+	this.node.className = 'cs_is_p  cs_is_p_'+( slot < 8 ? 0 : (slot < 16 ? 1 : 2));
 	
-	this.node.className = "character_sheet_item_parent";
-	
-	for (var i = 0; i < 5; i++) 
-	{	
-		size = II_DIMS[i][0];
-		top  = II_DIMS[i][1];
-		left = II_DIMS[i][2];
-		
-		// image
+	for( i=0; i<4; i++ ) {
 		this.icons[i] = document.createElement("img");
-		this.icons[i].className = "character_sheet_item_image";
-		this.icons[i].style.width = size + "px";
-		this.icons[i].style.height = size + "px";
-		this.iconDivs[i] = document.createElement("div");
-		this.iconDivs[i].className = "character_sheet_item_image_div";
-		this.iconDivs[i].style.zIndex = 3 * (5 - i) - 2;
-		this.iconDivs[i].style.top = top + "px";
-		this.iconDivs[i].style.left = left + "px";
-		this.iconDivs[i].style.width = size + "px";
-		this.iconDivs[i].style.height = size + "px";
-		// border
-		this.borderDivs[i] = document.createElement("div");
-		this.borderDivs[i].className = "character_sheet_item_border";
-		this.borderDivs[i].style.zIndex = 3 * (5 - i) - 1;
-		this.borderDivs[i].style.top = (top - 1) + "px";
-		this.borderDivs[i].style.left = (left - 1) + "px";
-		this.borderDivs[i].style.width = size + "px";
-		this.borderDivs[i].style.height = size + "px";
-		// highlight
-		this.highlightDivs[i] = document.createElement("div");
-		this.highlightDivs[i].className = "character_sheet_item_highlight";
-		this.highlightDivs[i].oncontextmenu = function(){return false;};
-		Listener.add(this.highlightDivs[i],"mouseover",this.__onMouseOver,this,[i]);
-		Listener.add(this.highlightDivs[i],"mouseout",this.__onMouseOut,this,[i]);
-		Listener.add(this.highlightDivs[i],"click",this.__onClick,this,[i]);
-		Listener.add(this.highlightDivs[i],"contextmenu",this.__onContextMenu,this,[i]);
-		
-		this.highlightDivs[i].ondblclick = function(){return false;};
-		this.highlightDivs[i].onmousedown = function(){return false;};
-		this.highlightDivs[i].onmouseup = function(){return false;};
-		this.highlightDivs[i].style.zIndex = 3 * (5 - i);
-		this.highlightDivs[i].style.top = top + "px";
-		this.highlightDivs[i].style.left = left + "px";
-		this.highlightDivs[i].style.width = size + "px";
-		this.highlightDivs[i].style.height = size + "px";
-		//	
-		this.iconDivs[i].appendChild(this.icons[i]);
-		this.node.appendChild(this.iconDivs[i]);
-		this.node.appendChild(this.borderDivs[i]);
-		this.node.appendChild(this.highlightDivs[i]);
-		
-		if( i > 0 ) {
-			this.borderDivs[i].style.display = "none"; 
-			this.iconDivs[i].style.display = "none";
-			this.highlightDivs[i].style.display = "none";
+		if( i == 0 ) {
+			this.icons[i].className = "cs_is_img_large";
 		}
 		else {
-			this.icons[i].src = "images/charsheet/slots/slot_"+this.slot+".jpg";
+			this.icons[i].className = "cs_is_img_small";
 		}
+		
 	}
+	
+	this.itemParent = new LayeredDiv(2);
+	this.itemParent.layers[0].className = 'cs_is_ip cs_is_ip_'+( slot < 8 ? 0 : (slot < 16 ? 1 : 2));
+	this.itemParent.layers[0].appendChild( this.icons[0] );
+	this.itemParent.layers[1].className = 'character_sheet_item_highlight';
+	this.itemParent.layers[1].oncontextmenu = function(){return false;};
+	this.node.appendChild(this.itemParent.layers[0]);
+	
+
+	Listener.add( this.itemParent.layers[1], 'mouseover', this.showTooltip, this, [0] );
+	Listener.add( this.itemParent.layers[1], 'mouseout', this.hideTooltip, this, [0] );
+	Listener.add( this.itemParent.layers[1], 'click', this.__onClick, this, [0] );
+	Listener.add( this.itemParent.layers[1], 'contextmenu', this.__onContextMenu, this, [0] );
+	
+	
+	this.historyItems = [];
+	for( i=0; i<3; i++ ) {
+		this.historyItems[i] = new LayeredDiv(3);
+		
+		
+		document.createElement("div");
+		this.historyItems[i].layers[0].className = 'cs_is_hi';
+		
+		this.historyItems[i].layers[1].appendChild( this.icons[i+1] );
+		this.historyItems[i].layers[1].className = 'cs_is_hip';
+		this.historyItems[i].layers[1].style.zIndex = "";
+		
+		this.historyItems[i].layers[2].className = 'cs_is_hi_event_p';
+		
+		a = DOM.createAt( this.historyItems[i].layers[2], 'a', {'class': 'cs_is_hi_event', 'href':'javascript:'} )
+		a.oncontextmenu = function(){return false;};
+		
+		Listener.add( a, 'mouseover', this.showTooltip, this, [i+1] );
+		Listener.add( a, 'mouseout', this.hideTooltip, this, [i+1] );
+		Listener.add( a, 'click', this.__onClick, this, [i+1] );
+		Listener.add( a, 'contextmenu', this.__onContextMenu, this, [i+1] );
+		
+		this.node.appendChild(this.historyItems[i].layers[0]);
+	}
+	
+	this.items = [];
 }
 
 ItemSlot.prototype = {
-	node: null, iconDivs: [], borderDivs: [], 
-	highlightDivs: [], icons: [], slot: -1, 
+	node: null, icons: [], slot: -1, 
 	quality: -1, selected: false,
 	characterSheet: null,
+	items: [], itemParent: null, historyItems: [], historyItemsParent: [],
 	/**
 	 * @param {number} slot
 	 * @param {number} index
 	 */
-	__onMouseOver: function(index) { 
-		this.characterSheet.showSlotTooltip( this.slot, index ); 
-	},
-	/**
-	 * @param {number} slot
-	 * @param {number} index
-	 */
-	showTooltip: function( html, index ) {
-		if( index > 0 )
-		{
-			this.iconDivs[index].style.zIndex = 26;
-			this.borderDivs[index].style.zIndex = 27;
-			this.highlightDivs[index].style.zIndex = 28;
-		}
-		else {
-			//this._highlightDiv[index].style.backgroundImage = "url(images/site/item_slot_over.png)";
-		}
-		Tooltip.showSlot( html , this.highlightDivs[index]);
-	},
-	__onMouseOut: function(index) {
-		
-		this.iconDivs[index].style.zIndex = 3 * (5 - index) - 2;
-		this.borderDivs[index].style.zIndex = 3 * (5 - index) - 1;
-		this.highlightDivs[index].style.zIndex = 3 * (5 - index);
+	showTooltip: function( index ) {
+		if( this.items[index] ) {
 
-		this.characterSheet.hideSlotTooltip( this.slot, index ); 
+			if( index >= 1 ) {
+				this.icons[index].src = "images/icons/large/"+this.items[index].icon+".png";
+				this.icons[index].className = 'cs_is_img_large';
+				
+				DOM.addClass( this.historyItems[index-1].layers[1], 'cs_is_hip_enlarge');
+				
+				var tt = this.items[index].getTooltip() + "<div class='tt_note'>Press CTRL to prevent this tooltip from showing</div>"
+				
+				Tooltip.showSlot(  tt , this.icons[index]);
+			}
+			else {
+				Tooltip.showSlot( this.items[index].getTooltip() , this.icons[index]);
+			}
+		}
+
+		this.characterSheet.eventMgr.fire('item_tooltip_show',{
+			'slot': this.slot, 'index': index
+		});
+	},
+	hideTooltip: function(index) {
+
+		if( index >= 1 ) {
+			if( this.items[index] ) {
+				this.icons[index].src = "images/icons/gem/"+this.items[index].icon+".png";
+			}
+			else {
+				//
+			}
+			this.icons[index].className = 'cs_is_img_small';
+			
+			DOM.removeClass( this.historyItems[index-1].layers[1], 'cs_is_hip_enlarge');
+		}
+		
+		Tooltip.hide();
+
+		this.characterSheet.eventMgr.fire('item_tooltip_hide',{
+			'slot': this.slot, 'index': index
+		});
 	},
 	__onClick: function(index) {
-		this.characterSheet.leftClickItem( this.slot, index ); 
+		this.characterSheet.eventMgr.fire('item_left_click',{
+			'slot': this.slot, 'index': index
+		});
 	},
 	__onContextMenu: function(index) {
-		this.characterSheet.rightClickItem( this.slot, index ); 
+		this.characterSheet.eventMgr.fire('item_right_click',{
+			'slot': this.slot, 'index': index
+		});
 	},
 	setVisibility: function(visible) {
 		this.node.style.display = (visible?"block":"none");
 	},
 	select: function() {
-		this.node.style.backgroundImage = "url(images/site/item_border_hover.png)";
+		this.itemParent.layers[0].style.backgroundImage = "url(images/site/item_border_hover.png)";
 		this.selected = true;
 	},
 	deselect: function() {
 		if( this.quality > -1 ) {
-			this.node.style.backgroundImage = "url(images/site/item_border_q"+this.quality+".png)";
+			this.itemParent.layers[0].style.backgroundImage = "url(images/site/item_border_q"+this.quality+".png)";
 		}
 		else {
-			this.node.style.backgroundImage = "url(images/site/item_border.png)";
+			this.itemParent.layers[0].style.backgroundImage = "url(images/site/item_border.png)";
 		}
 		this.selected = false;
 	},
 	update: function( items ) {
 		var itm;
-		for(var i=0;i<5;i++){
+		this.items = items;
+		for(var i=0;i<4;i++){
 			//
-			itm = items[i];
+			itm = this.items[i];
 			if (itm == null) {
 				if( i > 0){
-					this.borderDivs[i].style.display = "none"; 
-					this.iconDivs[i].style.display = "none";
-					this.highlightDivs[i].style.display = "none";
+					this.icons[i].style.display = "none";
+//					this.borderDivs[i].style.display = "none"; 
+//					this.iconDivs[i].style.display = "none";
+//					this.highlightDivs[i].style.display = "none";
+					
+					DOM.removeClass(this.historyItems[i-1].layers[0], /^cs_is_quality_\d+$/);
 				}
 				else {
-					this.node.style.backgroundImage = "url(images/site/item_border.png)";
+					this.icons[i].src = "images/charsheet/slots/slot_"+this.slot+".jpg";
+					this.itemParent.layers[0].style.backgroundImage = "url(images/site/item_border.png)";
 				}
-				this.icons[i].src = "images/charsheet/slots/slot_"+this.slot+".jpg";
 			}
 			else {
 				
 				if( i > 0){
-					this.borderDivs[i].style.display = "block"; 
-					this.iconDivs[i].style.display = "block";
-					this.highlightDivs[i].style.display = "block";
+					this.icons[i].style.display = "block";
+					DOM.addClass(this.historyItems[i-1].layers[0], 'cs_is_quality_'+itm.quality);
+					//this.historyItems[i-1].style.display = "block";
+					this.icons[i].src = "images/icons/gem/" + itm.icon + ".png";
 				}
 				else {
 					this.quality = itm.quality;
 					if( this.selected ) {
-						this.node.style.backgroundImage = "url(images/site/item_border_hover.png)";
+						this.itemParent.layers[0].style.backgroundImage = "url(images/site/item_border_hover.png)";
 					}
 					else {
-						if( itm.invalid ) {
-							this.node.style.backgroundImage = "url(images/site/item_border_invalid.png)";
+						if( itm.isInvalid() ) {
+							this.itemParent.layers[0].style.backgroundImage = "url(images/site/item_border_invalid.png)";
 						}
 						else if( this.quality > -1 ) {
-							this.node.style.backgroundImage = "url(images/site/item_border_q"+this.quality+".png)";
+							this.itemParent.layers[0].style.backgroundImage = "url(images/site/item_border_q"+this.quality+".png)";
 						}
 						else {
-							this.node.style.backgroundImage = "url(images/site/item_border.png)";
+							this.itemParent.layers[0].style.backgroundImage = "url(images/site/item_border.png)";
 						}
 					}
-				}
-				if( itm.invalid ) {
-					this.icons[i].src = "images/icons/r/large/" + itm.icon + ".png";
-				}
-				else {
-					this.icons[i].src = "images/icons/large/" + itm.icon + ".png";
+					if( itm.isInvalid() ) {
+						this.icons[i].src = "images/icons/r/large/" + (itm.icon ? itm.icon : 'Temp')  + ".png";
+					}
+					else {
+						this.icons[i].src = "images/icons/large/" + (itm.icon ? itm.icon : 'Temp') + ".png";
+					}
 				}
 			}
 		}
 	}
-};
-
-function EquippedItem ( id, icon, quality, invalid ) {
-	this.id=id,this.icon=icon; this.quality=quality; this.invalid=invalid;
-}
-EquippedItem.prototype = {
-	icon: "", quality: -1, id: 0, invalid: false
 };

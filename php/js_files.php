@@ -4,7 +4,6 @@
 		array( "js/", "Engine.js"),
 	
 		array( "js/common/", "Ajax.js"),
-		array( "js/common/", "EventManager.js"),
 		array( "js/common/", "Globals.js"),
 		array( "js/common/", "Handler.js"),
 		array( "js/common/", "Listener.js"),
@@ -12,9 +11,14 @@
 		array( "js/common/", "Tools.js"),
 		array( "js/common/", "GameInfo.js"),
 		array( "js/common/", "LinkedList.js"),
-		array( "js/common/", "GenericEventManager.js"),
+		array( "js/common/", "Compression.js"),
+		array( "js/common/", "NotImplementedException.js"),
 		array( "js/common/extern/", "json2.js"),
 		array( "js/common/extern/", "md5.js"),
+		
+		array( "js/events/", "GenericEvent.js"),
+		array( "js/events/", "GenericSubject.js"),
+		array( "js/events/", "GenericObserver.js"),
 
 		array( "js/engine/", "CharacterIO.js"),
 		array( "js/engine/", "DatabaseIO.js"),
@@ -53,8 +57,6 @@
 		array( "js/engine/container/", "CharacterManager.js"),
 		
 		array( "js/engine/character/", "Character.js"),
-		array( "js/engine/character/", "CharacterObserver.js"),
-		array( "js/engine/character/", "CharacterEventManager.js"),
 		array( "js/engine/character/", "CharacterRace.js"),
 		array( "js/engine/character/", "CharacterClass.js"),
 		array( "js/engine/character/", "Stats.js"),
@@ -63,24 +65,27 @@
 		array( "js/engine/cache/", "SpellCache.js"),
 		
 		
+		array( "js/gui/", "DOM.js"),
 		array( "js/gui/", "Gui.js"),
 		
 		array( "js/gui/tooltip/", "ItemTooltip.js"),
 		array( "js/gui/tooltip/", "SpellTooltip.js"),
 		array( "js/gui/tooltip/", "Tooltip.js"),
 		array( "js/gui/tooltip/", "StatTooltip.js"),
+		array( "js/gui/tooltip/", "TalentTooltip.js"),
 		
 		array( "js/gui/character_sheet/", "BuffBar.js"),
 		array( "js/gui/character_sheet/", "CharacterSheet.js"),
-		array( "js/gui/character_sheet/", "CharacterSheetObserver.js"),
-		array( "js/gui/character_sheet/", "CharacterSheetEventManager.js"),
 		array( "js/gui/character_sheet/", "ItemSlot.js"),
 		array( "js/gui/character_sheet/", "PresenceSelector.js"),
 		array( "js/gui/character_sheet/", "RaceClassSelector.js"),
 		array( "js/gui/character_sheet/", "ShapeSelector.js"),
 		array( "js/gui/character_sheet/", "Stat.js"),
 		
-		array( "js/gui/widgets/", "SingleSelect.js"),
+		array( "js/gui/widgets/", "SimpleUserControl.js"),
+			array( "js/gui/widgets/", "Input.js"),
+			array( "js/gui/widgets/", "SingleSelect.js"),
+		
 		array( "js/gui/widgets/", "MultiSelect.js"),
 		array( "js/gui/widgets/", "StaticGrid.js"),
 		array( "js/gui/widgets/", "Collapsable.js"),
@@ -88,10 +93,39 @@
 		array( "js/gui/widgets/", "TabFolder.js"),
 		array( "js/gui/widgets/", "Menu.js"),
 		array( "js/gui/widgets/", "StackedDiv.js"),
+		array( "js/gui/widgets/", "FilterableCollection.js"),
+		
+		array( "js/gui/widgets/editable/", "Editable.js"),
+			array( "js/gui/widgets/editable/", "InputEditable.js"),
+			array( "js/gui/widgets/editable/", "SelectEditable.js"),
+			array( "js/gui/widgets/editable/", "BattleNetProfileEditable.js"),
+			array( "js/gui/widgets/editable/", "PostEditable.js"),
+		
+		array( "js/gui/components/", "SocketInterface.js"),
+		array( "js/gui/components/", "ReforgeInterface.js"),
+		array( "js/gui/components/", "GlyphInterface.js"),
+		array( "js/gui/components/", "RandomPropertyInterface.js"),
+		array( "js/gui/components/", "ImportInterface.js"),
+		array( "js/gui/components/", "SaveInterface.js"),
+		array( "js/gui/components/", "BuffInterface.js"),
+		array( "js/gui/components/", "Overview.js"),
 		
 		
 		array( "js/adapter/", "CharacterCharacterSheetAdapter.js"),
 		array( "js/adapter/", "EngineGuiAdapter.js"),
+		array( "js/adapter/", "TalentsAdapter.js"),
+		array( "js/adapter/facades/", "EquippedItem.js"),
+		array( "js/adapter/facades/", "SocketedGem.js"),
+		array( "js/adapter/facades/", "AvailableItemRandomEnchantment.js"),
+		array( "js/adapter/facades/", "TalentsFacade.js"),
+		array( "js/adapter/facades/", "TalentTreeFacade.js"),
+		array( "js/adapter/facades/", "TalentFacade.js"),
+		array( "js/adapter/facades/", "SpellFacade.js"),
+		array( "js/adapter/facades/", "GlyphFacade.js"),
+		array( "js/adapter/facades/", "CharacterFacade.js"),
+		array( "js/adapter/facades/", "AvailableBuff.js"),
+		array( "js/adapter/facades/", "AvailableShapeform.js"),
+		array( "js/adapter/facades/", "ActiveBuff.js"),
 		
 		array( "js/gui/list/filter/", "AbstractFilter.js"),
 		array( "js/gui/list/filter/", "FilterData.js"),
@@ -107,10 +141,16 @@
 		
 		array( "js/gui/list/item_list/", "ItemList.js"),
 		array( "js/gui/list/item_list/", "ItemListGui.js"),
+		array( "js/gui/list/spell_list/", "SpellList.js"),
+		array( "js/gui/list/spell_list/", "SpellListGui.js"),
+		array( "js/gui/list/profile_list/", "ProfileList.js"),
+		array( "js/gui/list/profile_list/", "ProfileListGui.js"),
 		
 		array( "js/gui/list/profile_list/", "ProfileList.js"),
 		array( "js/gui/list/profile_list/", "ProfileListGui.js"),
 		
 		
+		array( "js/gui/talents/", "TalentsGui.js"),
+		array( "js/gui/talents/", "TalentIcon.js"),
 	);
 ?>

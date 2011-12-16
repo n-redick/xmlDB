@@ -3,88 +3,62 @@
  * @returns {BuffBar}
  */
 function BuffBar () {
-	this.node = document.createElement('div');
-	this.node.className = 'bb_p';
+	this.node = DOM.create('div', {'class': 'bb_p'});
+	this.eventMgr = new GenericSubject();
+	this.eventMgr.registerEvent('remove_buff', ['id']);
+	this.eventMgr.registerEvent('add_stack', ['id']);
 }
 
 BuffBar.prototype = {
-	/** @type {Element} */
+	eventMgr: null,
 	node : null,
-	/** @type {Handler} */
-	removeHandler : null,
-	/** @type {Handler} */
-	clickHandler : null,
 	/**
 	 * 
 	 */
 	update : function( activeBuffs ) {
-		Tools.removeChilds(this.node);
+		DOM.truncate(this.node);
 		
 		for( var i in activeBuffs ) {
 			this.__showBuff( activeBuffs[i] );
 		}
-		Tools.clearBoth(this.node);
 	},
 	/**
 	 * @param {ActiveBuff} b
 	 */
 	__showBuff : function( activeBuff ) {
-		var d = document.createElement('img');
-		d.className = 'bb_buff';
-		d.src = 'images/icons/small/'+activeBuff.icon+'.png';
-		d.oncontextmenu = function(){return false;};
+		var d = DOM.createAt( this.node, 'div', {'class': 'bb_buff', 'backgroundImage': 'images/icons/small/'+activeBuff.icon+'.png'});
+		
 		Listener.add( d, 'contextmenu', this.__onRemove, this, [activeBuff.id] );
 		Listener.add( d, 'click', this.__onClick, this, [activeBuff.id] );
 
+		d.oncontextmenu = function(){return false;};
 		d.onmouseout = function(){Tooltip.hide();};
 		d.onmousemove = function(){Tooltip.move();};
-		if( activeBuff.stackable > 1 ) {
-			d.appendChild(Tools.outline(activeBuff.stacks));
-		}
-		Listener.add(d,"mouseover",Tooltip.showSpell,Tooltip,[activeBuff.id]);
 		
-		this.node.appendChild(d);
-	},
-	/**
-	 * @param {number} b
-	 */
-	__onRemove : function( b ) {
-		if( this.removeHandler ) {
-			this.removeHandler.notify([b]);
+		if( activeBuff.stackable ) {
+			d.appendChild(Tools.outline(activeBuff.getStacks()));
 		}
-		this.update();
-	},
-
-	/**
-	 * @param {number} b
-	 */
-	__onClick: function( b ) {
-		if( this.clickHandler ) {
-			this.clickHandler.notify([b]);
+		
+		var tt = activeBuff.getTooltip();
+		
+		if( activeBuff.stackable ) {
+			if( activeBuff.getStacks() > 1  ) {
+				tt += "<div class='tt_note'>Left click to increase and right click to decrease the stack</div>";
+			}
+			else {
+				tt += "<div class='tt_note'>Left click to increase the stack and right click to remove the Buff</div>";
+			}
 		}
-		this.update();
+		else {
+			tt += "<div class='tt_note'>Right click to remove the Buff</div>";
+		}
+		
+		Listener.add(d,"mouseover",Tooltip.showMovable,Tooltip,[tt]);
 	},
-	
-	setRemoveHandler : function( handler ) {
-		this.removeHandler = handler;
+	__onRemove : function( id ) {
+		this.eventMgr.fire('remove_buff', {'id':id});
 	},
-	
-	setClickHandler : function( handler ) {
-		this.clickHandler = handler;
+	__onClick: function( id ) {
+		this.eventMgr.fire('add_stack', {'id':id});
 	}
-};
-
-/**
- * @constructor
- * @param id
- * @param icon
- * @param stackable
- * @param stacks
- * @returns {ActiveBuff}
- */
-function ActiveBuff ( id, icon, stackable, stacks) {
-	
-}
-ActiveBuff.prototype = {
-	id: -1, icon: "", stackable: false, stacks: 0
 };

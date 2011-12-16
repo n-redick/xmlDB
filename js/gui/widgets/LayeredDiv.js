@@ -4,21 +4,18 @@
  * @returns {LayeredDiv}
  */
 function LayeredDiv(layers) {
-	this.layers = new Array(layers);
-	
-	for(var i = 0; i < layers; i++ ) {
-		this.layers[i] = document.createElement("div");
-		if( i == 0 )
-		{
-			this.layers[i].style.position = "relative";
-		}
-		else 
-		{
+	if( layers > 0 ) {
+		this.layers = [];
+		
+		this.layers[0] = document.createElement("div");
+		this.layers[0].style.position = "relative";
+		
+		for(var i = 1; i < layers; i++ ) {
+			this.layers[i] = document.createElement("div");
 			this.layers[i].style.position = "absolute";
 			this.layers[i].style.zIndex = i; 
 			this.layers[0].appendChild(this.layers[i]);
 		}
-		
 	}
 }
 

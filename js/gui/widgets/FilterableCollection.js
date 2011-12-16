@@ -5,17 +5,17 @@
  * @returns {FilterableCollection}
  */
 function FilterableCollection( map, parent ) {
-	this._map = {};
+	this.map = {};
 	if( map ) {
 		for( var key in map ) {
-			this._map[key] = map[key];
+			this.map[key] = map[key];
 		}
 	}
-	this._parent = parent;
-	this._filterControl = document.createElement("input");
-	Listener.add(this._filterControl, "change", this._onFilterChange, this, []);
-	Listener.add(this._filterControl, "keyup", this._onFilterChange, this, []);
-	Listener.add(this._filterControl, "blur", this._onFilterChange, this, []);
+	this.parent = parent;
+	this.filterControl = document.createElement("input");
+	Listener.add(this.filterControl, "change", this.__onFilterChange, this, []);
+	Listener.add(this.filterControl, "keyup", this.__onFilterChange, this, []);
+	Listener.add(this.filterControl, "blur", this.__onFilterChange, this, []);
 }
 
 FilterableCollection.prototype = {
@@ -29,20 +29,20 @@ FilterableCollection.prototype = {
 		 * @param {string} key
 		 */
 		filter: function( key ) {
-			Tools.removeChilds(this._parent);
-			for( var k in this._map ) {
+			Tools.removeChilds(this.parent);
+			for( var k in this.map ) {
 				if( !key || new RegExp(key,"i").exec(k) ) {
-					this._parent.appendChild(this._map[k]);
+					this.parent.appendChild(this.map[k]);
 				}
 			}
 		},
 		showAll: function() {
-			Tools.removeChilds(this._parent);
-			for( var k in this._map ) {
-				this._parent.appendChild(this._map[k]);
+			Tools.removeChilds(this.parent);
+			for( var k in this.map ) {
+				this.parent.appendChild(this.map[k]);
 			}
 		},
-		_onFilterChange: function() {
-			this.filter(this._filterControl.value);
+		__onFilterChange: function() {
+			this.filter(this.filterControl.value);
 		}
 };

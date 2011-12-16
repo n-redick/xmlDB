@@ -3,7 +3,19 @@
  * @returns {List}
  */
 function List(  gui, filterData, staticVariables, order ) {
-	this.eventMgr = new EventManager(['update','show_tooltip', 'hide_tooltip', 'move_tooltip', 'click']);
+	
+	if( ! gui ) {
+		return null;
+	}
+	
+	this.eventMgr = new GenericSubject();
+	this.eventMgr.registerEvent('update', ['list']);
+	this.eventMgr.registerEvent('show_tooltip', ['entity']);
+	this.eventMgr.registerEvent('click', ['entity']);
+	this.eventMgr.registerEvent('move_tooltip', []);
+	this.eventMgr.registerEvent('hide_tooltip', []);
+	
+	(['update','show_tooltip', 'hide_tooltip', 'move_tooltip', 'click']);
 	this.filterMgr = new FilterManager(); 
 	this.gui = gui;
 	
@@ -12,30 +24,44 @@ function List(  gui, filterData, staticVariables, order ) {
 	//
 	// necessary for inheritance prototype constructor 
 	// ( e.g. ItemList.prototype = new List )
-	if( gui ) {
-		gui.addListener( 'search', new Handler( this.update, this ) );
-		gui.addListener( 'next_page', new Handler( this.nextPage, this ) );
-		gui.addListener( 'prev_page', new Handler( this.prevPage, this ) );
-		gui.addListener( 'change_order', new Handler( this.setOrder, this ) );
-		
-
-		gui.addPropagator( 'show_tooltip', this.eventMgr );
-		gui.addPropagator( 'hide_tooltip', this.eventMgr );
-		gui.addPropagator( 'move_tooltip', this.eventMgr );
-		gui.addPropagator( 'click', this.eventMgr );
-		
-		gui.addListener( 'add_custom_filter', new Handler( this.addCustomFilter, this ) );
-		gui.addListener( 'remove_custom_filter', new Handler( this.removeCustomFilter, this ) );
-		
-
-		this.filterMgr.set( 
-				filterData, 
-				staticVariables 
-		);
-		this.set("", "", "", 1);
-		
-	}
 	
+	var guiHandler = new Handler(function( e ) {
+		if( e.is('search') ) {
+			this.update();
+		}
+		else if( e.is('next_page') ) {
+			this.nextPage();
+		}
+		else if( e.is('prev_page') ) {
+			this.prevPage();
+		}
+		else if( e.is('change_order') ) {
+			this.setOrder(e.get('order'));
+		}
+		else if( e.is('add_custom_filter') ) {
+			this.addCustomFilter(e.get('variable'), e.get('customFilter'));
+		}
+		else if( e.is('remove_custom_filter') ) {
+			this.removeCustomFilter(e.get('filter'));
+		}
+	}, this);
+	
+	var guiObserver = new GenericObserver([
+		'search', 'next_page', 'prev_page', 'change_order', 'add_custom_filter', 'remove_custom_filter'
+	], guiHandler);
+	
+	gui.addObserver(guiObserver);
+
+	gui.addPropagator( 'show_tooltip', this.eventMgr );
+	gui.addPropagator( 'hide_tooltip', this.eventMgr );
+	gui.addPropagator( 'move_tooltip', this.eventMgr );
+	gui.addPropagator( 'click', this.eventMgr );
+
+	this.filterMgr.set( 
+			filterData, 
+			staticVariables 
+	);
+	this.set("", "", "", 1);
 }
 
 List.ORDER_DESC = 0;
@@ -64,14 +90,38 @@ List.toCategories = function( categorisedFilterData ) {
 	return cs;
 };
 
+List.getSlotOptions= function() {
+	var options = {}, i;
+	for( i = 1; i <= 28; i++ ) {
+		options[i] = i == 14 ? locale['F_ShieldHand'] : locale['a_slot'][i];
+	}
+	return options;
+},
+List.getItemClassOptions= function() {
+	var options = {}, i;
+	for( i = 0; i < ITEM_CLASSES.length; i++ ) {
+		options[i] = ITEM_CLASSES[i][0];
+	}
+	return options;
+},
+List.getItemSubClassOptions= function() {
+	var options = {}, i, j;
+	for( j=0; j < ITEM_CLASSES.length; j++ ) {
+		for( i = 0; i < ITEM_CLASSES[j][1].length; i++ ) {
+			options[j+"."+i] = ITEM_CLASSES[j][1][i];
+		}
+	}
+	return options;
+};
+
 List.prototype = {
 	eventMgr: null,
 	page: 1, maxPage: 0, 
 	filterMgr: null, 
 	gui: null,
 	order: "", orderDirection: List.ORDER_DESC,
-	addListener: function( event, handler ) {
-		this.eventMgr.addListener(event, handler);
+	addObserver: function( observer ) {
+		this.eventMgr.addObserver( observer);
 	},
 	setMaxPage: function( maxPage ) {
 		this.maxPage = maxPage;
@@ -108,7 +158,7 @@ List.prototype = {
 		this.__update();
 	},
 	__update: function() {
-		this.eventMgr.fire('update', [this]);
+		this.eventMgr.fire('update', { 'list': this });
 		
 		this.gui.showLoading();
 	},
@@ -160,6 +210,5 @@ List.prototype = {
 		var tmp = this.filterMgr.getArgumentString(); 
 		tmp = tmp.replace(new RegExp("\b"+variable+"\\.\\w+\\.[^;]+;"),"") + replace ;
 		this.filterMgr.setArgumentString(tmp);
-		this.update();
 	}
 };

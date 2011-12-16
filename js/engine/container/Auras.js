@@ -160,7 +160,6 @@ Auras.prototype = {
 	{
 		var activeSets = [];
 		var foundSets = {};
-		var inventory = this.character.inventory;
 		var tmp, i;
 		/** @type {Buff} */
 		var b = null;
@@ -182,9 +181,9 @@ Auras.prototype = {
 		
 		this.character.getActiveSpells();
 		
-		for ( i=0; i < 20; i++) 
+		for ( i=0; i < Inventory.SLOTS; i++) 
 		{
-			if ( (tmp = inventory.get(i)) ) 
+			if ( (tmp = this.character.getEquippedItem(i, 0)) ) 
 			{
 				tmp.getActiveSpells( );
 				
@@ -241,13 +240,13 @@ Auras.prototype = {
 		}
 		sp.setLevel( this.character.level );
 		
-		if( sp.shapehshift && sp.shapehshift.formId != 0 && (sp.shapehshift.formId & (1<<(this.character.chrClass ? ( this.character.chrClass.shapeForm - 1 ) : 0))) == 0 ) { 
+		if( sp.shapehshift && sp.shapehshift.formId != 0 && (sp.shapehshift.formId & (1<<(this.character.chrClass ? ( this.character.chrClass.shapeform - 1 ) : 0))) == 0 ) { 
 			return;
 		}
 		//
 		//	Spell not castable if shape shifted, necessary?
 		//
-		//	if( (sp.type[0] & (1<<16)) != 0 && this.character.chrClass != null && this.character.chrClass.shapeForm != 0 ) {
+		//	if( (sp.type[0] & (1<<16)) != 0 && this.character.chrClass != null && this.character.chrClass.shapeform != 0 ) {
 		//		return;
 		//	}
 		if ( ! isBuff && ! sp.isAura() ) {
@@ -280,7 +279,7 @@ Auras.prototype = {
 				for( i = 0; i<32 && v; i++ ) {
 					if( sp.equippedItems.slotMask & 1<<i ) {
 						s = g_inventoryToSlot[i];
-						itm = this.character.inventory.items[s][0];
+						itm = this.character.getEquippedItem(s, 0);
 						if( !(itm && itm.itemClass == sp.equippedItems.classId && sp.equippedItems.itemSubClassMask&1<<itm.itemSubClass)  ) {
 							v = false;
 						}
@@ -444,7 +443,7 @@ Auras.prototype = {
 	 */
 	__addEffect : function(effect,effectId,value,spellItemId,usedStat,spellEffectId)
 	{
-		var i, shapeForm = this.character.chrClass ? this.character.chrClass.shapeForm : 0;
+		var i, shapeform = this.character.chrClass ? this.character.chrClass.shapeform : 0;
 		
 		switch( spellEffectId ) {
 		//
@@ -460,7 +459,7 @@ Auras.prototype = {
 		case 88002:
 		case 88004:
 		case 88006:
-			if( shapeForm != BEAR && shapeForm != DIRE_BEAR ) return;
+			if( shapeform != BEAR && shapeform != DIRE_BEAR ) return;
 			effectId = 142;
 			spellItemId = 1;
 			break;
@@ -470,7 +469,7 @@ Auras.prototype = {
 		case 8697:
 		case 8700:
 		case 8694:
-			if( shapeForm != BEAR && shapeForm != DIRE_BEAR ) return;
+			if( shapeform != BEAR && shapeform != DIRE_BEAR ) return;
 			effectId = 137;
 			usedStat = 1<<2;
 			break;
@@ -479,7 +478,7 @@ Auras.prototype = {
 		case 8699:
 		case 8696:
 		case 8693:
-			if( shapeForm != CAT ) return;
+			if( shapeform != CAT ) return;
 			effectId = 166;
 			break;
 		//

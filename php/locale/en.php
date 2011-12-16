@@ -274,6 +274,7 @@
 	$locale['F_Melee'] = "Melee";
 	$locale['F_Spell'] = "Spell";
 	$locale['F_Defense'] = "Defense";
+	$locale['F_Enchant'] = "Enchant";
 	// Titles
 	$locale['F_ItemLevel'] = "Item Level";
 	$locale['F_RequiredLevel'] = "Req. Level";
@@ -292,6 +293,10 @@
 	$locale['F_Speed'] = "Speed";
 	$locale['F_UsableBy'] = "Usable by";
 	$locale['F_GemReqItemLevel'] = "Required Item Level by Gem";
+	//
+	$locale['F_EnchantItemLevel'] = "Required Item Level";
+	$locale['F_EnchantCharacterLevel'] = "Required Character Level";
+	$locale['F_ItemSubClass'] = "Item Sub Class";
 	// Options
 	$locale['F_Yes'] = "Yes";
 	$locale['F_No'] = "No";
@@ -474,7 +479,52 @@
 		53=>"Frost Resistance",
 		54=>"Shadow Resistance",
 		55=>"Arcane Resistance"
+	);
 	
+	$locale['ItemStatNamesShort'] = array(
+		1=>"Health",
+		2=>"Mana",
+		3=>"Agility",
+		4=>"Strength",
+		5=>"Intellect",
+		6=>"Spirit",
+		7=>"Stamina",
+		
+		13=>"Dodge",
+		14=>"Parry",
+		15=>"Block",
+		16=>"Melee Hit Rating",
+		17=>"Ranged Hit Rating",
+		18=>"Spell Hit Rating",
+		19=>"Melee Critical Strike Rating",
+		20=>"Ranged Critical Strike Rating",
+		21=>"Spell Critical Strike",
+		
+		28=>"Melee Haste",
+		29=>"Ranged Haste",
+		30=>"Spell Haste",
+		31=>"Hit",
+		32=>"Crit",
+		
+		35=>"Resi",
+		36=>"Haste",
+		37=>"Exp",
+		38=>"AP",
+		
+		43=>"Mana Reg",
+		44=>"Armor Pen.",
+		45=>"Spell Power",
+		46=>"Health Reg",
+		47=>"Spell Pen.",
+		48=>"Block Value",
+		49=>"Mastery",
+		
+		50=>"Armor",
+		51=>"Fire Resi",
+		52=>"Nature Resi",
+		53=>"Frost Resi",
+		54=>"Shadow Resi",
+		55=>"Arcane Resi"
 	);
 	
 	$locale['TT_TargetLevel'] = "Target Level";
@@ -582,4 +632,58 @@
 	$locale['RF_Ratings'] = "Ratings";
 	$locale['ERR_GemRequiresMinItemLevel'] = "Requires an item level of at least $";
 	$locale['RequiresItemLevel'] = "Requires Item Level: $";
+	
+	$locale['Slots'] = array(
+		'Head',
+		'Neck','
+		Shoulders',
+		'Back',
+		'Chest',
+		'Shirt',
+		'Tabard',
+		'Wrist',
+		'Hands',
+		'Waist',
+		'Legs',
+		'Feet',
+		'Finger#1',
+		'Finger#2',
+		'Trinket#1',
+		'Trinket#2',
+		'Main Hand',
+		'Off Hand',
+		'Ranged'
+	);
+	
+	$locale['CharacterClass'] = array('None','Warrior','Paladin','Hunter','Rogue','Priest','Deathknight','Shaman','Mage','Warlock','','Druid');
+	$locale['CharacterRace'] = array(
+		1=>"Human",
+		2=>"Orc",
+		3=>"Dwarf",
+		4=>"Night Elf",
+		5=>"Undead",
+		6=>"Tauren",
+		7=>"Gnome",
+		8=>"Troll",
+		9=>"Goblin",
+		10=>"Blood Elf",
+		11=>"Draenei",
+		12=>"Fel Orc",
+		13=>"Naga",
+		14=>"Broken",
+		15=>"Skeleton",
+		16=>"Vrykul",
+		17=>"Tuskarr",
+		18=>"Forest Troll",
+		19=>"Taunka",
+		20=>"Northrend Skeleton",
+		21=>"Ice Troll",
+		22=>"Worgen"
+	);
+	
+	$locale['Regions'] = array( 'us' => 'North America', 'eu' => 'Europe', 'kr' => 'Korea', 'tw' => 'Taiwan', 'cn' => 'China' );
+	
+	function localize( $key ) {
+		return $key;
+	}
 ?>

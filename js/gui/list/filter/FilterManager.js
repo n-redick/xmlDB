@@ -1,5 +1,7 @@
 function FilterManager() {
-	this.eventMgr = new EventManager(["set_argument_string", "create_filter"]);
+	this.eventMgr = new GenericSubject();
+	this.eventMgr.registerEvent("set_argument_string", []);
+	this.eventMgr.registerEvent("create_filter", []);
 	
 	this.__init();
 }
@@ -38,8 +40,8 @@ FilterManager.prototype = {
 		
 	},
 	
-	addListener: function( event, handler ) {
-		this.eventMgr.addListener(event, handler);
+	addObserver: function( observer ) {
+		this.eventMgr.addObserver( observer );
 	},
 	
 	setArgumentString: function( str ) {

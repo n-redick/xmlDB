@@ -15,28 +15,7 @@ CharacterIO._readCharacter_callback = function( request, handler )
 	var character = null;
 	var exception = null;
 	try {
-		if (request.status == 200) 
-		{
-			if (!request.getResponseHeader("error")) 
-			{
-				try
-				{
-					character = eval('(' + request.responseText + ')');
-				}
-				catch( e )
-				{
-					Tools.rethrow(e);
-				}
-			}
-			else
-			{
-				throw new GenericAjaxException( request.responseText );
-			}
-		}
-		else
-		{
-			throw new BadResponseException( request ); 
-		}
+		character = Ajax.getResponseObject(request);
 	}
 	catch( e ) {
 		exception = e;
@@ -47,37 +26,19 @@ CharacterIO._readCharacter_callback = function( request, handler )
 /**
  * @param {XMLHttpRequest} request
  * @param {Handler} handler
+ * @param {Character} character
  */
 CharacterIO._writeCharacter_callback = function( request, handler, character )
 {
-	var id = null;
-	var errorMessage = "";
-	if (request.status == 200) 
-	{
-		if (!request.getResponseHeader("error")) 
-		{
-			try
-			{
-				id = eval('(' + request.responseText + ')');
-				character._lastSaved = character.toArray();
-			}
-			catch( e )
-			{
-				Tools.rethrow(e);
-			}
-		}
-		else
-		{
-			throw new GenericAjaxException( request.responseText );
-		}
+	var id = 0;
+	try {
+		id = Ajax.getResponseObject(request);
 	}
-	else
-	{
-		throw new BadResponseException( request );
+	catch( e ) {
+		exception = e;
 	}
-	handler.notify([id, errorMessage]);
+	handler.notify([id, exception]);
 };
-
 /**
  * @param {string} name
  * @param {string} server
@@ -87,7 +48,7 @@ CharacterIO._writeCharacter_callback = function( request, handler, character )
 CharacterIO.readFromArmory = function(name,server,region,handler)
 {
 	Ajax.request(
-		'php/interface/profiles/get_armory_profile.php' 
+		'php/interface/profiles/get_battlenet_profile.php' 
 			+ TextIO.queryString({
 				'name': name,
 				'server': server,

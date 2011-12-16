@@ -155,10 +155,13 @@ TextIO.parse = function(desc,character)
 	if (character) 
 	{
 		var stats = character.stats;
-		var inv = character.inventory;
+
 		desc = desc.replace(/\$pl\b/gi, 	String(character.level));
 		desc = desc.replace(/\$max\b/gi, 	"Math.max");
-		desc = desc.replace(/\$hnd\b/gi, 	inv.get(16) ? (inv.get(16).inventorySlot == 17 && null == inv.get(17) ? "2" : "1") : "1");
+		desc = desc.replace(
+			/\$hnd\b/gi, 	
+			character.getEquippedItem(16, 0) ? (character.getEquippedItem(16, 0).inventorySlot == 17 && null == character.getEquippedItem(17, 0) ? "2" : "1") : "1"
+		);
 		
 		desc = desc.replace(/\$ap\b/gi, 	String(Math.floor(stats.attackPower)));
 		desc = desc.replace(/\$rap\b/gi, 	String(Math.floor(stats.rangedAttackPower)));
@@ -174,14 +177,14 @@ TextIO.parse = function(desc,character)
 		desc = desc.replace(/\$sp\b/gi, 	String(Math.floor(stats.spell[0])));
 		
 		desc = desc.replace(/\$MWS\b/gi,  TextIO.formatFloat(stats.mhSpeed, 2));
-		/*
-		desc = desc.replace(/\$mwb/g, 	Math.ceil(stats.mainhandMaxDmg));
-		desc = desc.replace(/\$MWB/g, 	Math.floor(stats.mainhandMaxDmg));
-		desc = desc.replace(/\$rwb/g, 	Math.ceil(stats.rangedMinDmg));
-		desc = desc.replace(/\$RWB/g, 	Math.floor(stats.rangedMaxDmg));
-		desc = desc.replace(/\$mw/g, 	Math.ceil(stats.mainhandMinDmg));
-		desc = desc.replace(/\$MW/g, 	Math.floor(stats.mainhandMaxDmg));
-		*/
+		
+//		desc = desc.replace(/\$mwb/g, 	Math.ceil(stats.mainhandMaxDmg));
+//		desc = desc.replace(/\$MWB/g, 	Math.floor(stats.mainhandMaxDmg));
+//		desc = desc.replace(/\$rwb/g, 	Math.ceil(stats.rangedMinDmg));
+//		desc = desc.replace(/\$RWB/g, 	Math.floor(stats.rangedMaxDmg));
+		desc = desc.replace(/\$mw/g, 	stats.melee[0][0]);
+		desc = desc.replace(/\$MW/g, 	stats.melee[0][1]);
+		
 		desc = desc.replace(/\$z\b/gi, "[Location]");
 	}
 	else 

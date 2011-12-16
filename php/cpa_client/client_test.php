@@ -1,19 +1,22 @@
 ﻿<?php
-//	Author: Martin Waßmann
+//	Author: Martin WaÃŸmann
 //	Date: 02 Aug 2001
 //
 //	Usage of cpa_client
 //
 //
 //	cpa_client File
+require_once('../common.php');
+require_once('../db.php');
+require_once('../bnet_auth.php');
 require_once('cpa_client.php');
+
 //
 //
 //	Your private and public keys go here, if you have none
 //	leave these values null, the client will then do 
 //	un-authenticated requests
-define("BNET_PRIVATE_KEY", null);
-define("BNET_PUBLIC_KEY", null);
+
 //
 //
 //	Create a new client instance
@@ -30,7 +33,7 @@ $client->set_protocol( cpa_client::PROTOCOL_HTTP);
 //
 //
 //	Example item retrieval, only works with authentication
-echo $client->get_item(62023);
+// echo $client->get_item(62023);
 //
 //
 //	Example profile request, notice that the cpa_client requires 
@@ -61,15 +64,16 @@ echo $client->get_item(62023);
 //		cpa_client::REGION_TW
 //
 echo $client->get_profile( 
-	"Rebirthh", 
-	"眾星之子", 
-	cpa_client::REGION_TW,
+	"Sélénïa", 
+	"medivh", 
+	cpa_client::REGION_EU,
 	array(
 		cpa_client::PROFILE_ITEMS, 
 		cpa_client::PROFILE_TALENTS, 
 		cpa_client::PROFILE_PROFESSIONS
 	)
 );
+//
 //
 //
 ?>

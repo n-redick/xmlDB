@@ -27,7 +27,7 @@ ItemSet.prototype = {
 	getActiveSpells : function(characterScope) {
 		for ( var i = 0; i < 8; i++) {
 			if (this.bonuses[i] != null
-					&& characterScope.inventory.getEquippedSetItems(this.id) >= this.requiredPieces[i]) {
+					&& characterScope.getEquippedSetItems(this.id) >= this.requiredPieces[i]) {
 				characterScope.auras.add(this.bonuses[i]);
 			}
 		}

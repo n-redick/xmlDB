@@ -18,6 +18,7 @@ Function.prototype.apply = function( obj, any ) { /***/ };
 Function.prototype.call = function( obj, any ) { /***/ };
 
 var locale = {};
+var g_realmList = {};
 
 var JSON = {
 	stringify: function( any ) {

@@ -1,5 +1,7 @@
 /**
  * @constructor
+ * 
+ * @param {Array} serialized
  */
 function Item( serialized ) {
 	var i;
@@ -183,6 +185,9 @@ Item.prototype = {
 	//
 	//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 	//
+	isReforgable: function() {
+		return this.level >= REFORGE_ITEM_MIN_LEVEL;
+	},
 	reforge : function( reducedStat, addedStat ) {
 		var i,valid = false, statIndex = -1, enchantIndex = -1, enchant;
 
@@ -517,7 +522,7 @@ Item.prototype = {
 					&& (gem.unique > 0 || gem.isUniqueEquipped() == true)
 					&& (this.gems[socketIndex] == null || this.gems[socketIndex].id != gem.id)
 			) {
-				if( ! this.characterScope.inventory.testGemUnique( gem.id ) ) {
+				if( ! this.characterScope.testGemUnique( gem.id ) ) {
 					throw new InvalidGemException( gem, this, InvalidGemException.CAUSE_UNIQUE );
 				}
 			}
@@ -684,5 +689,22 @@ Item.prototype = {
 	},
 	clone: function() {
 		return new Item(this.serialized);
+	},
+	getStatValue: function( stat ) {
+		var j;
+		for( j=0; j<this.stats.length; j++ ) {
+			if( this.stats[j] && this.stats[j][0] == stat ) {
+				return this.stats[j][1];
+			}
+		}
+		if( this.selectedRandomEnchantment ) {
+			for( j=0; j<this.selectedRandomEnchantment.enchants.length; j++ ) {
+				var e = this.selectedRandomEnchantment.enchants[j];
+				if( e && e.types[0] == 5 && e.spellIds[0] == stat ) {
+					return e.values[0];
+				}
+			}
+		}
+		return 0;
 	}
 };

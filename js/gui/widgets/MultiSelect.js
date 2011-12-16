@@ -25,7 +25,7 @@ MultiSelect.fromObject = function( obj ) {
 	var show = [];
 	var n = 0;
 	for( var k in obj ) {
-		show[n++] = [obj[k],k]; 
+		show[n++] = [k,obj[k]]; 
 	}
 	return new MultiSelect(show);
 };

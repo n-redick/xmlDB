@@ -2,14 +2,16 @@
 
 /**
  * @constructor
+ * @param {number} tree
  * @param {Array} serialized
  * @returns {Talent}
  */
-function Talent( serialized ){
+function Talent( tree, serialized ){
 	var i;
 	// deserialize
 	this.spent = 0;
 	this.id = serialized[0];
+	this.tree = tree;
 	this.row = serialized[1];
 	this.col = serialized[2];
 	//TODO make sure talents are always containing ALL spells, if a spell is missing throw error, so that no handling of missing spell is necessary here
@@ -36,7 +38,7 @@ function Talent( serialized ){
 Talent.prototype = {
 	id: 0, spells: null, petMask: null, 
 	ranks: 0, requiredIds: 0, spent: 0, 
-	row: 0, col: 0, id: 0,
+	tree: 0, row: 0, col: 0, id: 0,
 	requiredTalents: [], icon: "Temp",
 
 	/** @returns {boolean} */
@@ -57,7 +59,7 @@ Talent.prototype = {
 	},
 	/** @returns {string} */
 	getName : function(){
-		return (this.spells[0]?this.spells[0].getName():null);
+		return (this.spells[0]?this.spells[0].name:null);
 	},
 	/** @returns {Spell} */
 	getSpell : function(){
@@ -80,7 +82,7 @@ Talent.prototype = {
 	 * @param {number} petId
 	 * @param {number} petTalent
 	 */
-	isAvailable : function(petId, petTalent)
+	isAvailableForPet : function(petId, petTalent)
 	{
 		if( petTalent == 4 )
 		{

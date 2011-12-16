@@ -64,9 +64,10 @@ function RaceClassSelector( characterSheet ) {
 	layoutGrid.cells[0][1].appendChild(this.chrClass.layers[0]);
 	this.node.appendChild(layoutGrid.node);
 
-	d1 = document.createElement("div"); d1.className = 'rcs_select_header'; d1.innerHTML = "Select a Race:";
-	d2 = document.createElement("div"); d2.className = 'rcs_close'; d2.onclick = function(){Tooltip.enable();};
-	this.selectRace.appendChild(d1);this.selectRace.appendChild(d2);
+	d1 = document.createElement("div"); d1.innerHTML = "<span class='rcs_select_header'>Select a Race:</span>";
+	d2 = document.createElement("a"); d2.className = 'close rcs_close'; d2.onclick = function(){Tooltip.enable();};
+	d1.appendChild(d2);
+	this.selectRace.appendChild(d1);
 	
 	layoutGrid2.cells[0][0].innerHTML = "<div class='rcs_faction_alliance'>Alliance</div>";
 	layoutGrid2.cells[0][1].innerHTML = "<div class='rcs_faction_horde'>Horde</div>";
@@ -134,9 +135,11 @@ RaceClassSelector.prototype = {
 			}
 			
 			Tools.removeChilds(this.selectClass);
-			d1 = document.createElement("div"); d1.className = "rcs_select_header"; d1.innerHTML = "Select a Class:";
-			d2 = document.createElement("div"); d2.className = "rcs_close"; d2.onclick = function(){Tooltip.enable();};
-			this.selectClass.appendChild(d1);this.selectClass.appendChild(d2);
+			
+			d1 = document.createElement("div"); d1.innerHTML = "<span class='rcs_select_header'>Select a Class:</span>";
+			d2 = document.createElement("a"); d2.className = 'close rcs_close'; d2.onclick = function(){Tooltip.enable();};
+			d1.appendChild(d2);
+			this.selectClass.appendChild(d1);
 			
 			for( var i = 0; i<11; i++ ) {
 				if( (CHR_RACE_CLASS_MASK[chrRaceId]&(1<<i)) != 0 ) {
@@ -165,7 +168,12 @@ RaceClassSelector.prototype = {
 	},
 	
 	showClassSelector : function( ) {
-		Tooltip.showDisabled(this.selectClass);
+		if( this.chrRaceId != -1 ) {
+			Tooltip.showDisabled(this.selectClass);
+		}
+		else {
+			Tooltip.showDisabled(this.selectRace);
+		}
 	},
 	
 	showRaceSelector : function() {

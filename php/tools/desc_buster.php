@@ -1,5 +1,7 @@
 
 <?php
+	ini_set('memory_limit', '512M');
+
 	include('../db.php');
 	include('../common.php');
 	include('../locale/en.php');

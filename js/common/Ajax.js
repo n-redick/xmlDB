@@ -1,4 +1,40 @@
-var Ajax = {};
+var Ajax = {
+	post: function( url, kvps, handler, args )
+	{
+		var request = Ajax.getRequestObject();
+		
+		if( ! Ajax.isValidURL( url ))
+		{
+			throw new InvalidURLException( url );
+		}
+		
+		if( ! args )
+		{
+			args = [];
+		}
+		
+		if( -1 == url.search(/\?/) ) {
+			url += "?_=" + new Date().getTime();
+		}
+		else {
+			url += "&_=" + new Date().getTime();
+		}
+		
+		request.open('POST', url , true);
+		
+		if ( handler ) {
+			request.onreadystatechange = function() {
+				Ajax.defaultCallbackHandler( this, handler, args, true );
+			};
+		}
+		else {
+			request.onreadystatechange = function(){/**/};
+		}
+		
+		request.setRequestHeader("Content-Type","application/x-www-form-urlencoded; Charset=utf-8");		
+		request.send(TextIO.urlEncode(kvps));
+	}	
+};
 
 /**
  * @param {string} url
@@ -109,6 +145,35 @@ Ajax.defaultCallbackHandler = function( response, handler, args , callbackOnErro
 	}
 };
 
+Ajax.getResponseObject = function( response )  {
+	if ( response.status == 200) 
+	{
+		var error = response.getResponseHeader("error");
+		if( !error )
+		{
+			if( response.responseText == "" ) {
+				return null;
+			}
+			
+			var obj = eval( '(' + response.responseText + ')' );
+			
+			if( response.getResponseHeader("auto_redirect") ) {
+				window.location.href = obj;
+			}
+			
+			return obj;
+		}
+		else
+		{
+			throw new GenericAjaxException( response.responseText );
+		}
+	}
+	else
+	{
+		throw new BadResponseException( response );
+	}
+};
+
 /**
  * @return {XMLHttpRequest}
  */
@@ -157,8 +222,7 @@ BadResponseException.prototype = {
  * @constructor
  * @returns {XMLHttpException}
  */
-function XMLHttpException() {
-}
+function XMLHttpException() {/**/}
 /**
  * @constructor
  * @param {string} message

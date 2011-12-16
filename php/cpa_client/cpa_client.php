@@ -58,8 +58,18 @@ class cpa_client {
 		);
 	}
 	
-	public function get_profile( $name, $server, $region, $fields ) {
+	public function get_realm_list( $region ) {
 		
+		$this->validate_region( $region );
+	
+		return $this->request( 
+			$this->protocol.'://'.$region.'.battle.net', 
+			'/api/wow/realm/status',
+			''
+		);
+	}
+	
+	private function validate_region( $region ) {
 		switch( $region ) {
 			case cpa_client::REGION_EU: break;
 			case cpa_client::REGION_US: break;
@@ -69,25 +79,34 @@ class cpa_client {
 			default:
 				throw new Exception("Illegal region: " . $region);
 		}
+	}
+	
+	public function get_profile( $name, $server, $region, $fields = null ) {
 		
-		for( $i = 0; $i < count($fields); $i++ ) {
-			switch( $fields[$i] ) {
-				case cpa_client::PROFILE_GUILD: break;
-				case cpa_client::PROFILE_STATS: break;
-				case cpa_client::PROFILE_TALENTS: break;
-				case cpa_client::PROFILE_ITEMS: break;
-				case cpa_client::PROFILE_REPUTATION: break;
-				case cpa_client::PROFILE_TITLES: break;
-				case cpa_client::PROFILE_PROFESSIONS: break;
-				case cpa_client::PROFILE_APPEARANCE: break;
-				case cpa_client::PROFILE_COMPANIONS: break;
-				case cpa_client::PROFILE_MOUNTS: break;
-				case cpa_client::PROFILE_PETS: break;
-				case cpa_client::PROFILE_ACHIEVEMENTS: break;
-				case cpa_client::PROFILE_PROGRESSION: break;
-				default: 
-					throw new Exception("Illegal profile field: " . $fields[$i]);
+		$this->validate_region( $region );
+		
+		$fields_str = "";
+		if( $fields != null ) {		
+			for( $i = 0; $i < count($fields); $i++ ) {
+				switch( $fields[$i] ) {
+					case cpa_client::PROFILE_GUILD: break;
+					case cpa_client::PROFILE_STATS: break;
+					case cpa_client::PROFILE_TALENTS: break;
+					case cpa_client::PROFILE_ITEMS: break;
+					case cpa_client::PROFILE_REPUTATION: break;
+					case cpa_client::PROFILE_TITLES: break;
+					case cpa_client::PROFILE_PROFESSIONS: break;
+					case cpa_client::PROFILE_APPEARANCE: break;
+					case cpa_client::PROFILE_COMPANIONS: break;
+					case cpa_client::PROFILE_MOUNTS: break;
+					case cpa_client::PROFILE_PETS: break;
+					case cpa_client::PROFILE_ACHIEVEMENTS: break;
+					case cpa_client::PROFILE_PROGRESSION: break;
+					default: 
+						throw new Exception("Illegal profile field: " . $fields[$i]);
+				}
 			}
+			$fields_str = '?fields=' . implode( ',', $fields );
 		}
 	
 		return $this->request( 
@@ -96,12 +115,12 @@ class cpa_client {
 				$this->encodeServer($server) . 
 				'/' . 
 				$this->encodeName($name),
-			'?fields=' . implode( ',', $fields )
+			$fields_str
 		);
 	}
 	
 	private function encodeServer( $server ) {
-		return urlencode(mb_strtolower(str_replace(" ","-",$server),"UTF-8"));
+		return urlencode(mb_strtolower(mb_ereg_replace("'","",mb_ereg_replace(" ","-",$server)),"UTF-8"));
 	}
 	
 	private function encodeName( $name ) {
@@ -111,7 +130,7 @@ class cpa_client {
 	private function create_signature( $url, $method, $date_string ) {
 		
 		$string = $method . "\n" . $date_string . "\n" . $url .	"\n";
-		
+
 		return base64_encode(hash_hmac('sha1', $string, $this->private_key, true));
 	}
 	
@@ -120,7 +139,7 @@ class cpa_client {
 			return $this->signed_request( $host, $url, $query );
 		}
 		else {
-			return file_get_contents(
+			return @file_get_contents(
 				$host . $url . $query
 			);
 		}
@@ -140,8 +159,7 @@ class cpa_client {
 		));
 
 		$context = stream_context_create($opts);
-
-		return file_get_contents( $host . $url . $query, false, $context);
+		return @file_get_contents( $host . $url . $query, false, $context);
 	}
 }
 

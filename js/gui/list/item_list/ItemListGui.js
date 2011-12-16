@@ -101,8 +101,7 @@ ItemListGui.prototype.deserialize = function( data ) {
 		grid.rows[i].className = 'il_row'+(i%2); 
 		
 		a = document.createElement("a");
-		a.className = 'il_link';
-		a.style.color = g_color[tmp.quality];
+		a.className = 'il_link item_quality_'+tmp.quality;
 		
 //		if( tmp.quality == 1 ) {
 //			var wf = document.createElement("span");
@@ -131,10 +130,10 @@ ItemListGui.prototype.deserialize = function( data ) {
 //		}
 //		else {
 		
-			Listener.add(a, 'mouseover', this.eventMgr.fire, this.eventMgr, ['show_tooltip',[tmp]]);
-			Listener.add(a, 'mouseout', this.eventMgr.fire, this.eventMgr, ['hide_tooltip',[]]);
-			Listener.add(a, 'mousemove', this.eventMgr.fire, this.eventMgr, ['move_tooltip',[]]);
-			Listener.add(a, 'click', this.eventMgr.fire, this.eventMgr, ['click',[tmp]]);
+			Listener.add(a, 'mouseover', this.eventMgr.fire, this.eventMgr, ['show_tooltip',{'entity': tmp}]);
+			Listener.add(a, 'mouseout', this.eventMgr.fire, this.eventMgr, ['hide_tooltip',{}]);
+			Listener.add(a, 'mousemove', this.eventMgr.fire, this.eventMgr, ['move_tooltip',{}]);
+			Listener.add(a, 'click', this.eventMgr.fire, this.eventMgr, ['click',{'entity': tmp}]);
 			
 			if( this.staticLinks ) {
 				a.href = '?item='+tmp.id;
@@ -163,7 +162,7 @@ ItemListGui.prototype.deserialize = function( data ) {
 			grid.cells[i][column].className = cellStyle + " li_"+(tmp.typeMask2&512?"un":"")+"imp_col";
 			grid.cells[i][column++].innerHTML = tmp.dps ? TextIO.getSpeedFormatted(tmp) : "";
 		}
-		grid.cells[i][column].className = cellStyle;
+		grid.cells[i][column].className = cellStyle + " li_imp_col";
 		grid.cells[i][column++].innerHTML = tmp.level;
 
 		grid.cells[i][column].className = cellStyle + (this.dpsAndDelay ? " li_unimp_col" : " li_imp_col");;

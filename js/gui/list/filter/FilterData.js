@@ -16,7 +16,7 @@ FilterData.prototype = {
 	 * @returns {AbstractFilter}
 	 */
 	getFilter: function( operator, value ) {
-		throw new CalledAbstractMethodException("FilterData", "getFilter");
+		throw new NotImplementedException("FilterData", "getFilter");
 	}
 };
 

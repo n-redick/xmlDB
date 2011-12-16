@@ -46,23 +46,6 @@ Tools.removeChilds = function(el)
 	}
 };
 
-Tools.setChilds = function(parent, childs) {
-	var i;
-	if(!parent)
-	{
-		return;
-	}
-	while(parent.firstChild)
-	{
-		parent.removeChild(parent.firstChild);
-	}
-	for( i=0;i<childs.length;i++ ) {
-		if( childs[i] ) {
-			parent.appendChild(childs[i]);
-		}
-	}
-};
-
 Tools.addChilds = function(parent, childs) {
 	var i;
 	if(!parent)
@@ -76,19 +59,6 @@ Tools.addChilds = function(parent, childs) {
 	}
 };
 
-Tools.setChild = function(parent,child)
-{
-	if(!parent)
-	{
-		return;
-	}
-	while(parent.firstChild)
-	{
-		parent.removeChild(parent.firstChild);
-	}
-	parent.appendChild(child);
-};
-
 Tools.setColoredStat = function( compareNode, node, compareStat, stat, precision)
 {
 	var flooredCompareStat = Tools.floor(compareStat,precision);
@@ -98,7 +68,7 @@ Tools.setColoredStat = function( compareNode, node, compareStat, stat, precision
 		Tools.removeChilds(compareNode);
 	}
 	else {
-		Tools.setChild(node, document.createTextNode("["+flooredCompareStat+"]"));
+		DOM.set(node, document.createTextNode("["+flooredCompareStat+"]"));
 		if (flooredCompareStat > flooredStat) {
 			compareNode.className = CSS_COMPARE_GREEN_CLASS;
 		}
@@ -106,7 +76,7 @@ Tools.setColoredStat = function( compareNode, node, compareStat, stat, precision
 			compareNode.className = CSS_COMPARE_RED_CLASS;
 		}
 	}
-	Tools.setChild(node, document.createTextNode(flooredStat));
+	DOM.set(node, document.createTextNode(flooredStat));
 };
 
 Tools.floor = function(value,precision){
@@ -168,8 +138,9 @@ Tools.outline = function(str) {
 		d[i].innerHTML = str;
 		d[i].style.position = 'absolute';
 		d[i].style.textAlign = 'right';
+		d[i].style.width = '24px';
 		d[i].style.top = TOOLS_OUTLINE_POS[i].y+"px";
-		d[i].style.right = TOOLS_OUTLINE_POS[i].x+"px";
+		d[i].style.left = TOOLS_OUTLINE_POS[i].x+"px";
 		d[i].style.zIndex = i;
 		p.appendChild(d[i]);
 		
@@ -183,6 +154,9 @@ Tools.outline = function(str) {
 		}
 	}
 	p.style.position = 'relative';
+	p.style.height = '17px';
+	p.style.marginTop = '6px';
+	p.style.fontSize = '12px';
 	return p;
 };
 
@@ -198,8 +172,8 @@ Tools.jsCssClassHandler = function( node, obj ) {
 	node.focussed = false;
 	if( obj["focus"] ) {
 		node.onfocus = /** @this {Element} */function(){ this.focussed = true; this.className = obj["default"] + " " + obj["focus"]; };
-		node.onblur = /** @this {Element} */function(){ this.focussed = false; this.className = obj["default"]; };
 	}
+	node.onblur = /** @this {Element} */function(){ this.focussed = false; this.className = obj["default"]; };
 	if( obj["hover"] ) {
 		
 		if( obj["focusHover"] ) {
@@ -212,7 +186,7 @@ Tools.jsCssClassHandler = function( node, obj ) {
 				}
 			};
 			node.onmouseout = /** @this {Element} */function(){ 
-				if( this.focussed) { 
+				if( this.focussed && obj["focus"]) { 
 					this.className = obj["default"] + " " + obj["focus"]; 
 				}
 				else {
@@ -223,7 +197,7 @@ Tools.jsCssClassHandler = function( node, obj ) {
 		else {
 			node.onmouseover = /** @this {Element} */function(){ this.className = obj["default"] + " " + obj["hover"]; };
 			node.onmouseout = /** @this {Element} */function(){ 
-				if( this.focussed) { 
+				if( this.focussed && obj["focus"]) { 
 					this.className = obj["default"] + " " + obj["focus"]; 
 				}
 				else {

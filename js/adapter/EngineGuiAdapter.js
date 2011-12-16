@@ -5,14 +5,14 @@
  * @returns {EngineGuiAdapter}
  */
 function EngineGuiAdapter( engine, gui ) {
-
-	var leftClickHandler = new Handler( this.__onItemSlotLeftClick, this );
-	var onClassChangeHandler = new Handler( this.__updateClass, this );
 	
 	this.engine = engine;
 	this.gui = gui;
-	this.characterObserver = new CharacterObserver();
-	this.sheetObserver = new CharacterSheetObserver();
+	this.sheetObserver = new GenericObserver(['item_left_click'], new Handler( function( e ) {
+		if( e.is('item_left_click') ) {
+			this.__onItemSlotLeftClick(e.get('slot'), e.get('index'));
+		}
+	}, this));
 	
 	this.storedItemFilters = [];
 	
@@ -20,74 +20,550 @@ function EngineGuiAdapter( engine, gui ) {
 		this.storedItemFilters[i] = "";
 	}
 	
-	this.sheetObserver.onItemLeftClick = function(slot, index) {
-		leftClickHandler.notify( [slot, index ]);
-	};
-	
-	
-	this.characterObserver.onClassChange = function(newClass) {
-		onClassChangeHandler.notify( [newClass] );
-	};
+	var cHanlder = new Handler(function( e ){
+		if( e.is('class_change') ) {
+			this.__updateClass(e.get('class'));
+		}
+		else if( e.is('character_loaded') ) {
+			this.updateGlyphTab();
+		}
+		else if( e.is('gem_change') ) {
+			if ( this.guiTab == Gui.TAB_CHARACTER_SHEET && this.csTab == Gui.TAB_GEMS ) {
+				this.updateGemsTab();
+			}
+		}
+		else if( e.is('item_change') ) {
+			if( e.get('slot') == this.slot ) {
+				switch( this.guiTab ) {
+				case Gui.TAB_OVERVIEW:
+					this.updateOverviewTab();
+					break;
+				case Gui.TAB_CHARACTER_SHEET:
+					switch( this.csTab ) {
+					case Gui.TAB_GEMS:
+						this.updateGemsTab();
+						break;
+					case Gui.TAB_REFORGE:
+						this.updateReforgeTab();
+						break;
+					case Gui.TAB_ENCHANTS:
+						this.updateEnchantsTab();
+						break;
+					}
+					break;
+				}
+			}
+		}
+		else if( e.is('random_enchant_change') ) {
+			if ( this.guiTab == Gui.TAB_CHARACTER_SHEET && this.csTab == Gui.TAB_ENCHANTS ) {
+				var cc = this.engine.getCurrentCharacter();
+				this.gui.randomPropertyInterface.update(new EquippedItem( cc, cc.getEquippedItem(this.slot), this.slot));
+			}
+		}
+		else if( e.is('talent_tree_selected') ) {
+			gui.talentsGui.selectTree(e.get('tree'));
+		}
+		else if( e.is('talent_tree_reset') ) {
+			gui.talentsGui.update();
+		}
+		else if( e.is('talents_reset') ) {
+			gui.talentsGui.selectTree(this.engine.getCurrentCharacter().getSelectedTalentTree());
+			gui.talentsGui.update();
+		}
+		else if( e.is('talent_point_added') ) {
+			gui.talentsGui.update();
+		}
+		else if( e.is('talent_point_removed') ) {
+			gui.talentsGui.update();
+		}
+		else if( e.is('talent_distribution_set') ) {
+			gui.talentsGui.update();
+		}
+		else {
+			throw new Error("Unhandled event: "+e.event);
+		}
+	}, this);
+	this.characterObserver = new GenericObserver([
+		'class_change', 'gem_change','random_enchant_change',
+		'talent_tree_selected','talents_reset','talent_tree_reset',
+		'talent_point_added','talent_point_removed',
+		'talent_distribution_set', 'character_loaded', 'item_change'
+	], cHanlder);
 	
 	this.gui.characterSheet.addObserver(this.sheetObserver);
-	
-//	for( var i=0; i< 19; i++ ) {
-//		gui.characterSheet.slots[i].addListener( 'left_click', leftClickHandler );
-//	}
-	
-	gui.addListener('import', new Handler( this.__onImport, this));
-	
+	//
+	//
+	//
+	//
+	//
+	var gHandler = new Handler(function( e ){
+		var cc = this.engine.getCurrentCharacter();
+		if( e.is('select_talent_tree') ) {
+			cc.selectTalentTree(e.get('tree'));
+		}
+		else if( e.is('reset_talent_tree') ) {
+			cc.resetTalentTree(e.get('tree'));
+		}
+		else if( e.is('reset_talents') ) {
+			cc.resetTalents();
+		}
+		else if( e.is('add_talent_point') ) {
+			cc.addTalentPoint(e.get('tree'), e.get('row'), e.get('col'));
+		}
+		else if( e.is('remove_talent_point') ) {
+			cc.removeTalentPoint(e.get('tree'), e.get('row'), e.get('col'));
+		}
+		else if( e.is('show_tooltip') ) {
+			var row = e.get('row'), col = e.get('col'), tree = e.get('tree');
+			Tooltip.showTalent( TalentTooltip.getHTML(cc.getTalents(), tree, row, col, null), tree, row, col, e.get('node'));
+		}
+		else {
+			throw new Error("Unhandled event "+e.event);
+		}
+	},this);
+	var gObserver = new GenericObserver(['select_talent_tree', 'reset_talent_tree', 'reset_talents','show_tooltip','add_talent_point', 'remove_talent_point'], gHandler);
+	gui.talentsGui.addObserver(gObserver);
+	//
+	//#########################################################################
+	//
+	//	ITEM LIST
+	//
+	//#########################################################################
+	//
 	this.itemList = new ItemList();
-	
-	this.itemList.addListener('click', new Handler( this.__onItemListClick, this ));
-	
-	gui.initLists( this.itemList.gui );
-	
+	//
 	this.itemList.gui.show( false );
-	
-	engine.addListener( 'character_change', new Handler(this.__onCharacterChange, this));
-	
-	this.itemList.addListener( 'update', new Handler(	
-		function( list ) {
+	//
+	var ilHandler = new Handler(function( e ){
+		var cc;
+		if( e.is('show_tooltip') ) {
+			cc = this.engine.getCurrentCharacter();
+			Tooltip.showMovable( ItemTooltip.getHTML(e.get('entity'), cc) );
+			cc.setItemPreview( this.slot, e.get('entity') );
+		}
+		else if( e.is('move_tooltip') ) {
+			Tooltip.move();
+		}
+		else if( e.is('hide_tooltip') ) {
+			Tooltip.hide();
+			this.engine.getCurrentCharacter().removeItemPreview();
+		}
+		else if( e.is('click') ) {
+			cc = this.engine.getCurrentCharacter();
+			if( cc && this.slot != -1 ) {
+				try {
+					cc.addItem( this.slot, e.get('entity').clone() );
+				}
+				catch( e ) {
+					if( e instanceof InvalidItemException ) {
+						Tooltip.showError(e);
+					}
+					else {
+						Tools.rethrow(e);
+					}
+				}
+			}
+		}
+		else if( e.is('update') ) {
 			new ListBackEndProxy("php/interface/get_items.php").update(this.itemList);
-			
 			if( this.slot != -1 ) {
-				this.storedItemFilters[this.slot] = this.itemList.getArgumentString();
+
+				var args = this.itemList.getArgumentString(); 
+
+				this.__propagateFilterSettings('name',args);
+				this.__propagateFilterSettings('quality',args);
+				this.__propagateFilterSettings('lvl',args);
+				this.__propagateFilterSettings('reqlvl',args);
+				
+				this.storedItemFilters[this.slot] = args;
 				//
 				// TODO: propagation of common attributes like quality etc.
 			}
-		}, this
-	));
-	
-	this.itemList.addListener( 'show_tooltip', new Handler(
-		function( itm ) {
-			Tooltip.showMovable( ItemTooltip.getHTML(itm, this.engine.getCurrentCharacter()) );
-			this.engine.getCurrentCharacter().inventory.setPreview( itm, this.slot, this.socket );
-		}, this
-	));
-		
-	this.itemList.addListener( 'move_tooltip', new Handler(
-		function() {
+		}
+	}, this);
+	//
+	var ilObserver = new GenericObserver([
+		'show_tooltip',
+		'move_tooltip',
+		'hide_tooltip',
+		'update',
+		'click'
+	], ilHandler);
+	//
+	this.itemList.addObserver(ilObserver);
+	//
+	//#########################################################################
+	//
+	//	PROFILE LIST 
+	//
+	//#########################################################################
+	//
+	this.profileList = new ProfileList();
+	this.profileList.gui.showFilter(true);
+	//
+	var plHandler = new Handler(function( e ){
+		var cc;
+		if( e.is('show_tooltip') ) {
+//			cc = this.engine.getCurrentCharacter();
+//			Tooltip.showMovable( SpellTooltip.getHTML(e.get('entity'), cc) );
+//			cc.setEnchantPreview( this.slot, e.get('entity'));
+		}
+		else if( e.is('move_tooltip') ) {
+//			Tooltip.move();
+		}
+		else if( e.is('hide_tooltip') ) {
+//			Tooltip.hide();
+//			this.engine.getCurrentCharacter().removeEnchantPreview();
+		}
+		else if( e.is('click') ) {
+//			cc = this.engine.getCurrentCharacter();
+//			if( cc && this.slot != -1 && cc.getEquippedItem(this.slot) != null ) {
+//				cc.addEnchant( this.slot, e.get('entity').effects[0].secondaryEffect );
+//			}
+		}
+		else if( e.is('update') ) {
+			new ListBackEndProxy("php/interface/profiles/get_profiles.php").update(this.profileList);
+//			if( this.slot != -1 ) {
+//				this.storedGemFilters[this.slot] = this.gemList.getArgumentString();
+//				//
+//				// TODO: propagation of common attributes like quality etc.
+//			}
+		}
+	}, this);
+	//
+	var plObserver = new GenericObserver([
+		'show_tooltip',
+		'move_tooltip',
+		'hide_tooltip',
+		'update',
+		'click'
+	], plHandler);
+	//
+	this.profileList.addObserver(plObserver);
+	//
+	//#########################################################################
+	//
+	//	ENCHANT LIST 
+	//
+	//#########################################################################
+	//
+	this.enchantList = new SpellList();
+	//
+	var slHandler = new Handler(function( e ){
+		var cc;
+		if( e.is('show_tooltip') ) {
+			cc = this.engine.getCurrentCharacter();
+			Tooltip.showMovable( SpellTooltip.getHTML(e.get('entity'), cc) );
+			cc.setEnchantPreview( this.slot, e.get('entity'));
+		}
+		else if( e.is('move_tooltip') ) {
 			Tooltip.move();
-		}, this
-	));
-		
-	this.itemList.addListener( 'hide_tooltip', new Handler(
-		function() {
+		}
+		else if( e.is('hide_tooltip') ) {
 			Tooltip.hide();
-			this.engine.getCurrentCharacter().inventory.removePreview();
-		}, this
+			this.engine.getCurrentCharacter().removeEnchantPreview();
+		}
+		else if( e.is('click') ) {
+			cc = this.engine.getCurrentCharacter();
+			if( cc && this.slot != -1 && cc.getEquippedItem(this.slot) != null ) {
+				cc.addEnchant( this.slot, e.get('entity').effects[0].secondaryEffect );
+			}
+		}
+		else if( e.is('update') ) {
+			new ListBackEndProxy("php/interface/get_spells.php").update(this.enchantList);
+//			if( this.slot != -1 ) {
+//				this.storedGemFilters[this.slot] = this.gemList.getArgumentString();
+//				//
+//				// TODO: propagation of common attributes like quality etc.
+//			}
+		}
+	}, this);
+	//
+	var slObserver = new GenericObserver([
+		'show_tooltip',
+		'move_tooltip',
+		'hide_tooltip',
+		'update',
+		'click'
+	], slHandler);
+	//
+	this.enchantList.addObserver(slObserver);
+	//
+	//#########################################################################
+	//
+	//	GEM LIST 
+	//
+	//#########################################################################
+	//
+	this.gemList = new ItemList();
+	//
+	var glHandler = new Handler(function( e ){
+		var cc;
+		if( e.is('show_tooltip') ) {
+			cc = this.engine.getCurrentCharacter();
+			Tooltip.showMovable( ItemTooltip.getHTML(e.get('entity'), cc) );
+			cc.setGemPreview( this.slot, this.socket, e.get('entity') );
+		}
+		else if( e.is('move_tooltip') ) {
+			Tooltip.move();
+		}
+		else if( e.is('hide_tooltip') ) {
+			Tooltip.hide();
+			this.engine.getCurrentCharacter().removeGemPreview();
+		}
+		else if( e.is('click') ) {
+			cc = this.engine.getCurrentCharacter();
+			if( cc && this.slot != -1 && cc.getEquippedItem(this.slot) != null ) {
+				try {
+					cc.addGem( this.slot, this.socket, e.get('entity').clone() );
+				}
+				catch( e ) {
+					if( e instanceof InvalidItemException ) {
+						Tooltip.showError(e);
+					}
+					else {
+						Tools.rethrow(e);
+					}
+				}
+			}
+		}
+		else if( e.is('update') ) {
+			new ListBackEndProxy("php/interface/get_items.php").update(this.gemList);
+//			if( this.slot != -1 ) {
+//				this.storedGemFilters[this.slot] = this.gemList.getArgumentString();
+//				//
+//				// TODO: propagation of common attributes like quality etc.
+//			}
+		}
+	}, this);
+	//
+	var glObserver = new GenericObserver([
+		'show_tooltip',
+		'move_tooltip',
+		'hide_tooltip',
+		'update',
+		'click'
+	], glHandler);
+	//
+	this.gemList.addObserver(glObserver);
+	//
+	//#########################################################################
+	//
+	//	GUI - TAB, IMPORT 
+	//
+	//#########################################################################
+	//
+	var gh = new Handler( function( e ) {
+		if( e.is('import') ) {
+			this.__onImport(
+				e.get('name'), 
+				e.get('server'), 
+				e.get('region')
+			);
+		}
+		else if( e.is('save') ) {
+			this.__onSave(
+					e.get('name'), 
+					e.get('desc')
+				);
+			}
+		else if( e.is('tab_change') ) {
+			this.guiTab = e.get('newTab');
+			if( this.guiTab == Gui.TAB_OVERVIEW ) {
+				this.updateOverviewTab();
+			}
+		}
+		else if( e.is('csfolder_tab_change') ) {
+			this.csTab = e.get('newTab');
+			this.updateCharacterSheetTab();
+		}
+		else {
+			throw new Error("Unhandled event "+e.event);
+		}
+	}, this );
+	var go = new GenericObserver( ['import', 'save', 'tab_change', 'csfolder_tab_change'], gh );
+	this.gui.eventMgr.addObserver(go);
+	//
+	//#########################################################################
+	//
+	//	GLYPH INTERFACE 
+	//
+	//#########################################################################
+	//
+	this.gui.glyphInterface.eventMgr.addObserver(new GenericObserver(
+			['add_glyph', 'remove_glyph'], 
+			new Handler( function( e ) {
+				var cc = this.engine.getCurrentCharacter();
+				if( e.is('add_glyph') ) {
+					try {
+						cc.addGlyph( e.get('glyph').__glyph);
+					}
+					catch( e ) {
+						Tooltip.showError(e);
+					}
+					this.updateGlyphTab();
+				}
+				else if( e.is('remove_glyph') ) {
+					cc.removeGlyph( e.get('glyph').__glyph);
+					this.updateGlyphTab();
+				}
+			}, this)
 	));
+	//
+	//#########################################################################
+	//
+	//	BUFF INTERFACE 
+	//
+	//#########################################################################
+	//
+	this.gui.buffInterface.eventMgr.addObserver(new GenericObserver(
+			['add_buff'], 
+			new Handler( function( e ) {
+				var cc = this.engine.getCurrentCharacter();
+				if( e.is('add_buff') ) {
+					try {
+						cc.addBuff( e.get('id') );
+					}
+					catch( e ) {
+						Tooltip.showError(e);
+					}
+					this.updateGlyphTab();
+				}
+			}, this)
+	));
+	//
+	//#########################################################################
+	//
+	//	REFORGE INTERFACE 
+	//
+	//#########################################################################
+	//
+	var reHandler = new Handler( function( e ) {
+		var cc = this.engine.getCurrentCharacter();
+		if( e.is('reforge') ) {
+			cc.reforgeItem(this.slot, e.get('reduce'), e.get('add'));
+			this.updateReforgeTab();
+		}
+		else if( e.is('restore') ) {
+			cc.restoreItem(this.slot);
+			this.updateReforgeTab();
+		}
+		else if( e.is('reforge_preview') ) {
+			cc.setReforgePreview(this.slot, e.get('reduce'), e.get('add'));
+		}
+		else if( e.is('remove_reforge_preview') ) {
+			cc.removeReforgePreview(this.slot);
+		}
+	}, this);
+	this.gui.reforgeInterface.eventMgr.addObserver(new GenericObserver(
+			['reforge', 'restore', 'remove_reforge_preview', 'reforge_preview'], 
+			reHandler
+	));
+	//
+	//#########################################################################
+	//
+	//	SOCKET INTERFACE 
+	//
+	//#########################################################################
+	//
+	var siHandler = new Handler( function( e ) {
+		var cc, itm;
+		if( e.is('socket_left_click') ) {
+			cc = this.engine.getCurrentCharacter();
+			itm = cc.getEquippedItem( this.slot, 0 );
+			
+			this.socket = e.get('socket');
+			
+			if( itm == null ) {
+				return;
+			}
+			
+			var ic = 3, iscm = GameInfo.getMatchingGemSubClasses( itm.socketColors[this.socket]);
+			
+			this.gemList.setItemConstraints(0,ic,iscm);
+			
+			this.gemList.filterMgr.hideFilter('usablebyclass', true);
+			this.gemList.filterMgr.hideFilter('issocketablegem', true);
+			this.gemList.filterMgr.hideFilter('gemreqitemlvl', true);
+			this.gemList.filterMgr.hideFilter('class', true);
+			
+			this.gemList.set( 
+				(cc._chrClass != null ? 'usablebyclass.eq.'+(1<<(cc._chrClass._id-1))+';' : '') +
+				"issocketablegem.eq.1;class.eq.3;subclass.ba."+iscm+";" + 
+				"gemreqitemlvl.le."+itm.level+";",
+				null,
+				null,
+				1
+			);
+			
+			this.gemList.update();
+		}
+		else if( e.is('socket_right_click') ) {
+			cc = this.engine.getCurrentCharacter();
+			cc.removeGem( this.slot, e.get('socket') );
+		}
+		else if( e.is('used_gem_tooltip_show') ) {
+			cc = this.engine.getCurrentCharacter();
+			cc.setGemPreview( this.slot, e.get('socket'), ItemCache.get(e.get('gemId')));
+		}
+		else if( e.is('used_gem_tooltip_hide') ) {
+			cc = this.engine.getCurrentCharacter();
+			cc.removeGemPreview();
+		}
+		else if( e.is('socket_used_gem') ) {
+			cc = this.engine.getCurrentCharacter();
+			itm = cc.getEquippedItem( this.slot );
+			cc.addGem( this.slot, e.get('socket'), ItemCache.get(e.get('gemId')) );
+		}
+		else {
+			throw new Error("Unhandled event "+e.event);
+		}
+	}, this );
+	var siObserver = new GenericObserver( ['socket_used_gem','socket_left_click', 'socket_right_click', 'used_gem_tooltip_show', 'used_gem_tooltip_hide'], siHandler );
+	this.gui.socketInterface.eventMgr.addObserver(siObserver);
+	//
+	//#########################################################################
+	//
+	//	RANDOM ENCHANTMENT INTERFACE 
+	//
+	//#########################################################################
+	//
+	var reObserver = new GenericObserver(['change'], new Handler( function( e ){
+		if( e.is('change') ) {
+			cc = this.engine.getCurrentCharacter();
+			cc.setItemRandomEnchantment( this.slot, e.get('randomEnchantmentId') );
+		}
+		else {
+			throw new Error("Unhandled event "+e.event);
+		}
+	}, this ));
+	this.gui.randomPropertyInterface.eventMgr.addObserver(reObserver);
+	//
+	//#########################################################################
+	//
+	//
+	this.profileList.set("ismine.eq.1;", null, null, 1);
+	//
+	gui.initLists( this.itemList.gui, this.enchantList.gui, this.profileList.gui );
+	gui.socketInterface.setListGui(this.gemList.gui.node); this.gemList.gui.show(true);
+	
+	this.engine.addObserver( new GenericObserver(['character_change'], new Handler(function(e){
+		if( e.is('character_change') ) {
+			this.__onCharacterChange(e.get('character'));
+		}
+	}, this)));
 }
 
 EngineGuiAdapter.prototype = {
 	gui: null, engine: null,
-	itemList: null,
+	itemList: null,  gemList: null, enchantList: null, profileList: null,
 	slot: -1,
 	socket: -1,
 	adapter: null,
+	storedItemFilters: [], storedGemFilters: [],
+	guiTab: 0,
+	csTab: 0,
 	characterObserver: null,
-	storedItemFilters: [],
 	/**
 	 * @param {Character} character
 	 */
@@ -103,78 +579,196 @@ EngineGuiAdapter.prototype = {
 		
 		character.addObserver(this.characterObserver);
 	},
+	/**
+	 * @param {CharacterClass} newClass
+	 */
 	__updateClass: function( newClass ) {
 		var newArg = (newClass != null ? "usablebyclass.eq."+(1<<(newClass.id-1))+";" : "usablebyclass.eq.0;");
 		this.itemList.replaceArgument('usablebyclass', newArg);
 		
 		this.__replaceArgumentInStoredFilter('usablebyclass', newArg);
+		
+		if( newClass != null ) {
+			this.gui.talentsGui.init( new TalentsFacade( newClass.talents, this.engine.getCurrentCharacter() ) );
+		}
+		else {
+			this.gui.talentsGui.init(null);
+		}
+
+		this.updateGlyphTab();
+		
+		this.updateCharacterSheetTab();
 	},
 	__onItemSlotLeftClick: function( slot, index ) {
 		
 		if( index == 0 ) {
-			this.gui.characterSheet.selectSlot(slot);
-
-			var cc = this.engine.getCurrentCharacter();
-			var args =  this.storedItemFilters[slot];
-			
-			sl = cc.chardevSlotToBlizzardSlotMask(slot);
-			icl = cc.chardevSlotToItemClass(slot);
-			
-			this.itemList.setSlot( sl, icl[0], icl[1] );
-			
-			this.itemList.filterMgr.hideFilter('usablebyclass', true);
-			this.itemList.filterMgr.hideFilter('issocketablegem', true);
-			this.itemList.filterMgr.hideFilter('canbeusedwithlvl', true);
-			this.itemList.filterMgr.hideFilter('class', true);
-			this.itemList.filterMgr.hideFilter('gemreqitemlvl', true);
-			this.itemList.setWeaponSlot( cc.isWeaponSlot( slot ) );
-			
-			if( slot!=16 && slot!=17 && slot!=18 ) {
-				this.itemList.filterMgr.hideFilter('slot', true);
-			}
-			else {
-				this.itemList.filterMgr.hideFilter('slot', false);
-			}
-			if( slot==1 || slot == 12 || slot == 13 || slot == 14 || slot == 15 || slot == 6 || slot == 5) {
-				this.itemList.filterMgr.hideFilter('subclass', true);
-			}
-			else {
-				this.itemList.filterMgr.hideFilter('subclass', false);
-			}
-
-			args = args.replace(/\bclass\.\w+\.[^;]*;/,"") + (icl[0] >= 0 ? "class.eq."+icl[0]+";" : "");
-			args = args.replace(/\bslot\.\w+\.[^;]*;/,"") + (sl > 0 ? "slot.ba."+sl+";" : "");
-			args = args.replace(/\bsubclass\.\w+\.[^;]*;/,"") + (icl[1] > 0 ? "subclass.ba."+icl[1]+";" : "");
-			
-			//
-			//TODO: store filters
-			this.itemList.set( args, null, null, 1);
-			
-			this.itemList.update();
-			
-			this.itemList.gui.show( true );
-			
 			this.slot = slot;
+			
+			var cc = this.engine.getCurrentCharacter();
+			var itm = cc.getEquippedItem(this.slot, 0);
+			
+			if( ! itm && this.csTab != Gui.TAB_ITEMS ) {
+				this.gui.csFolder.show(Gui.TAB_ITEMS);
+			}
+			else {
+				this.updateCharacterSheetTab();
+			}
 		}
 	},
-	/**
-	 * @param {Item} itm
-	 */
-	__onItemListClick: function( itm ) {
+	updateGlyphTab: function() {
 		var cc = this.engine.getCurrentCharacter();
-		if( cc && this.slot != -1 ) {
-			try {
-				cc.inventory.set( this.slot, itm );
-			}
-			catch( e ) {
-				if( e instanceof InvalidItemException ) {
-					Tooltip.showError(e);
-				}
-				else {
-					Tools.rethrow(e);
-				}
+		var gs = [];
+		if( cc.chrClass ) { 
+			for( var i=0; i<cc.chrClass.availableGlyphs.length ; i++ ) {
+				gs.push(new GlyphFacade(cc.chrClass.availableGlyphs[i], cc));
 			}
 		}
+		this.gui.glyphInterface.update( gs, new CharacterFacade(cc));
+	},
+	updateOverviewTab: function() {
+		this.gui.overview.update(new CharacterFacade(this.engine.getCurrentCharacter()));
+	},
+	updateCharacterSheetTab: function() {
+		
+//		if( this.slot == -1 || this.guiTab != Gui.TAB_CHARACTER_SHEET ) {
+//			return;
+//		}
+//		
+//		this.gui.characterSheet.selectSlot(this.slot);
+		
+		switch( this.csTab ) {
+		case Gui.TAB_ITEMS:
+			if( this.slot == -1 ) {
+				return;
+			}
+			this.updateItemsTab();
+			break;
+		case Gui.TAB_GEMS:
+			if( this.slot == -1 ) {
+				return;
+			}
+			this.updateGemsTab();
+			break;
+		case Gui.TAB_ENCHANTS:
+			if( this.slot == -1 ) {
+				return;
+			}
+			this.updateEnchantsTab();
+			break;
+		case Gui.TAB_REFORGE:
+			if( this.slot == -1 ) {
+				return;
+			}
+			this.updateReforgeTab();
+			break;
+		case Gui.TAB_BUFFS:
+			Buffs.getAvailableBuffs(new Handler(function(buffs, exception){
+				if( exception != null ) {
+					Tooltip.showError(exception);
+					return;
+				} 
+				else {
+					this.gui.buffInterface.initialise( buffs );
+				}
+			},this), this.engine.getCurrentCharacter());
+			break;
+		}
+	},
+	updateReforgeTab: function() {
+		var cc = this.engine.getCurrentCharacter();
+		var itm = cc.getEquippedItem(this.slot);
+		this.gui.reforgeInterface.update(itm == null ? null : new EquippedItem(cc, itm, this.slot));
+	},
+	updateEnchantsTab: function() {
+		
+		this.enchantList.gui.show( false );
+		
+		if( this.slot == -1 ) {
+			return;
+		}
+		
+		var cc = this.engine.getCurrentCharacter();
+		var itm = cc.getEquippedItem(this.slot, 0);
+		
+		this.gui.randomPropertyInterface.update(itm == null ? null : new EquippedItem(cc, itm, this.slot));
+		
+		if( itm == null ) {
+			return;
+		}
+		
+		//TODO update enchant list
+		this.enchantList.filterMgr.hideFilter('isenchant', true);
+		this.enchantList.filterMgr.hideFilter('itemclasssubclasscombined', true);
+		this.enchantList.filterMgr.hideFilter('slot', true);
+		this.enchantList.filterMgr.hideFilter('enchantitemlevel', true);
+		this.enchantList.filterMgr.hideFilter('enchantchrlevel', true);
+		
+		
+		var args = "isenchant.eq.1;" +
+			"itemclasssubclasscombined.eq."+itm.itemClass+"."+itm.itemSubClass+";" +
+			"slot.ba."+(1<<itm.inventorySlot)+";" +
+			"enchantitemlevel.le."+itm.level+";" +
+			"enchantchrlevel.le."+cc.level+";";
+
+		this.enchantList.set( args, null, null, 1);
+		
+		this.enchantList.update();
+		
+		this.enchantList.gui.show( true );
+	},
+	updateGemsTab: function() {
+		if( this.slot == -1 ) {
+			return;
+		}
+		
+		var cc = this.engine.getCurrentCharacter();
+		var itm = cc.getEquippedItem(this.slot, 0);
+		
+		this.gui.socketInterface.update( 
+			itm == null ? null : new EquippedItem( cc, itm, this.slot),
+			this.getUsedGems()
+		);
+	},
+	updateItemsTab: function() {
+		var cc = this.engine.getCurrentCharacter();
+		var args =  this.storedItemFilters[this.slot];
+		
+		sl = cc.chardevSlotToBlizzardSlotMask(this.slot);
+		icl = cc.chardevSlotToItemClass(this.slot);
+		
+		this.itemList.setItemConstraints( sl, icl[0], icl[1] );
+		
+		this.itemList.filterMgr.hideFilter('usablebyclass', true);
+		this.itemList.filterMgr.hideFilter('issocketablegem', true);
+		this.itemList.filterMgr.hideFilter('canbeusedwithlvl', true);
+		this.itemList.filterMgr.hideFilter('class', true);
+		this.itemList.filterMgr.hideFilter('gemreqitemlvl', true);
+		this.itemList.setWeaponSlot( cc.isWeaponSlot( this.slot ) );
+		
+		if( this.slot!=16 && this.slot!=17 && this.slot!=18 ) {
+			this.itemList.filterMgr.hideFilter('slot', true);
+		}
+		else {
+			this.itemList.filterMgr.hideFilter('slot', false);
+		}
+		if( this.slot==1 || this.slot == 12 || this.slot == 13 || this.slot == 14 || this.slot == 15 || this.slot == 6 || this.slot == 5) {
+			this.itemList.filterMgr.hideFilter('subclass', true);
+		}
+		else {
+			this.itemList.filterMgr.hideFilter('subclass', false);
+		}
+
+		args = args.replace(/\bclass\.\w+\.[^;]*;/,"") + (icl[0] >= 0 ? "class.eq."+icl[0]+";" : "");
+		args = args.replace(/\bslot\.\w+\.[^;]*;/,"") + (sl > 0 ? "slot.ba."+sl+";" : "");
+		args = args.replace(/\bsubclass\.\w+\.[^;]*;/,"") + (icl[1] > 0 ? "subclass.ba."+icl[1]+";" : "");
+		
+		//
+		//TODO: store filters
+		this.itemList.set( args, null, null, 1);
+		
+		this.itemList.update();
+		
+		this.itemList.gui.show( true );
 	},
 	__onImport: function( name, server, region ) {
 		try {
@@ -188,15 +782,7 @@ EngineGuiAdapter.prototype = {
 	},
 	__onImportCallback: function( character, exception ) {
 		if ( exception != null ) {
-			if( exception instanceof GenericAjaxException ) {
-				Tooltip.showError(exception);
-			}
-			else if( exception instanceof BadResponseException ) {
-				Tooltip.showError(exception);
-			}
-			else {
-				Tools.rethrow(exception);
-			}
+			Tooltip.showError(exception);
 		}
 		else {
 			this.engine.getCurrentCharacter().load(character);
@@ -204,6 +790,28 @@ EngineGuiAdapter.prototype = {
 			this.gui.folder.show(Gui.TAB_CHARACTER_SHEET);
 			
 			Tooltip.enable();
+		}
+	},
+	__onSave: function( name, desc ) {
+		try {
+			var cc = Engine.getCurrentCharacter();
+			cc.setName(name);
+			cc.setDescription(desc);
+			
+			CharacterIO.writeToDatabaseSession(0, cc, new Handler( this.__onSaveCallback, this ));
+
+			Tooltip.showLoading();
+		}
+		catch( e ) {
+			Tooltip.showError(e);
+		}
+	},
+	__onSaveCallback: function( id, exception ) {
+		if ( exception != null ) {
+			Tooltip.showError(exception);
+		}
+		else {
+			Tooltip.show("Your profile was saved.<br /><a class='tt_profile_link' href='?profile="+id+"' target='_blank'>Click here</a> to view it.");
 		}
 	},
 	/**
@@ -214,5 +822,32 @@ EngineGuiAdapter.prototype = {
 		for( var i=0; i<INV_ITEMS; i++ ) {
 			this.storedItemFilters[i] = this.storedItemFilters[i].replace(new RegExp("\\b"+variable+"\\.\\w+\\.[^;]+;","g"), "") + replace ;
 		}
+	},
+	__propagateFilterSettings: function( variable, args ) {
+		var m = args.match(new RegExp("\\b"+variable+"\\.\\w+\\.[^;]+;","g"));
+		if( m ) {
+			this.__replaceArgumentInStoredFilter(variable,m.join(""));
+		}
+		else {
+			this.__replaceArgumentInStoredFilter(variable,"");
+		}
+	},
+	getUsedGems: function() {
+		var used = {};
+		var itm, gem;
+		var cc = this.engine.getCurrentCharacter();
+		for( var i=0; i<Inventory.SLOTS; i++ ) {
+			itm = cc.getEquippedItem(i);
+			if( itm == null ) {
+				continue;
+			}
+			for( var j=0; j<3; j++ ) {
+				gem = itm.gems[j];
+				if( gem ) {
+					used[gem.id] = new SocketedGem( cc, gem, j);
+				}
+			}
+		}
+		return used;
 	}
 };

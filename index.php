@@ -39,7 +39,9 @@
 <title>chardev 9</title>
 <!-- stylesheets -->
 <?php 
-echo '<link type="text/css" href="chardev9.css?'.$build.'" rel="stylesheet" />
+echo '
+<link type="text/css" href="chardev9.css?'.$build.'" rel="stylesheet" />
+<link type="text/css" href="list.css?'.$build.'" rel="stylesheet" />
 <link type="text/css" href="tooltip.css?'.$build.'" rel="stylesheet" />';
 ?>
 <!-- optimised js -->
@@ -50,9 +52,13 @@ echo '<link type="text/css" href="chardev9.css?'.$build.'" rel="stylesheet" />
 		profileId : 0,
 		sessionId : '',
 		userId : 0,
-		isPlanner : false
+		isPlanner : false,
+		userData: null,
+		profileLoadError: null
 	};
 	
+	var g_realmList = {};
+	var locale;
 	var g_onLoad = null;
 	
 	function __onLoad() {
@@ -84,7 +90,9 @@ echo '<link type="text/css" href="chardev9.css?'.$build.'" rel="stylesheet" />
 	g_settings.userId = ".($loggedIn?$_SESSION['user_id']:-1).";
 	g_settings.language = '".$g_lang_to_str[$g_language]."';
 	g_settings.debug = ".(isset($_GET['debug'])?"true":"false").";
-	var locale = ".json_encode($locale).";
+	g_settings.userData = ".($loggedIn?json_encode($_SESSION['user_data']):"null").";
+	locale = ".json_encode($locale).";
+	g_realmList = ".json_encode(get_realm_lists()).";
 /* ]]> */
 </script>";
 
@@ -124,8 +132,8 @@ echo '<link type="text/css" href="chardev9.css?'.$build.'" rel="stylesheet" />
 		include './php/content/talent_planner.php';
 		$page = PAGE_TALENTS;
 	}
-	else if(isset($_GET['forum']) || isset($_GET['topic'])){
-		include './php/content/forum.php';
+	else if(isset($_GET['forum']) || isset($_GET['thread'])){
+		include './php/thread_test.php';
 		$page = PAGE_FORUM;
 	}
 	else if(isset($_GET['register'])){
@@ -204,34 +212,83 @@ echo '<link type="text/css" href="chardev9.css?'.$build.'" rel="stylesheet" />
 		</div>
 	</div>
 
-	<div id="mtf_p">
-	<!--
-		<a class="cp_mm_link_base cp_mm_link_0_a">Character Sheet</a>
-		<a class="cp_mm_link_base cp_mm_link_1">Talents</a>
-		<a class="cp_mm_link_base cp_mm_link_2">Overview</a>
-		<a class="cp_mm_link_base cp_mm_link_3">Import</a>
-		<a class="cp_mm_link_base cp_mm_link_4">Save</a>
-		<a class="cp_mm_link_base cp_mm_link_5">Browse</a>
-	-->
-	</div>
+	<div class="ix_center ix_w">
+		<div class="ix_content_w">
+			<div class="cp_mm_p" id="mtf_p"></div>
+		
+			<div style="position: relative; top: 0px; left: 0px;">
+				
+			<?php 
+						if( $show_ads ) {
+							echo '
+							<div id="ix_ad_v" class="ix_ad_v">
+	<script type="text/javascript"><!--
+	google_ad_client = "ca-pub-7339088166028367";
+	/* 160x600, Erstellt 01.12.10 */
+	google_ad_slot = "9407904006";
+	google_ad_width = 160;
+	google_ad_height = 600;
+	//-->
+	</script>
+	<script type="text/javascript"
+	src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+	</script>
+	</div>						';
+						}
+					?>
+			</div>
+			<div class="ix_content_p">
+				<div class="ix_content_b">
+						<div class="ix_content" id="content">
+							<?php if(isset($g_content)) echo $g_content; ?>
+						</div>
+				</div> 
+			</div>
+		</div>
+		<div class="ix_foot">
 	
-	<div class="ix_center ix_content_p"> 
-	
-		<div class="ix_content" id="content">
-			<?php if(isset($g_content)) echo $g_content; ?>
+				<?php 
+				if( $show_ads) {
+					echo "
+						<div id='ix_ad_h' class='ix_ad_h'>
+							<script type='text/javascript'><!--
+							google_ad_client = 'pub-7339088166028367';
+							google_ad_slot = '8748092503';
+							google_ad_width = 728;
+							google_ad_height = 90;
+							//-->
+							</script>
+							<script type='text/javascript'
+							src='http://pagead2.googlesyndication.com/pagead/show_ads.js'>
+							</script>
+						</div>";
+				}
+				?>
+				
+			<div class="ix_bottom_link_bar">
+				<a class="ix_bottom_link" href='?items'>Items</a>
+				<a class="ix_bottom_link" href='?spells'>Spells</a>
+				<a class="ix_bottom_link" href='?base_stats'>Base Stats</a>
+				<a class="ix_bottom_link" href='?talents'>Talent Planner</a>
+				<a class="ix_bottom_link" href='?members'>Members</a>
+				<a class="ix_bottom_link" href='?credits'>Credits</a>
+				<a class="ix_bottom_link" href='?notice'>Site Notice</a>
+			</div>
+			<div class="ix_copy">&copy; 2007-2011 chardev.org - Design and Code by Martin Wa&szlig;mann<?php if( isset($build_number) ) { echo " - Build: ".$build_number; } ?></div>
+			<div class="ix_disclaimer">World of Warcraft and Blizzard Entertainment are trademarks or registered trademarks of Blizzard Entertainment in the U.S. and/or other countries.</div>
 		</div>
 	</div>
-	<div class="ix_center ix_foot">
-		<div class="ix_bottom_link_bar">
-			<a class="ix_bottom_link" href='?items'>Items</a>
-			<a class="ix_bottom_link" href='?spells'>Spells</a>
-			<a class="ix_bottom_link" href='?stats'>Base Stats</a>
-			<a class="ix_bottom_link" href='?mebers'>Members</a>
-			<a class="ix_bottom_link" href='?credits'>Credits</a>
-			<a class="ix_bottom_link" href='?notice'>Site Notice</a>
-		</div>
-		<div class="ix_copy">&copy; 2007-2011 chardev.org - Design and Code by Martin Wa&szlig;mann<?php if( isset($build_number) ) { echo " - Build: ".$build_number; } ?></div>
-		<div class="ix_disclaimer">World of Warcraft and Blizzard Entertainment are trademarks or registered trademarks of Blizzard Entertainment in the U.S. and/or other countries.</div>
+		
 	</div>
+	<!-- Google Analytics -->
+	<script type="text/javascript">
+		var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+		document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+		</script>
+		<script type="text/javascript">
+		var pageTracker = _gat._getTracker("UA-5069604-2");
+		pageTracker._initData();
+		pageTracker._trackPageview();
+	</script>
 </body>
 </html>

@@ -7,8 +7,8 @@ $donations = mysql_fetch_assoc(mysql_db_query(
 ));
 
 $g_content = '
-<div class="dn_p">
-	<div class="dn_title">Donate</div>
+<div class="content_wrapper">
+	<div class="content_header">Donate</div>
 	<div class="dn_info">
 		Chardev is a Web Application extensively using SQL and AJAX.
 		Every item you view or enchant you apply triggers a series of AJAX requests which are 
@@ -17,7 +17,7 @@ $g_content = '
 		If you want to support chardev, keep it alive and response times low please donate.  
 		<br />
 		<br />
-		As a small bonus, once donated, chardev will be free of advertisements. Be sure to supply your chardev user name, either directly via PayPal or afterwards via E-Mail.
+		As a small bonus, once donated, chardev will be free of advertisements. Be sure to supply your chardev user name, either directly via PayPal or after&shy;wards via E-Mail.
 		<br />
 		<br />
 		<div class="dn_signature">

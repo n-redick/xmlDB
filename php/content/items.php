@@ -58,41 +58,35 @@ if( isset($_GET['items']) && $_GET['items'] ) {
 			
 			document.getElementById('list_parent').appendChild(il.gui.node);
 			
-			il.addListener( 'show_tooltip', new Handler(
-				function( itm ) {
-					g_showItemTooltip( itm.id );
-				}, window
-			));
-			
-			il.addListener( 'move_tooltip', new Handler(
-				function() {
+			var ilHandler = new Handler(function( e ){
+				if( e.is('show_tooltip') ) {
+					g_showItemTooltip( e.get('entity').id );
+				}
+				else if( e.is('move_tooltip') ) {
 					g_moveTooltip();
-				}, window
-			));
-			
-			il.addListener( 'hide_tooltip', new Handler(
-				function() {
+				}
+				else if( e.is('hide_tooltip') ) {
 					g_hideTooltip();
-				}, window
-			));
+				}
+				else if( e.is('update') ) {
+					window.location.search = TextIO.queryString({ 
+						'items': il.getArgumentString().replace(/\;/g,"_"), 
+						'p': il.page, 
+						'o': il.order+"."+(il.orderDirection==List.ORDER_ASC?'asc':'desc')+"_" });
+				}
+			}, this);
 			
-			il.addListener( 'update', new Handler(
-				
-				function( list ) {
-					new ListBackEndProxy("php/interface/get_items.php").update(list);
-					/*
-					var tmp = ListBackEndProxy.getQueryObject(list);
-					var query = TextIO.queryString({ 
-						'items' : 	tmp['a'].replace( /\;/g, '_'), 
-						'p' : 		tmp['p'], 
-						'o': 		tmp['o'].replace( /\;/g, '_') });
-					//
-					// Pretty print: replace ; by _ as _ is not encoded
-					window.location.search = query;
-					*/
-				}, window
-			));
+			var ilObserver = new GenericObserver([
+				'show_tooltip',
+				'move_tooltip',
+				'hide_tooltip',
+				'update',
+			], ilHandler);
+			
+			il.addObserver(ilObserver);
 		}
+		
+		DOM.get('dbi_search').focus();
 	}
 </script>
 
@@ -108,8 +102,10 @@ if( $il_show ) {
 	$g_content = "
 <div class='dbi_w'>
 <div class='dbi_header'>
-	<div class='dbi_search_c'>
-		".$search_form."
+	<div class='dbi_title'>
+		Item Database
+	</div>
+	<div class='dbi_search_c'>{$search_form}
 	</div>
 	<div class='dbi_search_c'>
 		<span class='dbi_search_label'>Search</span>
@@ -124,7 +120,7 @@ else {
 
 	$g_content = "
 <div class='dbi_w'>
-<div class='dbi_search_label_large'>Search</div>
+<div class='dbi_search_label_large'>Search the Item Database</div>
 <div class='dbi_search_large'>".$search_form."</div>
 </div>";
 

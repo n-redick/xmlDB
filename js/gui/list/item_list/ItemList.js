@@ -1,29 +1,29 @@
 var FILTER_CLASS_OPTIONS = {};
-FILTER_CLASS_OPTIONS["Any class"] = 0;
-FILTER_CLASS_OPTIONS[locale['a_class'][0]] = 1;
-FILTER_CLASS_OPTIONS[locale['a_class'][1]] = 2;
-FILTER_CLASS_OPTIONS[locale['a_class'][2]] = 4;
-FILTER_CLASS_OPTIONS[locale['a_class'][3]] = 8;
-FILTER_CLASS_OPTIONS[locale['a_class'][4]] = 16;
-FILTER_CLASS_OPTIONS[locale['a_class'][5]] = 32;
-FILTER_CLASS_OPTIONS[locale['a_class'][6]] = 64;
-FILTER_CLASS_OPTIONS[locale['a_class'][7]] = 128;
-FILTER_CLASS_OPTIONS[locale['a_class'][8]] = 256;
-FILTER_CLASS_OPTIONS[locale['a_class'][10]] = 1024;
+FILTER_CLASS_OPTIONS[0] = "Any class";
+FILTER_CLASS_OPTIONS[1] = locale['a_class'][0];
+FILTER_CLASS_OPTIONS[2] = locale['a_class'][1];
+FILTER_CLASS_OPTIONS[4] = locale['a_class'][2];
+FILTER_CLASS_OPTIONS[8] = locale['a_class'][3];
+FILTER_CLASS_OPTIONS[16] = locale['a_class'][4];
+FILTER_CLASS_OPTIONS[32] = locale['a_class'][5];
+FILTER_CLASS_OPTIONS[64] = locale['a_class'][6];
+FILTER_CLASS_OPTIONS[128] = locale['a_class'][7];
+FILTER_CLASS_OPTIONS[256] = locale['a_class'][8];
+FILTER_CLASS_OPTIONS[1024] = locale['a_class'][10];
 
 var FILTER_YES_NO_OPTIONS = {};
-FILTER_YES_NO_OPTIONS[locale['F_No']] = 0;
-FILTER_YES_NO_OPTIONS[locale['F_Yes']] = 1;
+FILTER_YES_NO_OPTIONS[0] = locale['F_No'];
+FILTER_YES_NO_OPTIONS[1] = locale['F_Yes'];
 
 var FILTER_QUALITY_OPTIONS = {};
-FILTER_QUALITY_OPTIONS[locale['a_quality'][0]] = 0;
-FILTER_QUALITY_OPTIONS[locale['a_quality'][1]] = 1;
-FILTER_QUALITY_OPTIONS[locale['a_quality'][2]] = 2;
-FILTER_QUALITY_OPTIONS[locale['a_quality'][3]] = 3;
-FILTER_QUALITY_OPTIONS[locale['a_quality'][4]] = 4;
-FILTER_QUALITY_OPTIONS[locale['a_quality'][5]] = 5;
-FILTER_QUALITY_OPTIONS[locale['a_quality'][6]] = 6;
-FILTER_QUALITY_OPTIONS[locale['a_quality'][7]] = 7;
+FILTER_QUALITY_OPTIONS[0] = locale['a_quality'][0];
+FILTER_QUALITY_OPTIONS[1] = locale['a_quality'][1];
+FILTER_QUALITY_OPTIONS[2] = locale['a_quality'][2];
+FILTER_QUALITY_OPTIONS[3] = locale['a_quality'][3];
+FILTER_QUALITY_OPTIONS[4] = locale['a_quality'][4];
+FILTER_QUALITY_OPTIONS[5] = locale['a_quality'][5];
+FILTER_QUALITY_OPTIONS[6] = locale['a_quality'][6];
+FILTER_QUALITY_OPTIONS[7] = locale['a_quality'][7];
 
 var F_SLT_MASK_DFLT = 1<<1|1<<3|1<<5|1<<6|1<<7|1<<8|1<<9|1<<10;
 var F_SLT_MSK = [
@@ -52,7 +52,7 @@ ItemList.FILTER_DATA[locale['F_General']] = [
 	new RangeInputFilterData( locale['F_ItemLevel'], 'level' ),
 	new MultiSelectFilterData( locale['F_Quality'], 'quality', FILTER_QUALITY_OPTIONS ),
 	new RangeInputFilterData( locale['F_RequiredLevel'], 'reqlvl' ),
-	new SingleSelectFilterData( locale['F_ItemClass'], 'class', { "Armor": 4, "Gem": 3, "Weapon": 2 } )
+	new SingleSelectFilterData( locale['F_ItemClass'], 'class', { 4: "Armor", 3: "Gem", 2: "Weapon" } )
 ];
 ItemList.FILTER_DATA[locale['F_Stats']] = [
 	new InputFilterData( locale['CS_Stats'][1][0], 'str', InputFilterData.TYPE_NUMERIC ),
@@ -111,7 +111,7 @@ ItemList.prototype.setWeaponSlot = function( b ) {
 	this.weaponSlot = b;
 	this.gui.setProperty( "showDpsAndDelay", b);
 };
-ItemList.prototype.setSlot = function( slotMask, itemClass, itemSubClassMask ) {
+ItemList.prototype.setItemConstraints = function( slotMask, itemClass, itemSubClassMask ) {
 	this.slotMask = slotMask;
 	this.itemClass = itemClass;
 	this.itemSubClassMask = itemSubClassMask;
@@ -210,13 +210,13 @@ ItemList.prototype._getSubClassFilter = function( subclasses ) {
 	
 	if( subclasses ) {
 		for( i = 0; i < subclasses.length; i++ ) {
-			options[ITEM_CLASSES[this.itemClass][1][subclasses[i]]] = subclasses[i];
+			options[subclasses[i]] = ITEM_CLASSES[this.itemClass][1][subclasses[i]];
 		}
 	}
 	else {
 		for( i = 0; i < 32; i++ ) {
 			if( ((1<<i)&this.itemSubClassMask) != 0) {
-				options[ITEM_CLASSES[this.itemClass][1][i]] = i;
+				options[i] = ITEM_CLASSES[this.itemClass][1][i];
 			}
 		}
 	}
@@ -259,7 +259,7 @@ ItemList.prototype._getSlotFilter = function() {
 		if( (this.slotMask & 1<<i) == 0 ) {
 			continue;
 		}
-		options[i == 14 ? locale['F_ShieldHand'] : locale['a_slot'][i]] = i;
+		options[i] = i == 14 ? locale['F_ShieldHand'] : locale['a_slot'][i];
 	}
 	return new MultiSelectFilterData( locale['F_InventorySlot'], 'slot', options);
 };

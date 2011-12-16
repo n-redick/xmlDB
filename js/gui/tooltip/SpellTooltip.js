@@ -1,12 +1,12 @@
 
-var SpellTootip = {
+var SpellTooltip = {
 	/**
 	 * @param {Character} characterScope
 	 * @param {number} type
 	 * @param {Array} args
 	 * @returns {string}
 	 */
-	getTooltip : function( spell, characterScope, type, args )
+	getHTML : function( spell, characterScope, type, args )
 	{
 		spell.setLevel( characterScope != null ? characterScope.level : DEFAULT_LEVEL );
 		
@@ -128,7 +128,7 @@ var SpellTootip = {
 		//
 		//	desc
 		//
-		html += Tools.addTr1("<span class='tooltip_spell_description'>"+TextIO.parse(spell.getDescription(),characterScope).join('<br/>')+"</span>");
+		html += Tools.addTr1("<span class='tooltip_spell_description'>"+TextIO.nl2br(spell.getDescription(characterScope))+"</span>");
 		return html + "</table>";
 	}
 };

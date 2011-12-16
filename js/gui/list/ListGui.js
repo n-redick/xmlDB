@@ -2,7 +2,28 @@
  * @returns {ListGui}
  */
 function ListGui( categories ) {
-	this.eventMgr = new EventManager(['search', 'remove_custom_filter', 'add_custom_filter', 'create_filter', 'next_page', 'prev_page', 'change_order', 'show_tooltip', 'hide_tooltip', 'move_tooltip', 'click']);
+	
+	if( ! categories ) {
+		return null;
+	}
+	
+	this.eventMgr = new GenericSubject();
+//	([
+//		'search', 'remove_custom_filter', 'add_custom_filter', 
+//		'next_page', 'prev_page', 'change_order', 
+//		'show_tooltip', 'hide_tooltip', 'move_tooltip', 'click'
+//	]);
+	
+	this.eventMgr.registerEvent( 'search', []);
+	this.eventMgr.registerEvent( 'remove_custom_filter', ['customFilter']);
+	this.eventMgr.registerEvent( 'add_custom_filter', ['variable', 'customFilter']);
+	this.eventMgr.registerEvent( 'next_page', []);
+	this.eventMgr.registerEvent( 'prev_page', []);
+	this.eventMgr.registerEvent( 'change_order', ['order']);
+	this.eventMgr.registerEvent( 'hide_tooltip', []);
+	this.eventMgr.registerEvent( 'move_tooltip', []);
+	this.eventMgr.registerEvent( 'show_tooltip', ['entity']);
+	this.eventMgr.registerEvent( 'click', ['entity']);
 	
 	this.categories = categories;
 	//
@@ -46,7 +67,7 @@ function ListGui( categories ) {
 	
 	Tools.jsCssClassHandler( this.filterBtn, { 'default': "button button_light li_filter_search_btn", 'focus': "button_light_focus", 'hover': "button_light_hover"});
 	
-	Listener.add( this.form, "submit", this.eventMgr.fire, this.eventMgr, ['search',[]] );
+	Listener.add( this.form, "submit", this.eventMgr.fire, this.eventMgr, ['search',{}] );
 	
 	this.addFilterBtn = document.createElement("input");
 	this.addFilterBtn.type = "button";
@@ -77,7 +98,7 @@ function ListGui( categories ) {
 	
 	Tools.jsCssClassHandler( this.pagePrev, { 'default': "button button_light li_prev_page", 'focus': "button_light_focus", 'hover': "button_light_hover"});
 	
-	Listener.add(this.pagePrev,"click",this.eventMgr.fire,this.eventMgr,['prev_page']);
+	Listener.add(this.pagePrev,"click",this.eventMgr.fire,this.eventMgr,['prev_page', {}]);
 	
 	this.pageCurr = document.createElement("div");
 	this.pageCurr.className = "li_curr_page";
@@ -88,7 +109,7 @@ function ListGui( categories ) {
 	
 	Tools.jsCssClassHandler( this.pageNext, { 'default': "button button_light li_next_page", 'focus': "button_light_focus", 'hover': "button_light_hover"});
 	
-	Listener.add(this.pageNext,"click",this.eventMgr.fire,this.eventMgr,['next_page']);
+	Listener.add(this.pageNext,"click",this.eventMgr.fire,this.eventMgr,['next_page', {}]);
 	
 	this.pageGrid.cells[0][0].appendChild(this.pagePrev);
 	this.pageGrid.cells[0][1].appendChild(this.pageCurr);
@@ -111,7 +132,7 @@ ListGui.prototype = {
 	activeFilter: {},
 	staticFilter: {},
 	setProperty: function( property, value ) {
-		throw new CalledAbstractMethodException("ListGui","setProperty");
+		throw new NotImplementedException("ListGui","setProperty");
 	},
 	updateFilter: function( staticFilters, customFilters, customFilterOptions ) {
 		
@@ -128,15 +149,15 @@ ListGui.prototype = {
 	__initLayout: function() {
 		this.inputGrid = new StaticGrid( 0, 2 );
 		this.layoutGrid = new StaticGrid( 1, 1 );
-		this.layoutGrid.node.cellSpacing = "2px";
 		this.layoutGrid.setVerticalAlign(StaticGrid.VALIGN_TOP);
 		
 		this.inputGrid.node.cellSpacing = "2px";
-		this.inputGrid.node.className = 'li_filter_input_grid li_filter_grp';
+		this.inputGrid.node.className = 'group_t2 li_filter_input_grid li_filter_grp';
+		this.inputGrid.hide();
 		this.layoutGrid.cells[0][0].appendChild( this.inputGrid.node );
 		
 		var div = document.createElement("div");
-		div.className = "li_filter_grp";
+		div.className = "group_t2 li_filter_grp";
 		div.appendChild( this.customFilterParent);
 		div.appendChild( this.addFilterBtn );
 		
@@ -154,11 +175,11 @@ ListGui.prototype = {
 			}
 		}
 	},
-	addListener: function( event, handler ) {
-		this.eventMgr.addListener( event, handler);
+	addObserver: function( observer ) {
+		this.eventMgr.addObserver(observer);
 	},
-	addPropagator: function( event, eventMgr ) {
-		this.eventMgr.addPropagator( event, eventMgr);
+	addPropagator: function( event, subject ) {
+		this.eventMgr.addPropagator( event, subject);
 	},
 	addSelect: function( filter, slot ) {
 		while( slot + 1 >= this.layoutGrid.cols.length ) {
@@ -166,13 +187,15 @@ ListGui.prototype = {
 		}
 
 		var div = document.createElement("div");
-		var node = this.layoutGrid.cells[0][slot+1];
+		var node = document.createElement("div");
 		
 		div.innerHTML = filter.name;
 		div.className = "li_filter_lg_label";
-		Tools.setChilds(node, [div]);
+		DOM.set(node, div);
 		node.appendChild(filter.node);
-		node.className = "li_filter_grp";
+		node.className = "group_t2 li_filter_grp li_filter_select";
+		
+		this.layoutGrid.cells[0][slot+1].appendChild(node);
 	},
 	addInput: function( filter, slot ) {
 		while( slot >= this.inputGrid.rows.length ) {
@@ -183,11 +206,12 @@ ListGui.prototype = {
 
 		row[0].innerHTML = filter.name;
 		row[0].className = "li_filter_ig_label";
-		Tools.setChild(row[1],filter.node);
+		DOM.set(row[1],filter.node);
 		row[1].className = "li_filter_ig_input";
+		this.inputGrid.show();
 	},
 	newStaticFilter: function( filter ) {
-		throw new CalledAbstractMethodException("ListGui", "newStaticFilter");
+		throw new NotImplementedException("ListGui", "newStaticFilter");
 	},
 	newCustomFilter: function( filter ) {
 		var cf = new CustomFilter( this );
@@ -210,7 +234,7 @@ ListGui.prototype = {
 			this.content.innerHTML = "<div class='il_nothing'>Nothing Found</div>";
 		}
 		else {
-			Tools.setChild(this.content, node);
+			DOM.set(this.content, node);
 		}
 		this.disableSearchBtn(false);
 		this.pageNext.disabled = "";
@@ -232,14 +256,14 @@ ListGui.prototype = {
 		}
 		
 		if( maxPage > page ) {
-			this.pageNext.innerHTML = locale['next'];
+			this.pageNext.innerHTML = locale['next']+" &rsaquo;";
 			this.pageNext.style.display = "";
 		}
 		else {
 			this.pageNext.style.display = "none";
 		}
 		if ( page > 1 ) {
-			this.pagePrev.innerHTML = locale['previous'];
+			this.pagePrev.innerHTML = "&lsaquo; "+locale['previous'];
 			this.pagePrev.style.display = "";
 		}
 		else {
@@ -257,7 +281,7 @@ ListGui.prototype = {
 		}
 	},
 	deserialize: function( data ) {
-		throw new CalledAbstractMethodException("ListGui", "deserialize");
+		throw new NotImplementedException("ListGui", "deserialize");
 	},
 	setOrder: function( currentOrder, currentOrderDirection ) {
 		this.currentOrder = currentOrder;
@@ -266,9 +290,9 @@ ListGui.prototype = {
 	getSortLink: function( title, order ) {
 		var a = document.createElement("a");
 		a.innerHTML = title + ( order == this.currentOrder ? ( this.currentOrderDirection == List.ORDER_DESC ? ' ▼' : ' ▲') : "" );
-		a.className = 'li_sort_link'+( order == this.currentOrder ? '_active' : '' );
+		a.className = 'li_sort_link'+( order == this.currentOrder ? ' li_sort_link_active' : '' );
 		a.href = "javascript:";
-		Listener.add(a, 'click', this.eventMgr.fire, this.eventMgr, ['change_order',[order]]);
+		Listener.add(a, 'click', this.eventMgr.fire, this.eventMgr, ['change_order',{ 'order': order}]);
 		return a;
 	}
 };
@@ -281,9 +305,9 @@ ListGui.prototype = {
 function CustomFilter( parentGui ){
 	this.parentGui = parentGui;
 	
-	var sg = new StaticGrid(1,3); sg.node.className = "fi_cf_table";
+	var sg = new StaticGrid(1,3); sg.node.className = "group_t3 fi_cf_table";
 	var none = document.createElement("option"); none.innerHTML = ""; none.value = "";
-	var rm = document.createElement("a"); rm.className = "fi_cf_remove"; rm.href="javascript:";
+	var rm = document.createElement("a"); rm.className = "remove fi_cf_remove"; rm.href="javascript:";
 	
 	this.node = document.createElement("div");
 	
@@ -322,19 +346,19 @@ CustomFilter.prototype = {
 	onChange: function() {
 		var i = this.select.selectedIndex; 
 		if( i <= 0 || this.filter != null ) {
-			this.parentGui.eventMgr.fire( 'remove_custom_filter', [this.filter] );
+			this.parentGui.eventMgr.fire( 'remove_custom_filter', {'filter':this.filter});
 			this.filterParent.innerHTML = "";
 			this.filter = null;
 		}
 		
 		if( i > 0 ) {
-			this.parentGui.eventMgr.fire( 'add_custom_filter', [this.select.options[i].value, this] );
+			this.parentGui.eventMgr.fire( 'add_custom_filter', {'variable': this.select.options[i].value, 'customFilter': this} );
 		}
 	},
 	onRemove: function() {
 
 		if( this.filter != null ) {
-			this.parentGui.eventMgr.fire( 'remove_custom_filter', [this.filter] );
+			this.parentGui.eventMgr.fire( 'remove_custom_filter', {'filter':this.filter});
 		}
 		
 		this.node.parentNode.removeChild( this.node );

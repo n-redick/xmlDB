@@ -118,7 +118,7 @@ Stats.prototype.reset = function() {
 		this.ratings[i] = 0;
 	}
 	this.melee = [0,0,0,0,0,0,0,0,0,0];
-	this.ranged = [0,0,0,0,0,0,0,0];
+	this.ranged = [[0,0],0,0,0,0,0,0,0];
 	this.spell = [0,0,0,0,0,0,0,0];
 	this.defense = [0,0,0,0,0];
 	this.resistance = [0,0,0,0,0];
@@ -239,6 +239,7 @@ Stats.prototype.deminishingReturnParry = function(_v, chrClassId){
 };
 /**
  * @param {boolean} preview
+ * @param {boolean} noBuffs
  */
 Stats.prototype.calculate = function( preview, noBuffs  ) {
 	//
@@ -271,7 +272,7 @@ Stats.prototype.calculate = function( preview, noBuffs  ) {
 	var chrClass = this.character.chrClass;
 	var hasClass = false;
 	var classId  = 0; 
-	var shapeForm = 0;
+	var shapeform = 0;
 	var selectedTree = -1;
 	var baseStats = null;
 	var baseStatsLevel = null;
@@ -279,7 +280,7 @@ Stats.prototype.calculate = function( preview, noBuffs  ) {
 	if( chrClass ) {
 		hasClass = true;
 		classId = chrClass.id;
-		shapeForm = chrClass.shapeForm;
+		shapeform = chrClass.shapeform;
 		selectedTree = chrClass.talents.selectedTree;
 		baseStats = chrClass.baseStats;
 		if( baseStats[level] ) {
@@ -290,8 +291,8 @@ Stats.prototype.calculate = function( preview, noBuffs  ) {
 	var baseAttributesUnmodified = [0,0,0,0,0];
 	var ap_array = AP_PER_STAT[classId];
 	
-	if( classId == DRUID && shapeForm > 0 ) {
-		switch( shapeForm ) {
+	if( classId == DRUID && shapeform > 0 ) {
+		switch( shapeform ) {
 		case CAT:	
 			ap_array = AP_PER_STAT_CAT;
 			break;
@@ -327,7 +328,7 @@ Stats.prototype.calculate = function( preview, noBuffs  ) {
 	//
 	//	Feral swiftness
 	//
-	if( shapeForm == CAT || shapeForm == BEAR || shapeForm == DIRE_BEAR ) {
+	if( shapeform == CAT || shapeform == BEAR || shapeform == DIRE_BEAR ) {
 	// 		Rank 1
 		if( this.character.auras.isActive(17002) ) {
 			baseEffects[49] += 2;
@@ -341,13 +342,13 @@ Stats.prototype.calculate = function( preview, noBuffs  ) {
 	//	Master shapeshifter +4% crit in cat form
 	//
 	if( this.character.auras.isActive(48411) ) {
-		if( shapeForm == CAT ) {
+		if( shapeform == CAT ) {
 			baseEffects[290] += 4;
 		}
 		//
 		//						+4% physical damage in bear form
 		//
-		if( shapeForm == BEAR || shapeForm == DIRE_BEAR ) {
+		if( shapeform == BEAR || shapeform == DIRE_BEAR ) {
 			baseEffects[79][0] += 4;
 		}
 	}
@@ -603,7 +604,7 @@ Stats.prototype.calculate = function( preview, noBuffs  ) {
 	//#########################################################################
 	// TODO feral ap
 	/*
-	if (chrClassId == 1024 && (shapeForm == 1 || shapeForm == 2 || shapeForm == 3) && (tmp = inventory.get(16))) 
+	if (chrClassId == 1024 && (shapeform == 1 || shapeform == 2 || shapeform == 3) && (tmp = inventory.get(16))) 
 	{
 		this.attackPower += tmp.getFeralAp() + (tmp.getFeralAp() + tmp.getRating(27)) * Math.ceil(talents.getSpent(1,3,1) * 6.66) / 100;
 	}
@@ -611,14 +612,14 @@ Stats.prototype.calculate = function( preview, noBuffs  ) {
 	//
 	//	Main-hand
 	//
-	if (classId == DRUID && shapeForm == BEAR ) {
+	if (classId == DRUID && shapeform == BEAR ) {
 		this.mhSpeed 	= 2500;
 		if ( (tmp = inv.get(16)) ) {
 			this.mhMinDmg 	= tmp.minDamage * 2500 / tmp.delay;
 			this.mhMaxDmg 	= tmp.maxDamage * 2500 / tmp.delay;
 		}
 	}
-	else if (classId == DRUID && shapeForm == CAT ) {
+	else if (classId == DRUID && shapeform == CAT ) {
 		this.mhSpeed 	= 1000;
 		if ( (tmp = inv.get(16)) ) {
 			this.mhMinDmg 	= tmp.minDamage * 1000 / tmp.delay;
@@ -882,9 +883,9 @@ Stats.prototype.calculate = function( preview, noBuffs  ) {
 		this.ranged[3] = this.raSpeed;
 	}
 	else {
-		this.ranged[0] = null;
-		this.ranged[1] = null;
-		this.ranged[3] = null;
+		this.ranged[0] = [-1, -1];
+		this.ranged[1] = -1;
+		this.ranged[3] = -1;
 	}
 	
 	this.ranged[2] = this.rangedAttackPower;

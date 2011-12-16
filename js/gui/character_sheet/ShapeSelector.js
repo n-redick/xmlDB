@@ -4,26 +4,23 @@
  */
 function ShapeSelector() {
 	this.node = document.createElement("div");
-	this.eventMgr = new EventManager(["select_shape"]);
+	this.eventMgr = new GenericSubject();
+	this.eventMgr.registerEvent('select_shape', ['shape_id']);
 }
 
 ShapeSelector.prototype = {
 	eventMgr: null,
 	node: null, showMoonkin: false,
-	__onClick: function(){},
-	__onMouseOver: function(){},
-	__onMouseOut: function(){},
-	//
-	//#########################################################################
-	//
-	//	METHODS
-	//
-	//#########################################################################
-	//
+	__onClick: function( shapeformId ){
+		this.eventMgr.fire('select_shape', {'shape_id': shapeformId});
+	},
+	addPropagator: function(event, propagator) {
+		this.eventMgr.addPropagator(event, propagator);
+	},
 	update: function( availableShapeforms, currentShapeformId ) {
 		var parent,div;
-		Tools.removeChilds(this._node);
-		if( availableShapeforms.lenght != 0 )
+		Tools.removeChilds(this.node);
+		if( availableShapeforms != null && availableShapeforms.length != 0 )
 		{
 			parent = document.createElement("div");
 			for (var i = 0; i < availableShapeforms.length; i++) 
@@ -37,28 +34,20 @@ ShapeSelector.prototype = {
 				
 				parent.appendChild(div);
 
-				Listener.add( div, "mouseover", Tooltip.showShape, Tooltip, [availableShapeforms[i].description] );
+				Listener.add( 
+						div, 
+						"mouseover", 
+						Tooltip.show, 
+						Tooltip, 
+						[ "<div class='tooltip_spell_description'>"+availableShapeforms[i].description+"</div>"] 
+				);
 				div.onmouseout = function(){Tooltip.hide();};
 				div.onmousemove = function(){Tooltip.move();};
 				Listener.add( div, "click", this.__onClick, this, [availableShapeforms[i].id]);
 				this._showMoonkin = true;
 			}
-			this._node.appendChild(parent);
-			Tools.clearBoth(this._node);
+			this.node.appendChild(parent);
+			Tools.clearBoth(this.node);
 		}
 	}
-};
-
-/**
- * @constructor
- * @param {number} id
- * @param {string} icon
- * @param {string} description
- * @returns {AvailableShapeform}
- */
-function AvailableShapeform( id, icon, description ) {
-	this.id = id; this.icon = icon; this.description = description;
-} 
-AvailableShapeform.prototype = {
-	id: 0, icon: "", description: ""
 };

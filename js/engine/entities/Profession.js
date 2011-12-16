@@ -4,7 +4,6 @@
  *            character
  * @param {Array}
  *            serialized
- * @returns {Profession}
  */
 function Profession(character, serialized) {
 	this.id = serialized[0];

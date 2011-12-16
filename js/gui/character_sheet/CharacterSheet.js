@@ -1,9 +1,24 @@
 function CharacterSheet() {
-	this.eventMgr = new CharacterSheetEventManager(); 
-	var grid, i, j, div, div2, slotGrid, wpnGrid;
+	this.eventMgr = new GenericSubject();
+	this.eventMgr.registerEvent('race_select', ['race_id']);
+	this.eventMgr.registerEvent('class_select', ['class_id']);
+	this.eventMgr.registerEvent('level_select', ['level']);
+	this.eventMgr.registerEvent('profession_select', ['index','id']);
+	this.eventMgr.registerEvent('profession_level_select', ['index','level']);
+	this.eventMgr.registerEvent('stat_tooltip_show', ['group','index','node']);
+	this.eventMgr.registerEvent('stat_tooltip_hide', ['group','index','node']);
+	this.eventMgr.registerEvent('item_right_click', ['slot','index']);
+	this.eventMgr.registerEvent('item_left_click', ['slot','index']);
+	this.eventMgr.registerEvent('item_tooltip_show', ['slot','index']);
+	this.eventMgr.registerEvent('item_tooltip_hide', ['slot','index']);
+	this.eventMgr.registerEvent('remove_buff', ['spell_id']);
+	this.eventMgr.registerEvent('add_buff_stack', ['spell_id']);
+	this.eventMgr.registerEvent('select_shape', ['shape_id']);
+	//new CharacterSheetEventManager(); 
+	var grid, i, j, div, div2, slotGrid, wpnGrid, profDiv;
 	//
 	this.raceClassSelector = new RaceClassSelector( this );
-	this.shapeSelector = new ShapeSelector();
+	this.shapeSelector = new ShapeSelector(); this.shapeSelector.addPropagator('select_shape', this.eventMgr);
 	this.presenceSelector = new PresenceSelector();
 	this.buffBar = new BuffBar();
 	//
@@ -43,6 +58,7 @@ function CharacterSheet() {
 	div = document.createElement("div");
 	div.className = "cs_m_grid_t";
 	div.appendChild(grid.node);
+	profDiv = DOM.createAt(div, 'div', {'class': 'cs_prof_p'});
 	//
 	this.node.appendChild(div);
 	//
@@ -60,12 +76,9 @@ function CharacterSheet() {
 		this.slots[i] = new ItemSlot( this, i );
 	}
 	for( i = 0; i < 8; i++ ) {
-		slotGrid.cells[i][0].style.paddingRight = "8px";
-		slotGrid.cells[i][1].style.paddingLeft = "8px";
 		slotGrid.cells[i][0].appendChild(this.slots[i].node);
 		slotGrid.cells[i][1].appendChild(this.slots[i+8].node);
 	}
-	slotGrid.node.className = 'align_center';
 	div.appendChild(slotGrid.node);
 	//
 	wpnGrid = new StaticGrid(1,3);
@@ -93,26 +106,24 @@ function CharacterSheet() {
 			this.statCollapsables[i].toggle();
 		}
 		this.stats[i] = [];
-		div = document.createElement('div');
-		div.className = 'stat_title';
-		div.appendChild(document.createTextNode(locale['CS_StatGroups'][i]));
-		this.statCollapsables[i].header.appendChild(div);
 		for( j=0; j<locale['CS_Stats'][i].length; j++ ) {
-			this.stats[i][j] = new Stat( this, i,j);
+			var stat = new Stat(i,j);
+			stat.addPropagator('stat_tooltip_show', this.eventMgr);
+			stat.addPropagator('stat_tooltip_hide', this.eventMgr);
+			this.stats[i][j] = stat;
 			this.statCollapsables[i].content.appendChild(this.stats[i][j].node);
 		}
-		this.statCollapsables[i].node.className = 'cs_st_p';
+		this.statCollapsables[i].node.className = 'group cs_st_p';
+		this.statCollapsables[i].content.className = 'cs_st_c';
+		
+		div = DOM.createAt( this.statCollapsables[i].header, 'div', {'class': 'stat_title_p'} );
+		DOM.createAt( div, 'a', {'class': 'stat_title', 'text': locale['CS_StatGroups'][i], 'href': 'javascript:'} );
 		
 		grid.cells[0][1].appendChild(this.statCollapsables[i].node);
 	}
 	
-	this.professionsParent = new StaticGrid(0,2);
+	this.professionsParent = new StaticGrid(2,2);
 	this.professionsParent.node.className = 'cs_prof_grid';
-	this.professionsParent.addJoinedRow();
-	this.professionsParent.addRow();
-	this.professionsParent.addRow();
-	
-	this.professionsParent.cells[0][0].innerHTML = "<div class='cs_prof_title'>"+locale['Professions']+"</div>";
 	
 	this.professionSelects = [null,null];
 	
@@ -121,10 +132,11 @@ function CharacterSheet() {
 	this.__buildProfessionSelects();
 	
 	for( i=0; i<2; i++ ) {
-		this.professionsParent.cells[1+i][0].appendChild(this.professionSelects[i].node);
-		this.professionsParent.cells[1+i][1].appendChild(this.professionLevelSelects[i].node);
+		this.professionsParent.cells[i][0].appendChild(this.professionSelects[i].node);
+		this.professionsParent.cells[i][1].appendChild(this.professionLevelSelects[i].node);
 	}
-//	grid.cells[0][0].appendChild(this.professionsParent.node);
+	DOM.createAt(profDiv, 'div', {'class': 'cs_prof_title', 'text': locale['Professions']});
+	profDiv.appendChild(this.professionsParent.node);
 	
 	this.slots[18].setVisibility(false);
 	
@@ -170,9 +182,6 @@ CharacterSheet.prototype = {
 	removeObserver: function( observer ) {
 		this.eventMgr.removeObserver(observer);
 	},
-	__onShowStatTooltip: function( group, index, node ) {
-		this.eventMgr.fireStatTooltipShow(group, index, node);
-	},
 	__buildProfessionSelects: function() {
 		var opts, i;
 		for( var professionIndex = 0; professionIndex<2; professionIndex++ ) {
@@ -198,19 +207,22 @@ CharacterSheet.prototype = {
 		}
 	},
 	__onProfessionChange: function( professionIndex ) {
-		this.eventMgr.fireProfessionSelect(
-			professionIndex,
-			parseInt(this.professionSelects[professionIndex].getValue(), 10)
-		);
+		this.eventMgr.fire('profession_select', {
+			'index': professionIndex,
+			'id': parseInt(this.professionSelects[professionIndex].getValue(), 10)
+		});
 	},
 	__onProfessionLevelChange: function( professionIndex ) {
-		this.eventMgr.fireProfessionLevelSelect(
-			professionIndex,
-			parseInt(this.professionLevelSelects[professionIndex].getValue(), 10)
-		);
+
+		this.eventMgr.fire('profession_level_select', {
+			'index': professionIndex,
+			'level': parseInt(this.professionLevelSelects[professionIndex].getValue(), 10)
+		});
 	},
 	__onLevelChange: function() {
-		this.eventMgr.fireLevelSelect(parseInt( this.level.options[this.level.selectedIndex].value, 10 ));
+		this.eventMgr.fire('level_select', {
+			'level': parseInt( this.level.options[this.level.selectedIndex].value, 10 )
+		});
 	},
 	/**
 	 * @param {number} level
@@ -278,7 +290,7 @@ CharacterSheet.prototype = {
 			
 			if( prof != null ) {
 				
-				this.professionSelects[professionIndex].select( prof.id );
+				this.professionSelects[professionIndex].select( prof.id.toString() );
 			
 				this.professionLevelSelects[professionIndex].node.style.display = "block";
 
@@ -288,7 +300,7 @@ CharacterSheet.prototype = {
 					opts.push([i,i]);
 				}
 				this.professionLevelSelects[professionIndex].set(opts);
-				this.professionLevelSelects[professionIndex].select( prof.level );
+				this.professionLevelSelects[professionIndex].select( prof.level.toString() );
 			}
 			else {
 				this.professionLevelSelects[professionIndex].node.style.display = "none";
@@ -304,29 +316,17 @@ CharacterSheet.prototype = {
 		}
 		this.selectedSlot = slot;
 	},
-	selectedClass: function( raceId ) {
-		this.eventMgr.fireClassSelect(raceId);
+	selectedClass: function( classId ) {
+		this.eventMgr.fire('class_select', {'class_id': classId});
 	},
 	selectedRace: function( raceId ) {
-		this.eventMgr.fireRaceSelect(raceId);
-	},
-	leftClickItem: function( slot, index ) {
-		this.eventMgr.fireItemLeftClick(slot, index);
-	},
-	rightClickItem: function( slot, index ) {
-		this.eventMgr.fireItemRightClick(slot, index);
+		this.eventMgr.fire('race_select', {'race_id': raceId});
 	},
 	showSlotTooltip: function( slot, index ) {
-		this.eventMgr.fireItemTooltipShow(slot, index);
+		this.slots[slot].showTooltip(index);
 	},
 	hideSlotTooltip: function( slot, index ) {
-		this.eventMgr.fireItemTooltipHide(slot, index);
-	},
-	showStatTooltip: function( group, index, node ) {
-		this.eventMgr.fireStatTooltipShow(group, index, node);
-	},
-	hideStatTooltip: function( group, index, node ) {
-		this.eventMgr.fireStatTooltipHide(group, index, node);
+		this.slots[slot].hideTooltip(index);
 	}
 };
 

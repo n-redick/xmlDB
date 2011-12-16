@@ -31,14 +31,13 @@ if( $topicId )
 	$post_count_record = mysql_fetch_assoc(mysql_query("select count(*) as count from forum_post where topicID=".(int)$topicId));
 	$post_pages = (int)ceil((float)$post_count_record['count']/(float)$GLOBALS['posts_per_page']);
 //	
-	$fo_ll = "<a class='fo_link' href='?forum'>chardev forum</a>";
+	$fo_ll = "<a class='fo_link' href='?forum'>forum</a>";
 //	
 	if( $topic )
 	{
-		$fo_ll .= ' &raquo; '
-			.'<a class="fo_link" href="?forum='.$topic['subforumID'].'">'.$topic['subforum_title'].'</a>'
+		$fo_ll .= ' &raquo; <a class="fo_link" href="?forum='.$topic['subforumID'].'">'.$topic['subforum_title'].'</a>'
 			.' &raquo; '
-			.forum_topic_link( $topic['flag'], $topic['locked'], $topicId, $topic['topic_title'] );
+			.'<span class="fo_ll_active">'.forum_topic_link( $topic['flag'], $topic['locked'], $topicId, $topic['topic_title'] ).'</span>';
 	}
 //	
 	if( $loggedIn && $topic )
@@ -56,8 +55,8 @@ if( $topicId )
 	
 	$g_content = "
 <div class='fo_ll'>
-	<div class='fo_ll fo_ll_left'>".$fo_ll."</div>
-	<div class='fo_ll fo_ll_right'>".$action."</div>
+	<div class='fo_ll_left'>".$fo_ll."</div>
+	<div class='fo_ll_right'>".$action."</div>
 </div>
 <table cellpadding='0' cellspacing='0' class='fo_table'>
 	<colgroup>
@@ -80,7 +79,7 @@ if( $topicId )
 		</td>
 	</tr>
 	<tr>
-		<td class='forum_user_info".($posts[$i]['role']==10?'_admin':'')."' valign='top'>
+		<td rowspan='2' class='forum_user_info".($posts[$i]['role']==10?'_admin':'')."' valign='top'>
 		<div class='fo_user_name ".$user_role_to_css_class[$posts[$i]['role']]."'><a class='fo_user_link' href='?user=".$posts[$i]['userId']."'>".$posts[$i]['user']."</a></div>";
 		if($posts[$i]['avatar'])
 		{
@@ -110,7 +109,14 @@ if( $topicId )
 		$g_content .= "
 		</div></td>
 	</tr>
-		";
+	<tr>
+		<td class='fo_signatue_p' valign='bottom'>
+		".($posts[$i]['signature'] 
+			? "<div class='fo_sig_spacer'></div>
+				<div class='fo_signature'>".$posts[$i]['signature']."</div>" 
+			: "")."
+		</td>
+	</tr>";
 	}
 	if($reply)
 	{
@@ -162,12 +168,11 @@ else if( $subforumId )
 	$topic_pages = (int)ceil((float)$topic_count_record['count']/(float)$GLOBALS['topics_per_page']);
 	$action = "";
 	
-	$fo_ll = "<div class='fo_ll'><a class='fo_link' href='?forum'>chardev forum</a>";
+	$fo_ll = "<a class='fo_link' href='?forum'>forum</a>";
 	if( $subforum )
 	{
 		$fo_ll .= ' &raquo; <span class="fo_ll_active">'.$subforum['title'].'</span>';
 	}
-	$fo_ll .= "</div>";
 
 	if( $loggedIn && $subforum && !$new_topic )
 	{
@@ -279,12 +284,9 @@ else
 	$subforum_count_record = mysql_fetch_assoc(mysql_query("select count(*) as count from forum_subforum"));
 	$subforum_pages = (int)ceil((float)$subforum_count_record['count']/(float)$GLOBALS['forums_per_page']);
 	$g_content .= "
-<div class='fo_ll'>
-	<span class='fo_ll_active'>chardev forum</span>
-</div>
 <table cellpadding='0' cellspacing='0' class='fo_table'>
 	<colgroup>
-		<col width='500px' />
+		<col width='490px' />
 		<col width='75px' />
 		<col width='75px' />
 		<col width='300px' />
@@ -332,4 +334,7 @@ else
 $g_content .="
 </table>";
 }
+
+
+$g_content = "<div class='content_wrapper'><div class='content_header'>Forum</div>".$g_content."</div>";
 ?>

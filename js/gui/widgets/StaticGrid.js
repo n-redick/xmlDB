@@ -93,5 +93,11 @@ StaticGrid.prototype = {
 		}
 		this.tbody.appendChild(this.rows[row]);
 		return row;
+	},
+	show: function() {
+		this.node.style.display = 'table';
+	},
+	hide: function() {
+		this.node.style.display = 'none';
 	}
 };

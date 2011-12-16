@@ -9,8 +9,17 @@ var Chardev = {
 			window['g_register'] = Chardev.register;
 			window['g_requestPasswordChange'] = Chardev.requestPasswordChange;
 			window['g_requestPasswordRecovery'] = Chardev.requestPasswordRecovery;
+			window['g_editUserData'] = Chardev.editUserData;
+			window['g_saveUserData'] = Chardev.saveUserData;
+			window['g_deleteThread'] = Chardev.deleteThread;
+			window['g_makePostEditable'] = Chardev.makePostEditable;
 		},
-		
+		makePostEditable: function( arr ) {
+			e = new PostEditable();
+			new PostEditableObserver(arr['PostID'], arr['Data'], e);
+			DOM.set('p'+arr['PostID']+'_content', e.node);
+			e.edit(true);
+		},
 		requestPasswordChange: function (userId,guid)
 		{
 			try {
@@ -181,11 +190,10 @@ var Chardev = {
 				else {
 					g_settings.sessionId = response[1];
 					g_settings.userId = response[2];
-					document.getElementById('ajax_login').style.display = 'none';
-					document.getElementById('ajax_logout').style.display = 'block';
-					document.getElementById('register_logged_out').style.display = 'none';
-					document.getElementById('register_logged_in').style.display = 'block';
-					document.getElementById('register_user_name').innerHTML = response[3];
+					document.getElementById('ix_login_form').style.display = 'none';
+					document.getElementById('ix_logout_form').style.display = 'block';
+					document.getElementById('ix_self_link').innerHTML = response[3];
+					document.getElementById('ix_self_link').href = "?user=" + response[2];
 					if( g_settings.isPlanner ) {
 						Engine.loggedIn();
 					}
@@ -213,10 +221,8 @@ var Chardev = {
 			g_settings.sessionId = "";
 			g_settings.userId = 0;
 			g_settings.userName = "";
-			document.getElementById('ajax_login').style.display = 'block';
-			document.getElementById('ajax_logout').style.display = 'none';
-			document.getElementById('register_logged_out').style.display = 'block';
-			document.getElementById('register_logged_in').style.display = 'none';
+			document.getElementById('ix_login_form').style.display = 'block';
+			document.getElementById('ix_logout_form').style.display = 'none';
 			if( g_settings.isPlanner ) {
 				Engine.loggedOut();
 			}
@@ -224,8 +230,9 @@ var Chardev = {
 		},
 		
 		checkTopic : function (_id){
-			var title = document.getElementById('topic_title').value;
-			var content = document.getElementById('topic_content').value;
+			var title = DOM.getValue('topic_title');
+			var content = DOM.getValue('topic_content');
+			var type = DOM.getValue('thread_type');
 			
 			if(title.length<2){
 				Tooltip.showError("The title of your post is too short!");
@@ -237,39 +244,52 @@ var Chardev = {
 			}
 			document.getElementById('topic_submit').disabled = true;
 			
+			Tooltip.showLoading();
 			
-			Ajax.request(
-				'php/interface/forum/newTopic.php?forum='+_id+'&title='+encodeURIComponent(title)+'&content='+encodeURIComponent(content)+"&session_id="+g_settings.sessionId,
-				new Handler( Chardev.__checkTopic_callback, Chardev ),
+			Ajax.post(
+				'php/interface/forum/forum.php', {
+					'action': 'new_thread',
+					'hook': _id,
+					'title': title,
+					'type': type ? type : 'thread',
+					'content': content
+				}, 
+				new Handler(Chardev.__checkTopic_callback, Chardev), 
 				null
 			);
 		},
 
 		__checkTopic_callback : function ( request ) {
-			if( request.status == 200 ){
-				var arr = eval('(' + request.responseText + ')');
-				if(arr[0]!=0){
-					Tooltip.showError(arr[1]);
-					document.getElementById('topic_submit').disabled = false;
-				}
-				else{
-					document.getElementById('topic_form').onsubmit = function() {/***/};
-					document.getElementById('topic_form').action = '?f&topic='+arr[1];
-					document.getElementById('topic_form').submit();
-				}
+			
+			try {
+				var obj = Ajax.getResponseObject(request);
+				window.location.search = '?thread=' + obj;
 			}
-			else{ 
-				Tooltip.showError(request.responseText);
+			catch( e ) {
+				Tooltip.showError(e);
 				document.getElementById('topic_submit').disabled = false;
 			}
 		},
 
-		deleteTopic : function (_tid){
-			Ajax.request(
-				'php/interface/forum/deleteTopic.php?topic='+_tid+'&session_id='+g_settings.sessionId,
-				null,
+		deleteThread : function ( threadId ){
+			Tooltip.showLoading();
+			Ajax.post(
+				'php/interface/forum/forum.php', {
+					'action': 'delete_thread',
+					'thread': threadId
+				},
+				new Handler(Chardev.__deleteTopic_callback, Chardev),
 				null
 			);
+		},
+		__deleteTopic_callback : function ( request ) {		
+			try {
+				var obj = Ajax.getResponseObject(request);
+				window.location.search = '?forum=' + obj;
+			}
+			catch( e ) {
+				Tooltip.showError(e);
+			}
 		},
 
 		lockTopic : function (_tid){
@@ -289,33 +309,30 @@ var Chardev = {
 			}
 			document.getElementById('reply_submit').disabled = true;
 			
-			Ajax.request(
-				'php/interface/forum/addPost.php?topic='+_tid+'&content='+encodeURIComponent(content)+"&session_id="+g_settings.sessionId,
-				new Handler( Chardev.__checkReply_callback, Chardev ),
-				[_tid,_posts]
+			Tooltip.showLoading();
+			
+			Ajax.post(
+				'php/interface/forum/forum.php', {
+					'action': 'reply',
+					'thread': _tid,
+					'content': content
+				}, 
+				new Handler(Chardev.__checkReply_callback, Chardev), 
+				null
 			);
 		},
 
 		__checkReply_callback : function ( request, _tid,_posts ) {
-			if( request.status == 200 ){
-				var arr = eval('(' + request.responseText + ')');
-				if(arr[0]!=0){
-					Tooltip.showError(arr[1]);
-					document.getElementById('reply_submit').disabled = false;
-				}
-				else{
-					document.getElementById('reply_form').onsubmit = function() {/***/};
-					document.getElementById('reply_form').action = '?f&topic='+_tid+'&page='+Math.ceil(arr[1]/_posts)+"#bottom";
-					document.getElementById('reply_form').submit();
-				}
+			try {
+				Ajax.getResponseObject(request);
 			}
-			else{ 
-				Tooltip.showError(request.responseText);
+			catch( e ) {
+				Tooltip.showError(e);
 				document.getElementById('reply_submit').disabled = false;
 			}
 		},
 
-		checkEdit : function (_id,_tid,_page){
+		checkEdit : function (_id){
 			var content = document.getElementById('edit_content').value;
 
 			if(content.length<2){
@@ -324,28 +341,25 @@ var Chardev = {
 			}
 			document.getElementById('edit_submit').disabled = true;
 			
-			Ajax.request(
-				'php/interface/forum/editPost.php?post='+_id+'&content='+encodeURIComponent(content)+"&session_id="+g_settings.sessionId,
-				new Handler( Chardev.__checkEdit_callback, Chardev ) ,
-				[_id,_tid,_page]
+			Tooltip.showLoading();
+			
+			Ajax.post(
+				'php/interface/forum/forum.php', {
+					'action': 'edit',
+					'post': _id,
+					'content': content
+				}, 
+				new Handler(Chardev.__checkEdit_callback, Chardev), 
+				null
 			);
 		},
 
-		__checkEdit_callback : function( request, _id, _tid, _page ) {
-			if(request.status == 200){
-				var arr = eval('(' + request.responseText + ')');
-				if(arr[0]!=0){
-					Tooltip.showError(arr[1]);
-					document.getElementById('edit_submit').disabled = false;
-				}
-				else{
-					document.getElementById('edit_form').onsubmit = function() {/***/};
-					document.getElementById('edit_form').action = '?f&topic='+_tid+'&page='+_page+'#p'+_id;
-					document.getElementById('edit_form').submit();
-				}
+		__checkEdit_callback : function( request ) {
+			try {
+				Ajax.getResponseObject(request);
 			}
-			else{ 
-				Tooltip.showError(request.responseText);
+			catch( e ) {
+				Tooltip.showError(e);
 				document.getElementById('edit_submit').disabled = false;
 			}
 		}

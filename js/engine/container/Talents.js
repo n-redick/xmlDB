@@ -1,13 +1,12 @@
 function Talents( id, serialized, isPet) {
-	this.eventMgr = new EventManager([
-		"reset", 
-		"tree_reset", 
-		"tree_selected", 
-		"point_added", 
-		"point_removed",
-		"distribution_set",
-		"level_change"
-	]);
+	this.eventMgr = new GenericSubject();
+	this.eventMgr.registerEvent('talents_reset', []);
+	this.eventMgr.registerEvent('talent_tree_reset', ['tree']);
+	this.eventMgr.registerEvent('talent_tree_selected', ['tree']);
+	this.eventMgr.registerEvent('talent_point_added', ['tree','row','col','remainingPoints']);
+	this.eventMgr.registerEvent('talent_point_removed', ['tree','row','col','remainingPoints']);
+	this.eventMgr.registerEvent('talent_distribution_set', ['distribution']);
+	this.eventMgr.registerEvent('talents_init', []);
 	
 	this.id = id;
     this.petId = false;
@@ -24,12 +23,21 @@ function Talents( id, serialized, isPet) {
 	this.primarySpells = []; 
 	this.masterySpells = [];
 	
-	this.distribution = null;
-    this.condensedDistribution = null;
+	this.distribution = [];
+    this.condensedDistribution = [];
+    
+    this.treeNames = [];
+    this.treeIconSources = [];
+    this.treeDescriptions = [];
     
     var h, i, j, talent;
     var talentIdMap = [];
     for( h = 0 ; h < this.trees; h++ ) {
+    	
+
+        this.treeNames[h] = serialized[h][0];
+        this.treeIconSources[h] = serialized[h][2];
+        this.treeDescriptions[h] = serialized[h][1];
     	
     	this.talents[h] = new Array(this.rows);
     	for( i = 0; i < this.rows; i++ ){
@@ -39,10 +47,10 @@ function Talents( id, serialized, isPet) {
     	for (i = 0; i < serialized[h][3].length; i++) {
     		//
     		// create talent
-    		talent = new Talent(serialized[h][3][i]);
+    		talent = new Talent( h, serialized[h][3][i]);
     		//
     		// skip if not available
-    	    if (this.isPet && !talent.isAvailable(this.petId, this.id)) {
+    	    if (this.isPet && !talent.isAvailableForPet(this.petId, this.id)) {
     	        continue;
     	    }
     	    //
@@ -78,6 +86,8 @@ function Talents( id, serialized, isPet) {
     }
 	
 	this.selectTree(-1);
+	
+	this.eventMgr.fire('talents_init', {});
 }
 
 Talents.itoh = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 'A', 'B', 'C', 'D', 'E', 'F'];
@@ -100,13 +110,22 @@ Talents.prototype = {
 	isPet: false,
 	masterySpells: [],
 	primarySpells: [],
+	treeNames: [],
+	treeIconSources: [],
+	treeDescriptions: [],
 	/**
 	 * @param {number} tree
 	 */
+	addObserver: function(observer){
+		this.eventMgr.addObserver(observer);
+	},
+	removeObserver: function(observer){
+		this.eventMgr.removeObserver(observer);
+	},
 	selectTree: function( tree ) {
 		this.selectedTree = tree;
 		this.__reset(true);
-		this.eventMgr.fire( "tree_selected", tree );
+		this.eventMgr.fire( "talent_tree_selected", { 'tree': tree });
 	},
 	getRemainingPoints: function() {
 		if (this._level < this.minLevel) {
@@ -144,7 +163,6 @@ Talents.prototype = {
 	    if (this.getRemainingPoints() < 0) {
 	        this.__reset( true );
 	    }
-	    this.eventMgr.fire('level_change');
 	},
 	//
 	//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -155,12 +173,12 @@ Talents.prototype = {
 	//
 	addPoint: function( tree, row, col) {
 		if(this.__modify( tree, row, col, 1 )) {
-			this.eventMgr.fire('point_added', [tree, row, col, this.getRemainingPoints()]);
+			this.eventMgr.fire('talent_point_added', {'tree': tree, 'row': row, 'col': col, 'remainingPoints': this.getRemainingPoints()});
 		}
 	},
 	removePoint: function( tree, row, col) {
 		if( this.__modify( tree, row, col, -1 )) {
-			this.eventMgr.fire('point_removed', [tree, row, col, this.getRemainingPoints()]);
+			this.eventMgr.fire('talent_point_removed', {'tree': tree, 'row': row, 'col': col, 'remainingPoints': this.getRemainingPoints()});
 		}
 	},
 	__modify: function( tree, row, col, modifier ) {
@@ -180,6 +198,7 @@ Talents.prototype = {
 	        this.treeSpents[tree] += modifier;
 	        
 	        if( this.__testTree(tree)) {
+				this.__updateDistribution();
 	        	return true;
 	        }
             this.talents[tree][row][col].spent -= modifier;
@@ -229,8 +248,9 @@ Talents.prototype = {
 	//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 	//
 	reset: function() {
-		this.__reset(true);
-	    this.eventMgr.fire("reset");
+		this.__reset(false);
+		this.__updateDistribution();
+	    this.eventMgr.fire('talents_reset', {});
 	},
 	__reset: function( retainSelectedTree ) {
 		 for (var i = 0; i < this.trees; i++) {
@@ -243,11 +263,13 @@ Talents.prototype = {
 	resetTree: function( tree ) {
 		if( tree == this.selectedTree && this.getSpentPoints() != this.treeSpents[tree] ) {
 			this.__reset( true );
-		    this.eventMgr.fire("reset");
+			this.__updateDistribution();
+		    this.eventMgr.fire('talents_reset', {});
 		}
 		else {
-		   this.__resetTree( tree );
-		    this.eventMgr.fire("tree_reset");
+			this.__resetTree( tree );
+			this.__updateDistribution();
+		    this.eventMgr.fire('talent_tree_reset', {'tree': tree});
 		}
 	},
 	__resetTree: function( tree ) {
@@ -256,7 +278,7 @@ Talents.prototype = {
 			for (var j = 0; j < this.cols; j++) {
 				talent = this.talents[tree][i][j]; 
 				if ( talent != null) {
-					talent._spent = 0;
+					talent.spent = 0;
 				}
 			}
 		}
@@ -396,7 +418,9 @@ Talents.prototype = {
 	            }
 	        }
 	    }
-	    this.eventMgr.fire("distribution_set");
+	    
+		this.__updateDistribution();
+	    this.eventMgr.fire("talent_distribution_set", {'distribution': this.getDistribution(false)});
 	},
 	/**
 	 * @public

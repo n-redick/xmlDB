@@ -118,7 +118,7 @@ function forum_get_posts( $topicId, $page )
 		
 		$user = mysql_fetch_assoc(mysql_db_query(
 			$GLOBALS['g_forum_db'],
-			"select * from user where userID=".$post['userID'],
+			"select * from user u left join chardev_user.`user_data` ud on u.`userID` = ud.`UserID` where u.userID=".$post['userID'],
 			$GLOBALS['g_db_con']
 		));
 		$user_posts = mysql_fetch_assoc(mysql_db_query(
@@ -137,6 +137,7 @@ function forum_get_posts( $topicId, $page )
 		$posts[$n]['posts'] = $user_posts['count'];
 		$posts[$n]['avatar'] = $user['avatar'];
 		$posts[$n]['joined'] = $user['timestamp'];
+		$posts[$n]['signature'] = nl2br(forum_code_replace($user['ForumSignature']));
 		
 		$n++;
 	}

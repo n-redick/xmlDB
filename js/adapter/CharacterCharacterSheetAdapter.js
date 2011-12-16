@@ -1,12 +1,155 @@
 /**
  * @constructor
  * @param {Character} character
+ * @param {CharacterSheet} sheet
  * @returns {CharacterCharacterSheetAdapater}
  */
 function CharacterCharacterSheetAdapater( character, sheet ) {
 	
-	character.addObserver( this );
-	sheet.addObserver( this );
+	character.addObserver( new GenericObserver([
+		'class_change','race_change','level_change',
+		'item_change','profession_change','profession_level_change',
+		'character_loaded','stats_change','preview_stats_change',
+		'buffs_change', 'shapeform_change'
+	], new Handler( function( e ) {
+		if( e.is('class_change') ) {
+			this.updateClass(e.get('class'));
+		}
+		else if( e.is('race_change') ) {
+			this.updateRace(e.get('race'));
+		}
+		else if( e.is('level_change') ) {
+			this.updateLevel(e.get('level'));
+		}
+		else if( e.is('item_change') ) {
+			this.updateSlot(e.get('slot'));
+		}
+		else if( e.is('profession_change') ) {
+			this.updateProfessions();
+		}
+		else if( e.is('profession_level_change') ) {
+			this.updateProfessions();
+		}
+		else if( e.is('character_loaded') ) {
+			this.init();
+		}
+		else if( e.is('stats_change') ) {
+			this.updateStats( e.get('stats') );
+		}
+		else if( e.is('buffs_change') ) {
+			this.updateBuffs();
+		}
+		else if( e.is('preview_stats_change') ) {
+			this.updatePreviewStats( e.get('previewStats') );
+		}
+		else if( e.is('shapeform_change') ) {
+			this.updateShapeSelector();
+		}
+		else {
+			throw new Error("Unhandled event: "+e.event);
+		}
+	}, this)));
+	
+	sheet.addObserver( new GenericObserver([
+		'race_select','class_select','level_select','profession_select',
+		'profession_level_select','stat_tooltip_show','stat_tooltip_hide',
+		'item_left_click','item_right_click','item_tooltip_show',
+		'item_tooltip_hide', 'select_shape'
+	], new Handler( function( e ) {
+		if( e.is('race_select')) {
+			DatabaseIO.getCharacterRace( 
+				e.get('race_id'), 
+				new Handler( this.__selectRace, this) 
+			);
+			Tooltip.showLoading();
+		}
+		else if( e.is('class_select')) {
+			DatabaseIO.getCharacterClass( 
+				e.get('class_id'), 
+				new Handler( this.__selectClass, this) 
+			);
+			Tooltip.showLoading();
+		}
+		else if( e.is('level_select')) {
+			try {
+				this.character.setLevel( e.get('level') );
+			}
+			catch( ex ) {
+				if( ex instanceof InvalidCharacterLevelException ) {
+					Tooltip.showError(ex.toString());	
+				}
+				else {
+					Tools.rethrow(ex);
+				}
+			}
+		}
+		else if( e.is('profession_select')) {
+			this.character.setProfession(e.get('index'), e.get('id'));
+		}
+		else if( e.is('profession_level_select')) {
+			this.character.setProfessionLevel(e.get('index'), e.get('level'));
+		}
+		else if( e.is('stat_tooltip_show')) {
+			var html = StatTooltip.getHTML(this.character, e.get('group'), e.get('index'));
+			
+			if( ! html ) {
+				return;
+			}
+			
+			Tooltip.showStat( html, e.get('node') );
+		}
+		else if( e.is('stat_tooltip_hide')) {
+			Tooltip.hide();
+		}
+		else if( e.is('item_left_click')) {
+			var index = e.get('index'); var slot = e.get('slot');
+			if( index > 0 && this.character.getEquippedItem( slot, index ) != null ) {
+				this.character.swapItems(slot, index);
+				this.sheet.hideSlotTooltip(slot, index);
+			}
+			else {
+				this.sheet.selectSlot(e.get('slot'));
+			}
+		}
+		else if( e.is('item_right_click')) {
+			var index = e.get('index'); var slot = e.get('slot');
+			if( index == 0 ) {
+				this.character.removeItem(slot);
+				this.sheet.hideSlotTooltip(slot, index);
+			}
+		}
+		else if( e.is('item_tooltip_show')) {
+			var itm = this.character.getEquippedItem( e.get('slot'), e.get('index') );
+			if( itm ) {
+				if( index > 0 ) {
+					this.character.setItemPreview( slot, itm);
+				}
+			}
+		}
+		else if( e.is('item_tooltip_hide')) {
+			if( e.get('index') > 0 ) {
+				this.character.removeItemPreview();
+			}
+		}
+		else if( e.is('select_shape')) {
+			this.character.setShapeform(e.get('shape_id'));
+		}
+		else {
+			throw new Error("Unhandled event: "+e.event);
+		}
+	}, this)));
+	
+	sheet.buffBar.eventMgr.addObserver(new GenericObserver(['remove_buff', 'add_stack'], new Handler( function(e) {
+		if( e.is('remove_buff') ) {
+			character.removeBuff(e.get('id'));
+		}
+		else if( e.is('add_stack') ) {
+			character.addStack(e.get('id'));
+		}
+		else {
+			throw new Error("Unhandled event: "+e.event);
+		}
+	}, this)));
 	
 	this.sheet = sheet;
 	this.character = character;
@@ -19,54 +162,10 @@ CharacterCharacterSheetAdapater.prototype = {
 	//
 	//#########################################################################
 	//
-	// Event handler - Character
-	//
-	//#########################################################################
-	//
-	onClassChange: function( newClass ) {	
-		this.updateClass(newClass);
-	},
-	onRaceChange: function( newRace ) {
-		this.updateRace(newRace);
-	},
-	onLevelChange: function( newLevel) {
-		this.updateLevel(newLevel);
-	},
-	onItemAdded: function( slot, itm ) {
-		this.updateSlot(slot);
-	},
-	onItemRemoved: function( slot ) {
-		this.updateSlot(slot);
-	},
-	onProfessionChange: function( index, newProfession ) {
-		this.updateProfessions();
-	},
-	onProfessionLevelChange: function( index, level ) {
-		this.updateProfessions();
-	},
-	onStatsChange: function( stats ) {
-		this.updateStats( stats );
-	},
-	onPreviewStatsChange: function( previewStats ) {
-		this.updatePreviewStats( previewStats );
-	},
-	onCharacterLoaded: function( character ) {
-		this.init();
-	},
-	//
-	//#########################################################################
-	//
 	// Event handler - CharacterSheet
 	//
 	//#########################################################################
 	//
-	onRaceSelect: function( raceId ) {		
-		DatabaseIO.getCharacterRace( 
-			raceId, 
-			new Handler( this.__selectRace, this) 
-		);
-		Tooltip.showLoading();
-	},
 	__selectRace: function( serializedChrRace ) {
 		var oldChrClassId = this.character.chrClass == null ? -1 : this.character.chrClass.id;
 		var newChrClassId;
@@ -82,79 +181,9 @@ CharacterCharacterSheetAdapater.prototype = {
 			Tooltip.enable();
 		}
 	},
-	onClassSelect: function( chrClassId ) {
-		DatabaseIO.getCharacterClass( 
-			chrClassId, 
-			new Handler( this.__selectClass, this) 
-		);
-		Tooltip.showLoading();
-	},
 	__selectClass: function( serializedChrClass ) {
 		this.character.setClass( new CharacterClass( serializedChrClass ));
 		Tooltip.enable();
-	},
-	onLevelSelect: function( level ) {
-		try {
-			this.character.setLevel( level );
-		}
-		catch( e ) {
-			if( e instanceof InvalidCharacterLevelException ) {
-				Tooltip.showError(e.toString());	
-			}
-			else {
-				Tools.rethrow(e);
-			}
-		}
-	},
-	onProfessionSelect: function( index, id ) {
-		this.character.setProfession(index, id);
-	},
-	onProfessionLevelSelect: function( index, level ) {
-		this.character.setProfessionLevel( index, level );
-	},
-	onStatTooltipShow: function( group, index, node ) {
-		var html = StatTooltip.getHTML(this.character, group, index);
-		
-		if( ! html ) {
-			return;
-		}
-		
-		Tooltip.showStat(
-			html, 
-			node
-		);
-	},
-	onStatTooltipHide: function( group, index, node ) {
-		Tooltip.hide();
-	},
-	onItemRightClick: function( slot, index ) {
-		if( index == 0 ) {
-			this.character.inventory.remove(slot);
-		}
-	},
-	onItemLeftClick: function( slot, index ) {
-		if( index > 0 && this.character.inventory.items[slot][index] != null ) {
-			this.character.inventory.swap(slot, index);
-		}
-	},
-
-	onItemTooltipShow: function( slot, index ) {
-		var itm = this.character.inventory.items[slot][index];
-		if( itm ) {
-			this.sheet.slots[slot].showTooltip( 
-				ItemTooltip.getHTML(itm, this.character),
-				index
-			);
-			if( index > 0 ) {
-				this.character.inventory.setPreview(itm, slot, -1);
-			}
-		}
-	},
-	onItemTooltipHide: function( slot, index ) {
-		if( index > 0 ) {
-			this.character.inventory.removePreview();
-		}
-		Tooltip.hide();
 	},
 	//
 	//#########################################################################
@@ -174,19 +203,48 @@ CharacterCharacterSheetAdapater.prototype = {
 		this.updateClass();
 		this.updateEquipment();
 		this.updateLevel();
+		this.updateBuffs();
 	},
 	updateClass: function( newClass ) {
 		this.sheet.showStatGroups(this.character.chrClass == null ? - 1 : this.character.chrClass.id);
 		this.sheet.updateLevelSelector( this.character.getMinLevel(), Character.MAX_LEVEL);
 
+		if( this.character.chrClass != null ) {
+			this.sheet.slots[18].setVisibility(true);
+		}
+		else {
+			this.sheet.slots[18].setVisibility(false);
+		}
+		this.updateShapeSelector();
 		this.updateRaceClassSelector();
 		this.updateEquipment();
+		this.updateLevel(this.character.level);
+	},
+	updateShapeSelector: function() {
+		if( this.character.chrClass != null ) {
+			
+			var availShapes = [];
+			for( var k in this.character.chrClass.shapes ) {
+				var shapeform = this.character.chrClass.shapes[k];
+				availShapes.push(new AvailableShapeform(
+						shapeform.id, 
+						shapeform.buffs[0].spell.icon, 
+						shapeform.buffs[0].spell.getDescription(this.character).join("<br />")
+				));
+			}
+			
+			this.sheet.shapeSelector.update( availShapes, this.character.chrClass.shapeform);
+		}
+		else {
+			this.sheet.shapeSelector.update( null, 0);
+		}
 	},
 	updateRace: function( newRace ) {
 		this.updateRaceClassSelector();
 	},
 	updateLevel: function( level ) {
 		this.sheet.updateLevel(this.character.level);
+		this.updateEquipment();
 	},
 	updateRaceClassSelector: function() {
 		this.sheet.raceClassSelector.update( 
@@ -211,16 +269,15 @@ CharacterCharacterSheetAdapater.prototype = {
 		var equippedItems = [];
 		var itm;
 		for( var j=0; j<5; j++ ) {
-			itm = this.character.inventory.items[slot][j];
+			itm = this.character.getEquippedItem( slot, j );
 			if( itm == null ) {
 				equippedItems.push(null);
 			}
 			else {
 				equippedItems.push(new EquippedItem(
-					itm.id, 
-					itm.icon, 
-					itm.quality, 
-					!this.character.canWear(itm) || !this.character.fitsItemClassRequirements(itm)
+					this.character,
+					itm,
+					slot
 				));
 			}
 		}
@@ -235,61 +292,83 @@ CharacterCharacterSheetAdapater.prototype = {
 		var i;
 		var cCl = this.character.chrClass;
 
-		this.sheet.stats[ST_GRP_GENERAL][1].node.style.display = 
-			cCl != null && GameInfo.hasMana( cCl.id, cCl.shapeForm ) ? "block" : "none";
-		this.sheet.stats[ST_GRP_GENERAL][2].node.style.display = 
-			cCl != null && GameInfo.hasRage( cCl.id, cCl.shapeForm ) ? "block" : "none";
-		this.sheet.stats[ST_GRP_GENERAL][3].node.style.display = 
-			cCl != null && GameInfo.hasEnergy( cCl.id, cCl.shapeForm ) ? "block" : "none";
-		this.sheet.stats[ST_GRP_GENERAL][4].node.style.display = 
-			cCl != null && GameInfo.hasFocus( cCl.id, cCl.shapeForm ) ? "block" : "none";
-		this.sheet.stats[ST_GRP_GENERAL][5].node.style.display = 
-			cCl != null && GameInfo.hasRunicPower( cCl.id, cCl.shapeForm ) ? "block" : "none";
+		this.sheet.stats[Stat.GRP_GENERAL][1].node.style.display = 
+			cCl != null && GameInfo.hasMana( cCl.id, cCl.shapeform ) ? "block" : "none";
+		this.sheet.stats[Stat.GRP_GENERAL][2].node.style.display = 
+			cCl != null && GameInfo.hasRage( cCl.id, cCl.shapeform ) ? "block" : "none";
+		this.sheet.stats[Stat.GRP_GENERAL][3].node.style.display = 
+			cCl != null && GameInfo.hasEnergy( cCl.id, cCl.shapeform ) ? "block" : "none";
+		this.sheet.stats[Stat.GRP_GENERAL][4].node.style.display = 
+			cCl != null && GameInfo.hasFocus( cCl.id, cCl.shapeform ) ? "block" : "none";
+		this.sheet.stats[Stat.GRP_GENERAL][5].node.style.display = 
+			cCl != null && GameInfo.hasRunicPower( cCl.id, cCl.shapeform ) ? "block" : "none";
 		
-		for( i=0; i<this.sheet.stats[ST_GRP_GENERAL].length; i++ ) {
-			this.sheet.stats[ST_GRP_GENERAL][i].setValue( stats.general[i] );
+		for( i=0; i<this.sheet.stats[Stat.GRP_GENERAL].length; i++ ) {
+			this.sheet.stats[Stat.GRP_GENERAL][i].setValue( stats.general[i] );
 		}
-		for( i=0; i<this.sheet.stats[ST_GRP_ATTRIBUTES].length; i++ ) {
-			this.sheet.stats[ST_GRP_ATTRIBUTES][i].setValue( stats.attributes[i] );
+		for( i=0; i<this.sheet.stats[Stat.GRP_ATTRIBUTES].length; i++ ) {
+			this.sheet.stats[Stat.GRP_ATTRIBUTES][i].setValue( stats.attributes[i] );
 		}
-		for( i=0; i<this.sheet.stats[ST_GRP_RESISTANCE].length; i++ ) {
-			this.sheet.stats[ST_GRP_RESISTANCE][i].setValue( stats.resistance[i] );
+		for( i=0; i<this.sheet.stats[Stat.GRP_RESISTANCE].length; i++ ) {
+			this.sheet.stats[Stat.GRP_RESISTANCE][i].setValue( stats.resistance[i] );
 		}
-		for( i=0; i<this.sheet.stats[ST_GRP_SPELL].length; i++ ) {
-			this.sheet.stats[ST_GRP_SPELL][i].setValue( stats.spell[i] );
+		for( i=0; i<this.sheet.stats[Stat.GRP_SPELL].length; i++ ) {
+			this.sheet.stats[Stat.GRP_SPELL][i].setValue( stats.spell[i] );
 		}
-		for( i=0; i<this.sheet.stats[ST_GRP_DEFENSE].length; i++ ) {
-			this.sheet.stats[ST_GRP_DEFENSE][i].setValue( stats.defense[i] );
+		for( i=0; i<this.sheet.stats[Stat.GRP_DEFENSE].length; i++ ) {
+			this.sheet.stats[Stat.GRP_DEFENSE][i].setValue( stats.defense[i] );
 		}
-		for( i=0; i<this.sheet.stats[ST_GRP_MELEE].length; i++ ) {
-			this.sheet.stats[ST_GRP_MELEE][i].setValue( stats.melee[i] );
+		for( i=0; i<this.sheet.stats[Stat.GRP_MELEE].length; i++ ) {
+			this.sheet.stats[Stat.GRP_MELEE][i].setValue( stats.melee[i] );
 		}
-		for( i=0; i<this.sheet.stats[ST_GRP_RANGED].length; i++ ) {
-			this.sheet.stats[ST_GRP_RANGED][i].setValue( stats.ranged[i] );
+		for( i=0; i<this.sheet.stats[Stat.GRP_RANGED].length; i++ ) {
+			this.sheet.stats[Stat.GRP_RANGED][i].setValue( stats.ranged[i] );
 		}
 	},
 	updatePreviewStats: function( previewStats ) {
+		
+		if( previewStats == null ) {
+			this.resetPreviewStats();
+			return;
+		}
+		
 		var i;
-		for( i=0; i<this.sheet.stats[ST_GRP_GENERAL].length; i++ ) {
-			this.sheet.stats[ST_GRP_GENERAL][i].setCompareValue( previewStats.general[i] );
+		for( i=0; i<this.sheet.stats[Stat.GRP_GENERAL].length; i++ ) {
+			this.sheet.stats[Stat.GRP_GENERAL][i].setCompareValue( previewStats.general[i] );
 		}
-		for( i=0; i<this.sheet.stats[ST_GRP_ATTRIBUTES].length; i++ ) {
-			this.sheet.stats[ST_GRP_ATTRIBUTES][i].setCompareValue( previewStats.attributes[i] );
+		for( i=0; i<this.sheet.stats[Stat.GRP_ATTRIBUTES].length; i++ ) {
+			this.sheet.stats[Stat.GRP_ATTRIBUTES][i].setCompareValue( previewStats.attributes[i] );
 		}
-		for( i=0; i<this.sheet.stats[ST_GRP_RESISTANCE].length; i++ ) {
-			this.sheet.stats[ST_GRP_RESISTANCE][i].setCompareValue( previewStats.resistance[i] );
+		for( i=0; i<this.sheet.stats[Stat.GRP_RESISTANCE].length; i++ ) {
+			this.sheet.stats[Stat.GRP_RESISTANCE][i].setCompareValue( previewStats.resistance[i] );
 		}
-		for( i=0; i<this.sheet.stats[ST_GRP_SPELL].length; i++ ) {
-			this.sheet.stats[ST_GRP_SPELL][i].setCompareValue( previewStats.spell[i] );
+		for( i=0; i<this.sheet.stats[Stat.GRP_SPELL].length; i++ ) {
+			this.sheet.stats[Stat.GRP_SPELL][i].setCompareValue( previewStats.spell[i] );
 		}
-		for( i=0; i<this.sheet.stats[ST_GRP_DEFENSE].length; i++ ) {
-			this.sheet.stats[ST_GRP_DEFENSE][i].setCompareValue( previewStats.defense[i] );
+		for( i=0; i<this.sheet.stats[Stat.GRP_DEFENSE].length; i++ ) {
+			this.sheet.stats[Stat.GRP_DEFENSE][i].setCompareValue( previewStats.defense[i] );
 		}
-		for( i=0; i<this.sheet.stats[ST_GRP_MELEE].length; i++ ) {
-			this.sheet.stats[ST_GRP_MELEE][i].setCompareValue( previewStats.melee[i] );
+		for( i=0; i<this.sheet.stats[Stat.GRP_MELEE].length; i++ ) {
+			this.sheet.stats[Stat.GRP_MELEE][i].setCompareValue( previewStats.melee[i] );
 		}
-		for( i=0; i<this.sheet.stats[ST_GRP_RANGED].length; i++ ) {
-			this.sheet.stats[ST_GRP_RANGED][i].setCompareValue( previewStats.ranged[i] );
+		for( i=0; i<this.sheet.stats[Stat.GRP_RANGED].length; i++ ) {
+			this.sheet.stats[Stat.GRP_RANGED][i].setCompareValue( previewStats.ranged[i] );
 		}
-	} 
+	},
+	resetPreviewStats: function() {
+		var j,i;
+		for( j=0; j<this.sheet.stats.length; j++ ) {
+			for( i=0; i<this.sheet.stats[j].length; i++ ) {
+				this.sheet.stats[j][i].resetCompare();
+			}
+		}
+	},
+	updateBuffs: function() {
+		var bs = this.character.getActiveBuffs();
+		var abs = [];
+		for( var k in bs ) {
+			abs.push(new ActiveBuff(bs[k], this.character));
+		}
+		this.sheet.buffBar.update(abs);
+	}
 };

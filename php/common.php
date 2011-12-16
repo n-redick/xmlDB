@@ -2,7 +2,9 @@
 
 include_once 'error.php';
 
+require_once 'bnet_auth.php';
 require_once 'cpa_client/cpa_client.php';
+require_once 'user_data.php';
 
 define("MAX_RECORDS",20);
 define("MAX_RECORDS_STAT_WEIGHTS",8);
@@ -208,7 +210,7 @@ $g_slot_name_to_chardev_slot_id = array(
 	"ranged" => 18
 );
 
-define( "USE_CACHE", isset($_SERVER['HTTP_HOST']) && $_SERVER['HTTP_HOST']!="127.0.0.1" ,true );
+define( "USE_CACHE", /*isset($_SERVER['HTTP_HOST']) && $_SERVER['HTTP_HOST']!="127.0.0.1"*/ true ,true );
 define("DAYS_TILL_CACHE_INVALIDATION",1,true);
 
 function get_redirect() {
@@ -516,7 +518,7 @@ function get_item( $item_id ) {
 			$item[17] = (int)$record['Binds'];
 			$item[18] = $record['Name'.$GLOBALS['g_table_suffix']] ? $record['Name'.$GLOBALS['g_table_suffix']] : $record['Name'];
 			$item[19] = get_set((int)$record['ItemSetID']);
-			$item[20] = (int)$record['Durability'];
+			$item[20] = -1;//(int)$record['Durability'];
 			$item[21] = array( 
 				(int)$record['SocketColor1'],
 				(int)$record['SocketColor2'],
@@ -1105,6 +1107,7 @@ function get_talents($id) {
 			$talents[$treeIndex][3] = array();
 			
 			$talentIndex = 0;
+			$done = array();
 			
 			$talent_stmt = mysql_db_query(
 				$GLOBALS['g_game_db'],
@@ -1113,16 +1116,37 @@ function get_talents($id) {
 			);
 			
 			while( ($talent_record = mysql_fetch_assoc($talent_stmt)) ) {
+			
+				//
+				// eliminate obsolete but still existing talents
+				// they could overwrite the correct talent elsewise
+				// and cause quite some problems due to non existant
+				// spells
+				$row = (int)$talent_record['Row'];
+				$col = (int)$talent_record['Col'];
+				if( isset($done[$row]) ) {
+					if( isset($done[$row][$col]) ) {
+						continue;
+					}
+					else {
+						$done[$row][$col] = true;
+					}
+				}
+				else {
+					$done[$row] = array();
+					$done[$row][$col] = true;
+				}
+			
 				$talents[$treeIndex][3][$talentIndex] = array(
 					(int)$talent_record['ID'],
 					(int)$talent_record['Row'],
 					(int)$talent_record['Col'],
 					array(
-						get_spell($talent_record['SpellID1']),
-						get_spell($talent_record['SpellID2']),
-						get_spell($talent_record['SpellID3']),
-						get_spell($talent_record['SpellID4']),
-						get_spell($talent_record['SpellID5'])
+						get_spell((int)$talent_record['SpellID1']),
+						get_spell((int)$talent_record['SpellID2']),
+						get_spell((int)$talent_record['SpellID3']),
+						get_spell((int)$talent_record['SpellID4']),
+						get_spell((int)$talent_record['SpellID5'])
 					),
 					array (
 						(int)$talent_record['RequiredTalentID1'],
@@ -1137,8 +1161,8 @@ function get_talents($id) {
 				$talentIndex++;
 			}
 			$talents[$treeIndex][4] = array(
-				get_spell($record['MasterySpellID1']),
-				get_spell($record['MasterySpellID2'])
+				get_spell((int)$record['MasterySpellID1']),
+				get_spell((int)$record['MasterySpellID2'])
 			);
 			
 			$talent_spells_stmt = mysql_db_query(
@@ -1263,7 +1287,6 @@ function get_spells( $arguments, $flags, $order, $page ) {
 	$page = $page < 1 ? 1 : $page;
 	$joinSpellRange = false;
 	$joinEquippedItems = false;
-	$join_spell_effect = false;
 	$is_enchant = false;
 	$where = "";
 	$spells = array();
@@ -1295,6 +1318,21 @@ function get_spells( $arguments, $flags, $order, $page ) {
 				$joinEquippedItems = true;
 				parse_binary_argument($where,$operator,$match[3],"sei.`ItemSubClassMask`",true);
 				break;
+			case "itemclasssubclasscombined":
+				if( $operator != EQ ) {
+					$GLOBALS["g_error"] = "Operator ".$match[2]." is not supported";
+				}
+				
+				$joinEquippedItems = true;
+				$arr = explode( ".", $match[3] );
+				
+				if( count($arr) != 2 ) {
+					$GLOBALS["g_error"] = "Value ".$match[3]." is invalid";
+				}
+				
+				$where .= ( $where?" AND ":"" ) ."(sei.`ItemSubClassMask`&" .(1<<(int)$arr[1]). ") != 0 AND sei.`ItemClassID`=".(int)$arr[0];
+				
+				break;
 			case "isenchant":
 				if( $operator != EQ ) {
 					$GLOBALS["g_error"] = "Operator ".$match[2]." is not supported";
@@ -1307,7 +1345,6 @@ function get_spells( $arguments, $flags, $order, $page ) {
 				break;
 			case "enchantchrlevel":
 				$is_enchant = true;
-				$join_spell_effect = true;
 				parse_numeric_argument($where,$operator,$match[3],"sie.`RequiredCharacterLevel`",true);
 				break;
 			default:
@@ -1326,8 +1363,8 @@ function get_spells( $arguments, $flags, $order, $page ) {
 		"`spell` s".
 		($joinSpellRange?					" INNER JOIN `spellrange` 				sr 		ON sr.`ID` = s.`SpellRangeID`":"").
 		($joinEquippedItems?				" INNER JOIN `spellequippeditems` 		sei 	ON sei.`ID` = s.`SpellEquippedItemsID`":"").
-		($join_spell_effect?				" INNER JOIN `spelleffect` 				se 		ON se.`SpellID` = s.`ID`":"").
 		($is_enchant?						" INNER JOIN ".$GLOBALS['g_static_db'].".`chardev_enchant_spell` 	ces 	ON s.`ID` = ces.`SpellID`".
+											" INNER JOIN `spelleffect` 				se 		ON se.`SpellID` = s.`ID`".
 											" INNER JOIN `spellitemenchantment` 	sie 	ON sie.`ID` = se.`SecondaryEffect`":"").
 		($where?" WHERE ".$where:"").
 		( $orderClause ? " ORDER BY ".$orderClause : "" ).
@@ -1349,6 +1386,7 @@ function get_spells( $arguments, $flags, $order, $page ) {
 	while( ($record = mysql_fetch_assoc($stmt)) ) {
 		$spells[] = get_spell($record['ID']);
 	}
+	
 	return $spells;
 }
 
@@ -1397,7 +1435,7 @@ function get_profiles( $arguments, $flags, $order, $page ) {
 		}
 	}
 	// order
-	$orderClause = parse_order( $order, array( "time" => "`Timestamp`") );
+	$orderClause = parse_order( $order, array( "time" => "`Timestamp`", "id" => "`ID`") );
 	
 	$query = "SELECT SQL_CALC_FOUND_ROWS * FROM `chardev_characters` WHERE ".(!$showDeleted?" `Deleted`='0' AND ":"")." `History` = 0 " . ($where?" AND ".$where:"") . ( $orderClause ? " ORDER BY ".$orderClause : "" ) . " LIMIT ".MAX_RECORDS *($page-1).",".MAX_RECORDS;
 //echo htmlspecialchars($arguments);
@@ -1670,7 +1708,7 @@ function get_items( $arguments, $flags, $order, $page, $weights ) {
 							$q = " AND ( i.`ItemClass`!=4 OR i.`ItemSubClass` NOT IN (2,3,4))";
 							break;
 					}
-					$where .= ( $where ? " AND " : "" ) . "(" . $cl_c ."&'". mysql_real_escape_string($match[3])."' OR ". $cl_c . "<='0' )".$q;
+					$where .= ( $where ? " AND " : "" ) . "((" . $cl_c ."&". (int)$match[3].")!=0 OR ". $cl_c . "<='0' )".$q;
 				}
 				break;
 			case "issocketablegem":
@@ -2276,24 +2314,73 @@ function get_armory_profile( $numRegion, $server, $name, &$error )
 	return $char;
 }
 
-function get_battlenet_profile( $numRegion, $server, $name, &$error )
+function update_realm_database () {
+	$client = new cpa_client( BNET_PRIVATE_KEY, BNET_PUBLIC_KEY );
+	
+	$regions = array( 'us', 'eu', 'kr', 'cn', 'tw' );
+	$typeStrToMask = array( 'pve' => 0, 'pvp' => 1, 'rp'=> 2, 'rppvp' => 3 );
+	
+	foreach( $regions as $val ) {
+		$json = $client->get_realm_list($val);
+		
+		$cached = array();
+	
+		if( ! $json ) {
+			continue;
+		}
+		
+		$obj = json_decode($json);
+		
+		$realms = $obj->realms;
+		
+		for( $i=0; $i<count($realms); $i++ ) {
+			
+			$realm = $realms[$i];
+			
+			mysql_query("REPLACE INTO chardev_user.`realm` 
+							VALUES ( 
+								'".mysql_real_escape_string($realm->name)."',
+								'".mysql_real_escape_string($val)."', 
+								".(int)$typeStrToMask[$realm->type].",
+								'".mysql_real_escape_string($realm->slug)."'
+							) "
+			);
+			
+			echo mysql_error();
+			
+			$cached[] = $realm->name;
+		}
+		
+		mysql_query("UPDATE chardev_user.`region` SET `CachedRealmList` = '".mysql_real_escape_string(serialize($cached))."' WHERE `Region` = '".$val."'");
+	}
+}
+
+function get_realm_lists () {
+
+	$n = rand( 0, 10000 );
+
+	if( $n == 0 ) {
+		update_realm_database();
+	}
+	
+	$result = mysql_query("SELECT * FROM chardev_user.`region`");
+	echo mysql_error();
+	$lists = array();
+	
+	while($record = mysql_fetch_assoc($result)) {
+		$lists[$record['Region']] = unserialize($record['CachedRealmList']);
+	}
+	
+	return $lists;
+}
+
+function get_battlenet_profile( $region, $server, $name, &$error )
 {
 	if( !$name || !is_string($name) || strlen($name)<2 ) {
 		$error = ARMORY_IMPORT_NO_NAME;
 	}
 	if( !$server || !is_string($server) || strlen($server)<2 ) {
 		$error = ARMORY_IMPORT_NO_SERVER;
-	}
-	if( !is_numeric($numRegion) || $numRegion<0 || $numRegion>4 ) {
-		$error = ARMORY_IMPORT_NO_REGION;
-	}
-	
-	$region = cpa_client::REGION_US;
-	switch($numRegion) {
-		case ARMORY_IMPORT_REGION_EU: $region = cpa_client::REGION_EU; break; 
-		case ARMORY_IMPORT_REGION_KR: $region = cpa_client::REGION_KR; break;
-		case ARMORY_IMPORT_REGION_TW: $region = cpa_client::REGION_TW; break;
-		case ARMORY_IMPORT_REGION_CN: $region = cpa_client::REGION_CN; break;
 	}
 
 	$client = new cpa_client( BNET_PRIVATE_KEY, BNET_PUBLIC_KEY );
@@ -2308,6 +2395,11 @@ function get_battlenet_profile( $numRegion, $server, $name, &$error )
 			cpa_client::PROFILE_PROFESSIONS
 		)
 	);
+	
+	if( ! $cp_json ) {
+		$error = "<div>The requested url does not exist, check your inputs!</div><div>Character name: ".$name."</br>Server: ".$server."</div>";
+		return null;
+	}
 
 	$cp = json_decode($cp_json);
 
@@ -2349,11 +2441,11 @@ function get_battlenet_profile( $numRegion, $server, $name, &$error )
 			get_spell_item_enchantment( isset($prm->enchant) ? (int)$prm->enchant : 0 ),
 			$reforge, // chardev reforge
 			isset($prm->suffix)  ? (int)$prm->suffix  : 0, // random props
-			isset($prm->tiker) ? array(get_spell_item_enchantment($prm->tinker)) : null
+			isset($prm->tinker) ? array(get_spell_item_enchantment($prm->tinker)) : null
 		);
 	}
 
-	$active_talents = $cp->talents[0]->selected ? $cp->talents[0] : $cp->talents[1];
+	$active_talents = isset($cp->talents[0]->selected) && $cp->talents[0]->selected ? $cp->talents[0] : $cp->talents[1];
 
 	$char[2] = $active_talents->build;
 	$char[3] = array();
@@ -2460,6 +2552,7 @@ function get_profile( $profile_id ) {
 	));
 	
 	if( $record ) {
+	
 		$r = unserialize($record['Serialized']); 
 		$r[0][2] = get_character_race((int)$r[0][2]);
 		$r[0][3] = get_character_class((int)$r[0][3]);
@@ -2570,9 +2663,7 @@ function authenticate( $user_name, $password, $stay_logged_in, &$notice ) {
 		$_SESSION['user_name']=$record['name'];
 		$_SESSION['password']=$record['pw'];
 		$_SESSION['role']=$record['role'];
-		$_SESSION['avatar']=$record['avatar'];
 		$_SESSION['user_id']=$record['userID'];
-		$_SESSION['language']=$record['language'];
 		if($stay_logged_in){
 			setCookie("user_name",$user_name,time()+2592000);
 			setCookie("password",$password,time()+2592000);
@@ -2582,7 +2673,21 @@ function authenticate( $user_name, $password, $stay_logged_in, &$notice ) {
 			"SELECT * FROM `donations` WHERE `userID` = '".(int)$_SESSION['user_id']."' AND `amount` > '0' ",
 			$GLOBALS['g_db_con']
 		));
+		
+		$record_data = mysql_fetch_assoc(mysql_query(
+			"SELECT * FROM chardev_user.`user_data` WHERE `UserID` = '".(int)$_SESSION['user_id']."'",
+			$GLOBALS['g_db_con']
+		));
 		$_SESSION['donated'] = $record_donated ? true : false;
+		$_SESSION['language']=$record_data['Language'];
+		$_SESSION['avatar']=$record_data['Avatar'];
+		
+		$ud = new user_data((int)$record['userID']);
+		
+		$_SESSION['user_data'] = array(
+			"battlenet_profiles" => $ud->get_battlenet_profiles(),
+			"region" => $ud->get_region(),
+		);
 		
 		return true;
 	}
@@ -2616,14 +2721,14 @@ function logout() {
 }
 
 function get_buffs() {
-	$class_buffs = array(11);
+	$buffs = array();
 	// Warrior
-	$class_buffs[0] = array(
+	$buffs["Warrior"] = array(
 		get_spell(29801),	// Rampage
 		get_spell(6673)		// Battle Shout
 	);
 	// Paladin
-	$class_buffs[1] = array(
+	$buffs["Paladin"] = array(
 		get_spell(465),		// Devotion Aura
 		get_spell(19891),	// Resistance Aura
 		get_spell(79062),	// Blessing of Kings
@@ -2634,32 +2739,32 @@ function get_buffs() {
 		get_spell(31801)	// Seal of Truth
 	);
 	// Hunter
-	$class_buffs[2] = array(
+	$buffs["Hunter"] = array(
 		get_spell(93435),	// Roar of Courage
 		get_spell(19506), 	// Trueshot Aura
 		get_spell(53290),	// Hunting Party
 		get_spell(13165)	// Aspect of the Hawk
 	);
 	// Rogue
-	$class_buffs[3] = array(
+	$buffs["Rogue"] = array(
 		get_spell(51701)	// Honor Among Thieves
 	);
 	// Priest
-	$class_buffs[4] = array(
+	$buffs["Priest"] = array(
 		get_spell(49868),	// Mind Quickening
 		get_spell(79104), 	// Power Word: Fortitude
 		get_spell(588),		// Inner Fire
 		get_spell(73413)	// Inner Will
 	);
 	// Death knight
-	$class_buffs[5] = array(
+	$buffs["DeathKnight"] = array(
 		get_spell(57330),	// Horn of Winter
 		get_spell(55610),	// Improved Icy Talons
 		get_spell(53138),	// Abomination's Might
 		get_spell(49016)	// Unholy Frenzy
 	);
 	// Shaman
-	$class_buffs[6] = array(
+	$buffs["Shaman"] = array(
 		get_spell(8076),	// Strength of Earth Totem
 		get_spell(51470),	// Elemental Oath
 		get_spell(8515),	// Windfury Totem
@@ -2671,23 +2776,21 @@ function get_buffs() {
 		get_spell(52127)	// Water Shield
 	);
 	// Mage
-	$class_buffs[7] = array(
+	$buffs["Mage"] = array(
 		get_spell(80353), 	// Time warp
 		get_spell(79057),	// Arcane Brilliance
 		get_spell(30482)	// Molten Armor
 	);
 	// Warlock
-	$class_buffs[8] = array(
+	$buffs["Warlock"] = array(
 		get_spell(54424),	// Fel Intelligence
 		get_spell(6307), 	// Blood Pact
 		get_spell(53646),	// Demonic Pact
 		get_spell(28176),	// Fel Armor
 		get_spell(85767)	// Dark Intent
 	);
-	// 
-	$class_buffs[9] = array();
 	// Druid
-	$class_buffs[10] = array(
+	$buffs["Druid"] = array(
 		get_spell(79060), 	// Mark of the Wild
 		get_spell(24932),	// Leader of the Pack
 		get_spell(24907)	// Moonkin Aura
@@ -2704,160 +2807,158 @@ function get_buffs() {
 		order by csi.elixirmask
 	*/
 	
-	$flasks = array(
-		array(
-			get_spell(6512),     // DETECT_LESSER_INVISIBILITY(0)
-			get_spell(7178),     // WATER_BREATHING(0)
-			get_spell(16589),     // NOGGENFOGGER_ELIXIR(0)
-			get_spell(11389),     // DETECT_UNDEAD(0)
-			get_spell(11403),     // DREAM_VISION(0)
-			get_spell(11407),     // DETECT_DEMON(0)
-			get_spell(22807),     // GREATER_WATER_BREATHING(0)
-			get_spell(28489),     // CAMOUFLAGE(0)
-			get_spell(28496),     // GREATER_STEALTH_DETECTION(0)
-			get_spell(7178),     // WATER_BREATHING(0)
-			get_spell(22807),     // GREATER_WATER_BREATHING(0)
-			get_spell(44467),     // RECOVERY_DIVERS_POTION(0)
-			get_spell(48719),     // WATER_BREATHING(0)
-			get_spell(65253),     // MIXTURE_OF_THE_FROST_WYRM(0)
-			get_spell(65255),     // MIXTURE_OF_STONEBLOOD(0)
-			get_spell(65252),     // MIXTURE_OF_ENDLESS_RAGE(0)
-			get_spell(65254),     // MIXTURE_OF_PURE_MOJO(0)
-			get_spell(59640),     // UNDERBELLY_ELIXIR(0)
-			get_spell(91722),     // PUFFER_BREATH(0)
-			get_spell(92679)     // FLASK_OF_BATTLE(0)
-		),
-		array(
-			get_spell(2367),     // LESSER_STRENGTH(1)
-			get_spell(2374),     // LESSER_AGILITY(1)
-			get_spell(3160),     // AGILITY(1)
-			get_spell(3164),     // STRENGTH(1)
-			get_spell(7844),     // FIRE_POWER(1)
-			get_spell(8212),     // ENLARGE(1)
-			get_spell(11328),     // AGILITY(1)
-			get_spell(11390),     // ARCANE_ELIXIR(1)
-			get_spell(11334),     // GREATER_AGILITY(1)
-			get_spell(11405),     // ELIXIR_OF_THE_GIANTS(1)
-			get_spell(11406),     // ELIXIR_OF_DEMONSLAYING(1)
-			get_spell(11474),     // SHADOW_POWER(1)
-			get_spell(17038),     // WINTERFALL_FIREWATER(1)
-			get_spell(17535),     // ELIXIR_OF_THE_SAGES(1)
-			get_spell(17538),     // ELIXIR_OF_THE_MONGOOSE(1)
-			get_spell(17537),     // ELIXIR_OF_BRUTE_FORCE(1)
-			get_spell(17539),     // GREATER_ARCANE_ELIXIR(1)
-			get_spell(21920),     // FROST_POWER(1)
-			get_spell(24363),     // MAGEBLOOD_ELIXIR(1)
-			get_spell(26276),     // GREATER_FIREPOWER(1)
-			get_spell(28490),     // MAJOR_STRENGTH(1)
-			get_spell(28491),     // HEALING_POWER(1)
-			get_spell(28493),     // MAJOR_FROST_POWER(1)
-			get_spell(54494),     // MAJOR_AGILITY(1)
-			get_spell(28501),     // MAJOR_FIREPOWER(1)
-			get_spell(28503),     // MAJOR_SHADOW_POWER(1)
-			get_spell(28509),     // GREATER_MANA_REGENERATION(1)
-			get_spell(33720),     // ONSLAUGHT_ELIXIR(1)
-			get_spell(54452),     // ADEPTS_ELIXIR(1)
-			get_spell(33726),     // ELIXIR_OF_MASTERY(1)
-			get_spell(38954),     // FEL_STRENGTH_ELIXIR(1)
-			get_spell(39627),     // ELIXIR_OF_DRAENIC_WISDOM(1)
-			get_spell(45373),     // BLOODBERRY(1)
-			get_spell(28497),     // MIGHTY_AGILITY(1)
-			get_spell(53746),     // WRATH_ELIXIR(1)
-			get_spell(33721),     // SPELLPOWER_ELIXIR(1)
-			get_spell(53747),     // ELIXIR_OF_SPIRIT(1)
-			get_spell(53748),     // MIGHTY_STRENGTH(1)
-			get_spell(53749),     // GURUS_ELIXIR(1)
-			get_spell(53764),     // MIGHTY_MANA_REGENERATION(1)
-			get_spell(60340),     // ACCURACY(1)
-			get_spell(60341),     // DEADLY_STRIKES(1)
-			get_spell(60344),     // EXPERTISE(1)
-			get_spell(80532),     // ARMOR_PIERCING(1)
-			get_spell(60346),     // LIGHTNING_SPEED(1)
-			get_spell(63729),     // ELIXIR_OF_MINOR_ACCURACY(1)
-			get_spell(79468),     // GHOST_ELIXIR(1)
-			get_spell(79474),     // ELIXIR_OF_THE_NAGA(1)
-			get_spell(79477),     // ELIXIR_OF_THE_COBRA(1)
-			get_spell(79481),     // IMPOSSIBLE_ACCURACY(1)
-			get_spell(79632),     // MIGHTY_SPEED(1)
-			get_spell(79635)     // ELIXIR_OF_THE_MASTER(1)
-		),
-		array(
-			get_spell(2378),     // HEALTH(2)
-			get_spell(3219),     // WEAK_TROLLS_BLOOD_ELIXIR(2)
-			get_spell(3166),     // LESSER_INTELLECT(2)
-			get_spell(3222),     // STRONG_TROLLS_BLOOD_ELIXIR(2)
-			get_spell(3220),     // ARMOR(2)
-			get_spell(3593),     // ELIXIR_OF_FORTITUDE(2)
-			get_spell(3223),     // MAJOR_TROLLS_BLOOD_ELIXIR(2)
-			get_spell(673),     // LESSER_ARMOR(2)
-			get_spell(11319),     // WATER_WALKING(2)
-			get_spell(11349),     // ARMOR(2)
-			get_spell(11371),     // GIFT_OF_ARTHAS(2)
-			get_spell(11396),     // GREATER_INTELLECT(2)
-			get_spell(12608),     // STEALTH_DETECTION(2)
-			get_spell(11348),     // GREATER_ARMOR(2)
-			get_spell(24361),     // MIGHTY_TROLLS_BLOOD_ELIXIR(2)
-			get_spell(28502),     // MAJOR_ARMOR(2)
-			get_spell(28514),     // EMPOWERMENT(2)
-			get_spell(29348),     // GOLDENMIST_SPECIAL_BREW(2)
-			get_spell(39625),     // ELIXIR_OF_MAJOR_FORTITUDE(2)
-			get_spell(39626),     // EARTHEN_ELIXIR(2)
-			get_spell(39628),     // ELIXIR_OF_IRONSKIN(2)
-			get_spell(53751),     // ELIXIR_OF_MIGHTY_FORTITUDE(2)
-			get_spell(53763),     // PROTECTION(2)
-			get_spell(60343),     // MIGHTY_DEFENSE(2)
-			get_spell(60347),     // MIGHTY_THOUGHTS(2)
-			get_spell(79480),     // ELIXIR_OF_DEEP_EARTH(2)
-			get_spell(79631)     // PRISMATIC_ELIXIR(2)
-		),
-		array(
-			get_spell(17626),     // FLASK_OF_THE_TITANS(3)
-			get_spell(17627),     // DISTILLED_WISDOM(3)
-			get_spell(17628),     // SUPREME_POWER(3)
-			get_spell(17629),     // CHROMATIC_RESISTANCE(3)
-			get_spell(28518),     // FLASK_OF_FORTIFICATION(3)
-			get_spell(28519),     // FLASK_OF_MIGHTY_RESTORATION(3)
-			get_spell(28520),     // FLASK_OF_RELENTLESS_ASSAULT(3)
-			get_spell(28521),     // FLASK_OF_BLINDING_LIGHT(3)
-			get_spell(28540),     // FLASK_OF_PURE_DEATH(3)
-			get_spell(40568),     // UNSTABLE_FLASK_OF_THE_ELDER(3)
-			get_spell(40575),     // UNSTABLE_FLASK_OF_THE_SOLDIER(3)
-			get_spell(40572),     // UNSTABLE_FLASK_OF_THE_BEAST(3)
-			get_spell(40567),     // UNSTABLE_FLASK_OF_THE_BANDIT(3)
-			get_spell(40573),     // UNSTABLE_FLASK_OF_THE_PHYSICIAN(3)
-			get_spell(40576),     // UNSTABLE_FLASK_OF_THE_SORCERER(3)
-			get_spell(28518),     // FLASK_OF_FORTIFICATION(3)
-			get_spell(28520),     // FLASK_OF_RELENTLESS_ASSAULT(3)
-			get_spell(28519),     // FLASK_OF_MIGHTY_RESTORATION(3)
-			get_spell(17628),     // SUPREME_POWER(3)
-			get_spell(41609),     // FORTIFICATION_OF_SHATTRATH(3)
-			get_spell(41610),     // MIGHTY_RESTORATION_OF_SHATTRATH(3)
-			get_spell(41611),     // SUPREME_POWER_OF_SHATTRATH(3)
-			get_spell(41608),     // RELENTLESS_ASSAULT_OF_SHATTRATH(3)
-			get_spell(42735),     // CHROMATIC_WONDER(3)
-			get_spell(46837),     // PURE_DEATH_OF_SHATTRATH(3)
-			get_spell(46839),     // BLINDING_LIGHT_OF_SHATTRATH(3)
-			get_spell(53752),     // LESSER_FLASK_OF_TOUGHNESS(3)
-			get_spell(62380),     // LESSER_FLASK_OF_RESISTANCE(3)
-			get_spell(53760),     // FLASK_OF_ENDLESS_RAGE(3)
-			get_spell(54212),     // FLASK_OF_PURE_MOJO(3)
-			get_spell(53758),     // FLASK_OF_STONEBLOOD(3)
-			get_spell(53755),     // FLASK_OF_THE_FROST_WYRM(3)
-			get_spell(53755),     // FLASK_OF_THE_FROST_WYRM(3)
-			get_spell(53760),     // FLASK_OF_ENDLESS_RAGE(3)
-			get_spell(54212),     // FLASK_OF_PURE_MOJO(3)
-			get_spell(53758),     // FLASK_OF_STONEBLOOD(3)
-			get_spell(67019),     // FLASK_OF_THE_NORTH(3)
-			get_spell(79469),     // FLASK_OF_STEELSKIN(3)
-			get_spell(79470),     // FLASK_OF_THE_DRACONIC_MIND(3)
-			get_spell(79471),     // FLASK_OF_THE_WINDS(3)
-			get_spell(79472),     // FLASK_OF_TITANIC_STRENGTH(3)
-			get_spell(79637),     // FLASK_OF_ENHANCEMENT(3)
-			get_spell(94160),     // FLASK_OF_FLOWING_WATER(3)
-		)
+	$buffs["Elixirs"] = array(
+		get_spell(6512),     // DETECT_LESSER_INVISIBILITY(0)
+		get_spell(7178),     // WATER_BREATHING(0)
+		get_spell(16589),     // NOGGENFOGGER_ELIXIR(0)
+		get_spell(11389),     // DETECT_UNDEAD(0)
+		get_spell(11403),     // DREAM_VISION(0)
+		get_spell(11407),     // DETECT_DEMON(0)
+		get_spell(22807),     // GREATER_WATER_BREATHING(0)
+		get_spell(28489),     // CAMOUFLAGE(0)
+		get_spell(28496),     // GREATER_STEALTH_DETECTION(0)
+		get_spell(7178),     // WATER_BREATHING(0)
+		get_spell(22807),     // GREATER_WATER_BREATHING(0)
+		get_spell(44467),     // RECOVERY_DIVERS_POTION(0)
+		get_spell(48719),     // WATER_BREATHING(0)
+		get_spell(65253),     // MIXTURE_OF_THE_FROST_WYRM(0)
+		get_spell(65255),     // MIXTURE_OF_STONEBLOOD(0)
+		get_spell(65252),     // MIXTURE_OF_ENDLESS_RAGE(0)
+		get_spell(65254),     // MIXTURE_OF_PURE_MOJO(0)
+		get_spell(59640),     // UNDERBELLY_ELIXIR(0)
+		get_spell(91722),     // PUFFER_BREATH(0)
+		get_spell(92679)     // FLASK_OF_BATTLE(0)
+	);
+	$buffs["BattleElixirs"] = array(
+		get_spell(2367),     // LESSER_STRENGTH(1)
+		get_spell(2374),     // LESSER_AGILITY(1)
+		get_spell(3160),     // AGILITY(1)
+		get_spell(3164),     // STRENGTH(1)
+		get_spell(7844),     // FIRE_POWER(1)
+		get_spell(8212),     // ENLARGE(1)
+		get_spell(11328),     // AGILITY(1)
+		get_spell(11390),     // ARCANE_ELIXIR(1)
+		get_spell(11334),     // GREATER_AGILITY(1)
+		get_spell(11405),     // ELIXIR_OF_THE_GIANTS(1)
+		get_spell(11406),     // ELIXIR_OF_DEMONSLAYING(1)
+		get_spell(11474),     // SHADOW_POWER(1)
+		get_spell(17038),     // WINTERFALL_FIREWATER(1)
+		get_spell(17535),     // ELIXIR_OF_THE_SAGES(1)
+		get_spell(17538),     // ELIXIR_OF_THE_MONGOOSE(1)
+		get_spell(17537),     // ELIXIR_OF_BRUTE_FORCE(1)
+		get_spell(17539),     // GREATER_ARCANE_ELIXIR(1)
+		get_spell(21920),     // FROST_POWER(1)
+		get_spell(24363),     // MAGEBLOOD_ELIXIR(1)
+		get_spell(26276),     // GREATER_FIREPOWER(1)
+		get_spell(28490),     // MAJOR_STRENGTH(1)
+		get_spell(28491),     // HEALING_POWER(1)
+		get_spell(28493),     // MAJOR_FROST_POWER(1)
+		get_spell(54494),     // MAJOR_AGILITY(1)
+		get_spell(28501),     // MAJOR_FIREPOWER(1)
+		get_spell(28503),     // MAJOR_SHADOW_POWER(1)
+		get_spell(28509),     // GREATER_MANA_REGENERATION(1)
+		get_spell(33720),     // ONSLAUGHT_ELIXIR(1)
+		get_spell(54452),     // ADEPTS_ELIXIR(1)
+		get_spell(33726),     // ELIXIR_OF_MASTERY(1)
+		get_spell(38954),     // FEL_STRENGTH_ELIXIR(1)
+		get_spell(39627),     // ELIXIR_OF_DRAENIC_WISDOM(1)
+		get_spell(45373),     // BLOODBERRY(1)
+		get_spell(28497),     // MIGHTY_AGILITY(1)
+		get_spell(53746),     // WRATH_ELIXIR(1)
+		get_spell(33721),     // SPELLPOWER_ELIXIR(1)
+		get_spell(53747),     // ELIXIR_OF_SPIRIT(1)
+		get_spell(53748),     // MIGHTY_STRENGTH(1)
+		get_spell(53749),     // GURUS_ELIXIR(1)
+		get_spell(53764),     // MIGHTY_MANA_REGENERATION(1)
+		get_spell(60340),     // ACCURACY(1)
+		get_spell(60341),     // DEADLY_STRIKES(1)
+		get_spell(60344),     // EXPERTISE(1)
+		get_spell(80532),     // ARMOR_PIERCING(1)
+		get_spell(60346),     // LIGHTNING_SPEED(1)
+		get_spell(63729),     // ELIXIR_OF_MINOR_ACCURACY(1)
+		get_spell(79468),     // GHOST_ELIXIR(1)
+		get_spell(79474),     // ELIXIR_OF_THE_NAGA(1)
+		get_spell(79477),     // ELIXIR_OF_THE_COBRA(1)
+		get_spell(79481),     // IMPOSSIBLE_ACCURACY(1)
+		get_spell(79632),     // MIGHTY_SPEED(1)
+		get_spell(79635)     // ELIXIR_OF_THE_MASTER(1)
+	);
+	$buffs["GuardianElixirs"] = array(
+		get_spell(2378),     // HEALTH(2)
+		get_spell(3219),     // WEAK_TROLLS_BLOOD_ELIXIR(2)
+		get_spell(3166),     // LESSER_INTELLECT(2)
+		get_spell(3222),     // STRONG_TROLLS_BLOOD_ELIXIR(2)
+		get_spell(3220),     // ARMOR(2)
+		get_spell(3593),     // ELIXIR_OF_FORTITUDE(2)
+		get_spell(3223),     // MAJOR_TROLLS_BLOOD_ELIXIR(2)
+		get_spell(673),     // LESSER_ARMOR(2)
+		get_spell(11319),     // WATER_WALKING(2)
+		get_spell(11349),     // ARMOR(2)
+		get_spell(11371),     // GIFT_OF_ARTHAS(2)
+		get_spell(11396),     // GREATER_INTELLECT(2)
+		get_spell(12608),     // STEALTH_DETECTION(2)
+		get_spell(11348),     // GREATER_ARMOR(2)
+		get_spell(24361),     // MIGHTY_TROLLS_BLOOD_ELIXIR(2)
+		get_spell(28502),     // MAJOR_ARMOR(2)
+		get_spell(28514),     // EMPOWERMENT(2)
+		get_spell(29348),     // GOLDENMIST_SPECIAL_BREW(2)
+		get_spell(39625),     // ELIXIR_OF_MAJOR_FORTITUDE(2)
+		get_spell(39626),     // EARTHEN_ELIXIR(2)
+		get_spell(39628),     // ELIXIR_OF_IRONSKIN(2)
+		get_spell(53751),     // ELIXIR_OF_MIGHTY_FORTITUDE(2)
+		get_spell(53763),     // PROTECTION(2)
+		get_spell(60343),     // MIGHTY_DEFENSE(2)
+		get_spell(60347),     // MIGHTY_THOUGHTS(2)
+		get_spell(79480),     // ELIXIR_OF_DEEP_EARTH(2)
+		get_spell(79631)     // PRISMATIC_ELIXIR(2)
+	);
+	$buffs["Flasks"] = array(
+		get_spell(17626),     // FLASK_OF_THE_TITANS(3)
+		get_spell(17627),     // DISTILLED_WISDOM(3)
+		get_spell(17628),     // SUPREME_POWER(3)
+		get_spell(17629),     // CHROMATIC_RESISTANCE(3)
+		get_spell(28518),     // FLASK_OF_FORTIFICATION(3)
+		get_spell(28519),     // FLASK_OF_MIGHTY_RESTORATION(3)
+		get_spell(28520),     // FLASK_OF_RELENTLESS_ASSAULT(3)
+		get_spell(28521),     // FLASK_OF_BLINDING_LIGHT(3)
+		get_spell(28540),     // FLASK_OF_PURE_DEATH(3)
+		get_spell(40568),     // UNSTABLE_FLASK_OF_THE_ELDER(3)
+		get_spell(40575),     // UNSTABLE_FLASK_OF_THE_SOLDIER(3)
+		get_spell(40572),     // UNSTABLE_FLASK_OF_THE_BEAST(3)
+		get_spell(40567),     // UNSTABLE_FLASK_OF_THE_BANDIT(3)
+		get_spell(40573),     // UNSTABLE_FLASK_OF_THE_PHYSICIAN(3)
+		get_spell(40576),     // UNSTABLE_FLASK_OF_THE_SORCERER(3)
+		get_spell(28518),     // FLASK_OF_FORTIFICATION(3)
+		get_spell(28520),     // FLASK_OF_RELENTLESS_ASSAULT(3)
+		get_spell(28519),     // FLASK_OF_MIGHTY_RESTORATION(3)
+		get_spell(17628),     // SUPREME_POWER(3)
+		get_spell(41609),     // FORTIFICATION_OF_SHATTRATH(3)
+		get_spell(41610),     // MIGHTY_RESTORATION_OF_SHATTRATH(3)
+		get_spell(41611),     // SUPREME_POWER_OF_SHATTRATH(3)
+		get_spell(41608),     // RELENTLESS_ASSAULT_OF_SHATTRATH(3)
+		get_spell(42735),     // CHROMATIC_WONDER(3)
+		get_spell(46837),     // PURE_DEATH_OF_SHATTRATH(3)
+		get_spell(46839),     // BLINDING_LIGHT_OF_SHATTRATH(3)
+		get_spell(53752),     // LESSER_FLASK_OF_TOUGHNESS(3)
+		get_spell(62380),     // LESSER_FLASK_OF_RESISTANCE(3)
+		get_spell(53760),     // FLASK_OF_ENDLESS_RAGE(3)
+		get_spell(54212),     // FLASK_OF_PURE_MOJO(3)
+		get_spell(53758),     // FLASK_OF_STONEBLOOD(3)
+		get_spell(53755),     // FLASK_OF_THE_FROST_WYRM(3)
+		get_spell(53755),     // FLASK_OF_THE_FROST_WYRM(3)
+		get_spell(53760),     // FLASK_OF_ENDLESS_RAGE(3)
+		get_spell(54212),     // FLASK_OF_PURE_MOJO(3)
+		get_spell(53758),     // FLASK_OF_STONEBLOOD(3)
+		get_spell(67019),     // FLASK_OF_THE_NORTH(3)
+		get_spell(79469),     // FLASK_OF_STEELSKIN(3)
+		get_spell(79470),     // FLASK_OF_THE_DRACONIC_MIND(3)
+		get_spell(79471),     // FLASK_OF_THE_WINDS(3)
+		get_spell(79472),     // FLASK_OF_TITANIC_STRENGTH(3)
+		get_spell(79637),     // FLASK_OF_ENHANCEMENT(3)
+		get_spell(94160),     // FLASK_OF_FLOWING_WATER(3)
 	);
 	
-	$food = array(
+	$buffs["Food"] = array(
 		get_item(64641),    //"Delicious" Worm Steak
 		get_item(62671),    //Severed Sagefish Head
 		get_item(62670),    //Beer-Basted Crocolisk
@@ -3056,11 +3157,7 @@ function get_buffs() {
 		get_item(724)    //Goretusk Liver Pie
 	);
 	
-	return array(
-		$class_buffs,
-		$flasks,
-		$food
-	);
+	return $buffs;
 }
 
 function get_profession( $id ) {
@@ -3226,4 +3323,32 @@ function get_storage_record($id) {
 		$GLOBALS['g_db_con']
 	));
 }
+
+function ajax_die( $error_msg, $description = null ) {
+	header("error: yes");
+	if( $description ) {
+		header("error_description: ".urlencode($description));
+	}
+	die($error_msg);
+}
+
+function ajax_die_on_exception( Exception $e ) {
+	header("error: yes");
+	$str = "<div>".$e->__toString()."</div>";
+	
+	$cause_str = "";
+	while( $cause = $e->getPrevious() ) {
+		$cause_str .= "<div>".$cause->__toString()."</div>";
+		$e = $cause;
+	}
+	if( $cause_str ) {
+		$str .= "<div>".$cause_str."</div>";
+	}
+	
+	if( $description ) {
+		header("error_description: ".urlencode($description));
+	}
+	die($str);
+}
+
 ?>
