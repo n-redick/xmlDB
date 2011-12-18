@@ -104,7 +104,7 @@ option[selected] { background-color: #40C0D8;}
 .ix_login_btn { background-image: url(images/site/button_bgs.jpg); background-position: 0px 0px; border: 1px solid #000000; color: #FFFFFF; font-size: 11px; }
 .ix_login_btn_hover { background-position: 0px -48px; }
 
-.ix_main_menu { float: left; width: 500px; margin-top: 36px; padding-left: 5px; }
+.ix_main_menu { float: left; width: 600px; margin-top: 36px; padding-left: 5px; }
 .ix_mm_entry{ float: left;}
 
 .ix_mm_link{ line-height: 24px; font-size: 13px; display: block; padding: 0px 20px; color: #808080; text-decoration: none; background-color: #262323; border: 1px solid #161313; margin-left: -1px; }
@@ -424,7 +424,8 @@ option[selected] { background-color: #40C0D8;}
 .rpi_content { padding-top: 10px; text-align: right;}
 .rpi_select { width: 500px;}
 
-.ba_collapse { margin-bottom: 5px;}
+.ba_collapse_c {padding-bottom:5px;}
+.ba_p { margin-bottom: 5px;}
 .collapse_h { font-size: 16px; font-family: georgia, serif; padding: 5px; color: #808080;}
 
 .bnpm_add_icon{float: left;}
@@ -446,7 +447,7 @@ option[selected] { background-color: #40C0D8;}
 .bnpm_select{ width: 150px;}
 .bnpm_static_link{color: #808080; font-size: 11px;}
 
-.character_class_1 { color: #C41F3B; }
+.character_class_1 { color: #C79C6E; }
 .character_class_2 { color: #F58CBA; }
 .character_class_3 { color: #ABD473; }
 .character_class_4 { color: #FFF569; }
@@ -543,6 +544,7 @@ option[selected] { background-color: #40C0D8;}
 .rf_error{ padding-left: 10px; color: #808078;}
 .rf_tt_c{ white-space: normal; }
 
+.rf_wowreforgeurl{ margin-right: 5px; width: 400px}
 
 .eqf_sel {
 	color: #808078;
@@ -634,9 +636,12 @@ option[selected] { background-color: #40C0D8;}
 .bi_collapse{ margin-bottom: 5px; }
 .bi_p{ padding-bottom: 20px;}
 .bi_fcc_parent{padding-left: 2px;}
+.bi_loading{height: 30px; background: url(images/site/li_loading.gif) 50% 50% no-repeat;}
 
-.ba_simple_op_link { margin-bottom: 2px; display: block; padding-left: 5px; color: #00A8bd}
+.ba_simple_op_link { font-family: Georgia, serif; color: #00A8bd; font-size: 13px;}
 .ba_simple_op_link:hover{ color: #00c0b8;}
+.ba_op_container { padding: 5px 10px;}
+.ba_op_title { font-family: Georgia, serif; color: #c0c0c0; font-size: 13px; padding-bottom: 5px;}
 
 .green{
 	color:#00DD00;

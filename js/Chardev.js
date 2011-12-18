@@ -108,6 +108,8 @@ var Chardev = {
 				return false;
 			}
 
+			Tooltip.showLoading();
+			
 			Ajax.request(
 				"php/interface/user/request_registration.php?u=" + _u + "&pw=" + _p + "&e=" + _e,
 				new Handler(Chardev.__register_callback, Chardev),
@@ -119,6 +121,7 @@ var Chardev = {
 		
 		__register_callback: function( request )
 		{
+			
 			document.getElementById("login").disabled = false;
 			if (request.status == 200) 
 			{
@@ -128,7 +131,7 @@ var Chardev = {
 				}
 				else if( request.responseText.search("register_success") != -1 )
 				{
-					Tooltip.showHTML("An E-Mail has been sent. Before you can use your account you have to confirm your registration by following the link given in the mail.");
+					Tooltip.showHtmlDisabled("An E-Mail has been sent. Before you can use your account you have to confirm your registration by following the link given in the mail.");
 				}
 				else
 				{
@@ -272,15 +275,17 @@ var Chardev = {
 		},
 
 		deleteThread : function ( threadId ){
-			Tooltip.showLoading();
-			Ajax.post(
-				'php/interface/forum/forum.php', {
-					'action': 'delete_thread',
-					'thread': threadId
-				},
-				new Handler(Chardev.__deleteTopic_callback, Chardev),
-				null
-			);
+			if( confirm("Are you sure you want to delete this thread?") ) {
+				Tooltip.showLoading();
+				Ajax.post(
+					'php/interface/forum/forum.php', {
+						'action': 'delete_thread',
+						'thread': threadId
+					},
+					new Handler(Chardev.__deleteTopic_callback, Chardev),
+					null
+				);
+			}
 		},
 		__deleteTopic_callback : function ( request ) {		
 			try {

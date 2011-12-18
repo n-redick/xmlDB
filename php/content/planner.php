@@ -5,8 +5,11 @@
 	$profileLoadError = null;
 	$profile_id = isset($_GET['profile']) ? (int)$_GET['profile'] : 0;
 	$profile = null;
+	$profileUser = 0;
 	if( $profile_id > 0 ) {
-		$profile = ( $profile_id > 0 ? get_profile($profile_id) : null );
+		$tmp = ( $profile_id > 0 ? get_profile($profile_id) : null );
+		$profile = $tmp["character"];
+		$profileUser = $tmp["user_id"];
 	}
 	else {
 		
@@ -21,6 +24,7 @@
 <script type=\"text/javascript\">
 /* <![CDATA[ */
 	g_settings.profileId=".(int)$profile_id.";
+	g_settings.profileUserId=".(int)$profileUser."
 	g_settings.character=".json_encode($profile).";
 	g_settings.profileLoadError=".json_encode($profileLoadError ? $profileLoadError : null).";
 	g_settings.isPlanner=true;

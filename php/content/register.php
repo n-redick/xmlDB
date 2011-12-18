@@ -12,10 +12,9 @@ if(isset($_GET['guid'])){
 }
 else {
 	$g_content .= "
+	<div class='content_header'>Register at chardev</div>
 	<form onsubmit='g_register(); return false;' action='#'>
-		<div class='im_sa_p'>
-			<div class='im_sa_h'>Register at chardev
-			</div> 
+		<div class='im_sa_p'> 
 			<div class='im_sa_r'> 
 				<div class='im_sa_left'>".$locale['User_name']."</div>
 				<div class='im_sa_right'><input tabindex='10' class='input im_sa_in' id='user_name' /></div>

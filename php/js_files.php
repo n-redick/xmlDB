@@ -94,6 +94,7 @@
 		array( "js/gui/widgets/", "Menu.js"),
 		array( "js/gui/widgets/", "StackedDiv.js"),
 		array( "js/gui/widgets/", "FilterableCollection.js"),
+		array( "js/gui/widgets/", "BatchOperations.js"),
 		
 		array( "js/gui/widgets/editable/", "Editable.js"),
 			array( "js/gui/widgets/editable/", "InputEditable.js"),
@@ -125,6 +126,7 @@
 		array( "js/adapter/facades/", "CharacterFacade.js"),
 		array( "js/adapter/facades/", "AvailableBuff.js"),
 		array( "js/adapter/facades/", "AvailableShapeform.js"),
+		array( "js/adapter/facades/", "AvailablePresence.js"),
 		array( "js/adapter/facades/", "ActiveBuff.js"),
 		
 		array( "js/gui/list/filter/", "AbstractFilter.js"),

@@ -50,6 +50,7 @@ echo '
 		character : null,
 		language : 'en',
 		profileId : 0,
+		profileUserId: 0,
 		sessionId : '',
 		userId : 0,
 		isPlanner : false,
@@ -196,7 +197,8 @@ echo '
 				<div class="ix_mm_entry"><a class="ix_mm_link<?php echo $page==PAGE_PLANNER ? " ix_mm_link_active" : ""; ?>" href="?planner">planner</a></div>
 				<div class="ix_mm_entry"><a class="ix_mm_link<?php echo $page==PAGE_FORUM ? " ix_mm_link_active" : ""; ?>" href="?forum">forum</a></div>
 				<div class="ix_mm_entry"><a class="ix_mm_link<?php echo $page==PAGE_DONATE ? " ix_mm_link_active" : ""; ?>" href="?donate">donate</a></div>
-				<div class="ix_mm_entry"><a class="ix_mm_link" href="http://github.com/chardev/chardev">source</a></div>
+				<div class="ix_mm_entry"><a class="ix_mm_link" href="http://github.com/chardev/chardev">source</a></div>		
+				<div style="<?php echo $loggedIn ? "display:none" : ""; ?>" class="ix_mm_entry"><a class="ix_mm_link<?php echo $page==PAGE_REGISTER ? " ix_mm_link_active" : ""; ?>" href="?register">register</a></div>
 				<div style="clear:both"></div>
 			</div>
 			

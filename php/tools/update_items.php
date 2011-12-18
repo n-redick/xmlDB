@@ -44,6 +44,7 @@
 		WHERE 
 		Name like 'QA %' 
 		OR Name like 'Obsolete%' 
+		OR Name like '[%' 
 		OR Name like 'Deprecated %' 
 		OR Name like '%(test)' 
 		OR Name like '[PH]%' 
@@ -53,7 +54,7 @@
 		OR Name like '%_PVE%' 
 		OR Name like '%Cataclysm C01%'
 		OR TypeMask & 16
-		OR Level >= 400
+		OR ( Level >= 400 && ItemID < 70000 )
 		)
 		",
 		$GLOBALS['g_db_con']

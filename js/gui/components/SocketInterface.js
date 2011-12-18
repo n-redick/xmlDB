@@ -1,6 +1,5 @@
 /**
  * @constructor
- * @returns {SocketInterface}
  */
 function SocketInterface() {
 
@@ -19,32 +18,19 @@ function SocketInterface() {
 	var a;
 	this.node = DOM.create('div');
 	this.sockets = [new LayeredDiv(5),new LayeredDiv(5),new LayeredDiv(5)];
-	this.batch = document.createElement('div');
-	this.batchCollapsable = new Collapsable(); this.batchCollapsable.toggle();
-	this.node.appendChild(this.batch);
-		
+	
+	this.ops = new BatchOperations();
+	DOM.addClass(this.ops.node, "ra_group");
+	this.node.appendChild(this.ops.node);
+	
+	this.ops.addSimple('remove_all', locale['SI_RemoveAllGems'], new Handler(function(){
+		this.onBatchOperation(SocketInterface.BATCH_OP_REM_ALL);
+	}, this));
+	
 	this.main = DOM.createAt( this.node, 'div', {'class': 'si_main'});
 	this.tooltip = DOM.createAt( this.main, 'div', {'class': 'si_tt_p'});
 	this.usedGemParent = DOM.createAt( this.main, 'div', {'class': 'ra_group si_used_parent'});
 	this.socketParent = DOM.createAt( this.main, 'div', {'class': 'si_socket_parent'});
-	
-	this.batch.appendChild(this.batchCollapsable.node);
-	this.batchCollapsable.header.appendChild(document.createTextNode(locale['SI_BatchHeader']));
-	this.batchCollapsable.header.className = "collapse_h";
-	this.batchCollapsable.content.className = "collapse_c";
-	this.batchCollapsable.node.className = "ra_group ba_collapse";
-	
-	a = DOM.createAt( this.batchCollapsable.content, 'a', {'text': locale['SI_RemoveAllGems'],'href': 'javascript:', 'class': 'ba_simple_op_link'});
-	Listener.add(a,"click",this.onBatchOperation,this,[SocketInterface.BATCH_OP_REM_ALL]);
-	
-	this.baOpRemColTitle = DOM.createAt( this.batchCollapsable.content, 'a', {'href': 'javascript:', 'class': 'ba_simple_op_link'});
-	Listener.add(this.baOpRemColTitle,"click",this.onBatchOperation,this,[SocketInterface.BATCH_OP_REM_ALL_SAME_GEM]);
-	
-	this.baOpSocAllTitle = DOM.createAt( this.batchCollapsable.content, 'a', {'href': 'javascript:', 'class': 'ba_simple_op_link'});
-	Listener.add(this.baOpSocAllTitle,"click",this.onBatchOperation,this,[SocketInterface.BATCH_OP_SOCK_ALL]);
-	
-	this.baOpSocColTitle = DOM.createAt( this.batchCollapsable.content, 'a', {'href': 'javascript:', 'class': 'ba_simple_op_link'});
-	Listener.add(this.baOpSocColTitle,"click",this.onBatchOperation,this,[SocketInterface.BATCH_OP_SOCK_ALL_COL]);
 	
 	for( var i=0; i<3; i++ ) {
 		this.sockets[i].layers[0].className = "si_gem_p";
@@ -87,22 +73,15 @@ SocketInterface.prototype = {
 	node: null,
 	main: null,
 	sockets: [],
-	batch: null,
 	itemRef: null,
-	batchCollapsable: null,
 	slot: 0,
 	character: null,
 	usedGemParent: null,
 	itm: null,
 	eventMgr: null,
 	listParent: null,
+	ops: null,
 
-	baOpRemColParent: null,
-	baOpSocAllParent: null,
-	baOpSocColParent: null,
-	baOpRemColTitle: null,
-	baOpSocAllTitle: null,
-	baOpSocColTitle: null,
 	internalTooltip: null,
 	setShow: function( b ) {
 		if( b ) {
@@ -201,6 +180,8 @@ SocketInterface.prototype = {
 			a.onmousemove = function(){Tooltip.move();};
 		}
 		Tools.clearBoth(this.usedGemParent);
+		
+		this.selectSocket(this.selectedSocket);
 	},
 	
 	onSocketMouseOver: function( socket ) {
@@ -232,14 +213,11 @@ SocketInterface.prototype = {
 	},
 	onBatchOperation: function( operation ) {
 		if( operation == SocketInterface.BATCH_OP_REM_ALL ) {
-			this.character.removeAllGems(0);
+			this.eventMgr.fire('remove_all_gems', {});
 		} 
 		else {
 			var gemId = this.itm.getGem(this.selectedSocket).id;
 			switch( operation ) {
-			case SocketInterface.BATCH_OP_REM_ALL:
-				this.eventMgr.fire('remove_all_gems', {});
-				break;
 			case SocketInterface.BATCH_OP_REM_ALL_SAME_GEM:
 				this.eventMgr.fire('remove_all_gems_by_id', {'gemId': gemId});
 				break;
@@ -257,10 +235,10 @@ SocketInterface.prototype = {
 	},
 	
 	selectSocket: function( socket ) {
-	
-		this.baOpRemColTitle.style.display = "none";
-		this.baOpSocAllTitle.style.display = "none";
-		this.baOpSocColTitle.style.display = "none";
+		
+		this.ops.remove('remove_color');
+		this.ops.remove('add_all');
+		this.ops.remove('add_color');
 		
 		if( socket != -1 ) {
 			var gem = this.itm.getGem(socket);
@@ -270,21 +248,25 @@ SocketInterface.prototype = {
 			DOM.addClass( this.sockets[socket].layers[0], "si_gem_p_selected" );
 			
 			if( gem != null ) {
-				this.baOpRemColTitle.style.display = "block";
-				this.baOpSocAllTitle.style.display = "block";
+
+				this.ops.addSimple('remove_color', TextIO.sprintf1( locale['SI_RemoveGems'], gem.name ), new Handler(function() {
+					this.onBatchOperation(SocketInterface.BATCH_OP_REM_ALL_SAME_GEM);
+				}, this));
 				
-	
-				this.baOpRemColTitle.innerHTML = TextIO.sprintf1( locale['SI_RemoveGems'], gem.name );
-				this.baOpSocAllTitle.innerHTML = TextIO.sprintf1( locale['SI_SocketAll'], gem.name );
+				this.ops.addSimple('add_all', TextIO.sprintf1( locale['SI_SocketAll'], gem.name ), new Handler(function() {
+					this.onBatchOperation(SocketInterface.BATCH_OP_SOCK_ALL);
+				}, this));
 				
-				if( this.itm.socketColors[socket] > 0 ) {
-					this.baOpSocColTitle.innerHTML = TextIO.sprintf( locale['SI_SocketAllColor'], [ gem.name, locale['SI_SocketColors'][this.itm.socketColors[socket]] ] );
-					this.baOpSocColTitle.style.display = "block";
+				if( this.itm.socketColors[socket] > 1 ) {
+					this.ops.addSimple('add_color', TextIO.sprintf( locale['SI_SocketAllColor'], [ gem.name, locale['SI_SocketColors'][this.itm.socketColors[socket]] ] ), new Handler(function() {
+						this.onBatchOperation(SocketInterface.BATCH_OP_SOCK_ALL_COL);
+					}, this));
 				}
 			}
 			this.setShowList(true);
 		}
 		else {
+			
 			this.usedGemParent.style.display = "none";
 			this.setShowList(false);
 		}

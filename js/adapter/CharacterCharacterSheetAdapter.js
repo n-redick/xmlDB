@@ -2,7 +2,6 @@
  * @constructor
  * @param {Character} character
  * @param {CharacterSheet} sheet
- * @returns {CharacterCharacterSheetAdapater}
  */
 function CharacterCharacterSheetAdapater( character, sheet ) {
 	
@@ -10,7 +9,7 @@ function CharacterCharacterSheetAdapater( character, sheet ) {
 		'class_change','race_change','level_change',
 		'item_change','profession_change','profession_level_change',
 		'character_loaded','stats_change','preview_stats_change',
-		'buffs_change', 'shapeform_change'
+		'buffs_change', 'shapeform_change', 'presence_change'
 	], new Handler( function( e ) {
 		if( e.is('class_change') ) {
 			this.updateClass(e.get('class'));
@@ -45,6 +44,9 @@ function CharacterCharacterSheetAdapater( character, sheet ) {
 		else if( e.is('shapeform_change') ) {
 			this.updateShapeSelector();
 		}
+		else if( e.is('presence_change') ) {
+			this.updatePresenceSelector();
+		}
 		else {
 			throw new Error("Unhandled event: "+e.event);
 		}
@@ -54,7 +56,7 @@ function CharacterCharacterSheetAdapater( character, sheet ) {
 		'race_select','class_select','level_select','profession_select',
 		'profession_level_select','stat_tooltip_show','stat_tooltip_hide',
 		'item_left_click','item_right_click','item_tooltip_show',
-		'item_tooltip_hide', 'select_shape'
+		'item_tooltip_hide', 'select_shape', 'select_presence'
 	], new Handler( function( e ) {
 		if( e.is('race_select')) {
 			DatabaseIO.getCharacterRace( 
@@ -102,27 +104,25 @@ function CharacterCharacterSheetAdapater( character, sheet ) {
 			Tooltip.hide();
 		}
 		else if( e.is('item_left_click')) {
-			var index = e.get('index'); var slot = e.get('slot');
-			if( index > 0 && this.character.getEquippedItem( slot, index ) != null ) {
-				this.character.swapItems(slot, index);
-				this.sheet.hideSlotTooltip(slot, index);
+			if( e.get('index') > 0 && this.character.getEquippedItem( e.get('slot'), e.get('index') ) != null ) {
+				this.character.swapItems(e.get('slot'), e.get('index'));
+				this.sheet.hideSlotTooltip(e.get('slot'), e.get('index'));
 			}
 			else {
 				this.sheet.selectSlot(e.get('slot'));
 			}
 		}
 		else if( e.is('item_right_click')) {
-			var index = e.get('index'); var slot = e.get('slot');
-			if( index == 0 ) {
-				this.character.removeItem(slot);
-				this.sheet.hideSlotTooltip(slot, index);
+			if( e.get('index') == 0 ) {
+				this.character.removeItem(e.get('slot'));
+				this.sheet.hideSlotTooltip(e.get('slot'), e.get('index'));
 			}
 		}
 		else if( e.is('item_tooltip_show')) {
 			var itm = this.character.getEquippedItem( e.get('slot'), e.get('index') );
 			if( itm ) {
-				if( index > 0 ) {
-					this.character.setItemPreview( slot, itm);
+				if( e.get('index') > 0 ) {
+					this.character.setItemPreview( e.get('slot'), itm);
 				}
 			}
 		}
@@ -133,6 +133,9 @@ function CharacterCharacterSheetAdapater( character, sheet ) {
 		}
 		else if( e.is('select_shape')) {
 			this.character.setShapeform(e.get('shape_id'));
+		}
+		else if( e.is('select_presence')) {
+			this.character.setPresence(e.get('presence_id'));
 		}
 		else {
 			throw new Error("Unhandled event: "+e.event);
@@ -216,13 +219,13 @@ CharacterCharacterSheetAdapater.prototype = {
 			this.sheet.slots[18].setVisibility(false);
 		}
 		this.updateShapeSelector();
+		this.updatePresenceSelector();
 		this.updateRaceClassSelector();
 		this.updateEquipment();
 		this.updateLevel(this.character.level);
 	},
 	updateShapeSelector: function() {
 		if( this.character.chrClass != null ) {
-			
 			var availShapes = [];
 			for( var k in this.character.chrClass.shapes ) {
 				var shapeform = this.character.chrClass.shapes[k];
@@ -234,9 +237,28 @@ CharacterCharacterSheetAdapater.prototype = {
 			}
 			
 			this.sheet.shapeSelector.update( availShapes, this.character.chrClass.shapeform);
+			
+			
 		}
 		else {
 			this.sheet.shapeSelector.update( null, 0);
+		}
+	},
+	updatePresenceSelector: function() {
+		if( this.character.chrClass != null ) {
+			var availPresences = [];
+			for( var k in this.character.chrClass.presences ) {
+				var presence = this.character.chrClass.presences[k];
+				availPresences.push(new AvailablePresence(
+						presence.id, 
+						presence.icon, 
+						presence.getDescription(this.character).join("<br />")
+				));
+			}
+			this.sheet.presenceSelector.update( availPresences, this.character.chrClass.presence ? this.character.chrClass.presence.spell.id : 0 );
+		}
+		else {
+			this.sheet.presenceSelector.update( null, 0);
 		}
 	},
 	updateRace: function( newRace ) {

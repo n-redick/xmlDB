@@ -1,13 +1,13 @@
 .fo_code_h {font-family: Georgia, serif; line-height: 35px; font-size:16px; font-weight: bold; padding-left: 5px; }
-.fo_code_td{ border-top: #e8e8e8 solid 1px;}
+.fo_code_td{ border-top: 1px dotted #808080;}
 .fo_code_parsed{padding: 5px;}
 .fo_code_name{ font-family: Georgia, serif; padding: 5px; font-size: 14px; color: #808080;}
 .fo_code_plain{padding: 5px;}
-.fo_code_p{ border-top: #00A8BD 1px solid; color: #808080; }
+.fo_code_p{ border-top: #00A8BD 1px solid; color: #c0c0c0; }
 .fo_code_tab{ width: 100%; }
 
 .fo_header_subforum_link {
-	color: #808080;
+	color: #c0c0c0;
 }
 
 .fo_recent_p {
@@ -27,8 +27,9 @@
 .fo_edit { width: 700px; height: 200px; }
 
 .fo_post_header_last{text-align: right;}
-.fo_post_header_action{margin-right: 5px; font-weight: bold;}
-.fo_header_action{ padding: 0 10px; margin: 0 2px; display: inline-block; line-height: 24px;}
+.fo_post_header_action{margin-right: 5px; font-weight: bold; color: #c0c0c0;}
+.fo_post_header_action:hover{color: white;}
+.fo_header_action{ padding: 0 10px; margin: 0 2px; display: inline-block; line-height: 24px}
 .fo_header_action:hover{text-decoration: none;}
 
 .fo_pl_l{text-align:left;}
@@ -196,16 +197,16 @@
 .forum_time
 {
 	font-size:10px;
-	color:#B0B0B0;
+	color:#808080;
 	padding-top:2px;
 }
 
 .forum_author
 {
-	color:#808080;
+	color:#c0c0c0;
 }
 
-.forum_author_donator
+.forum_author_donor
 {
 	color:#FFFF00;
 }
@@ -276,8 +277,10 @@
 {
 	font-size:16px;
 	font-family:Tahoma;
-	color: #404040;
+	color: #00a8bd;
 }
+
+.forum_goto_link:hover{ color: #00c0b8; }
 
 .forum_goto_link:hover
 {

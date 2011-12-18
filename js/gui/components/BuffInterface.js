@@ -6,14 +6,19 @@ function BuffInterface() {
 	this.eventMgr.registerEvent('add_buff', ['id']);
 	
 	this.node = DOM.create( 'div', {'class': 'bi_p'});
-	this.classNode = DOM.createAt( this.node, 'div');
-	this.itemNode = DOM.createAt( this.node, 'div');
-	this.talentNode = DOM.createAt( this.node, 'div');
-	this.procNode = DOM.createAt( this.node, 'div');
+	
+	this.content = DOM.createAt( this.node, 'div', {'display': 'none'});
+	this.classNode = DOM.createAt( this.content, 'div');
+	this.itemNode = DOM.createAt( this.content, 'div');
+	this.talentNode = DOM.createAt( this.content, 'div');
+	this.procNode = DOM.createAt( this.content, 'div');
+	
+	this.loading = DOM.createAt( this.node, 'div', {'class': 'bi_loading'});
 }
 
 BuffInterface.TYPE_SPELL = 0;
 BuffInterface.TYPE_ITEM = 1;
+BuffInterface.MAX_LENGTH_BUFF_NAME = 18;
 
 BuffInterface.prototype = {
 	eventMgr: null,
@@ -23,18 +28,21 @@ BuffInterface.prototype = {
 	procNode: null,
 	addBuffHandler: null,
 	buffHandler: null,
+	initialised: false,
+	content: null,
+	loading: null,
 	
 	/**
 	 * @public
-	 * @param {Character} character
+	 * @param {array} useSpells
+	 * @param {array} procSpells
+	 * @param {array} conditionalSpells
 	 */
-	update: function(character) {
+	update: function( useSpells, procSpells, conditionalSpells) {
 		
-		var itm, i, j, s, h, se, ps, enchant;
+		var spell, k;
 		var pc = new Collapsable();
 		var ic = new Collapsable();
-		var icc = 0, pcc = 0; 
-		var talentBuffs = [];
 		
 		ic.header.className = 'collapse_h bi_collapse_h';
 		ic.content.className = 'collapse_c bi_collapse_c';
@@ -46,59 +54,20 @@ BuffInterface.prototype = {
 		DOM.set(this.itemNode,ic.node);
 		DOM.set(this.procNode,pc.node);
 		
-		for( i = 0; i < INV_ITEMS; i++ ) {
-			/** @type {Item} */
-			itm = character.inventory.get(i);
-			if( ! itm ) {
-				continue;
-			}
-			
-			for( j = 0; j < itm.spells.length; j++ ) {
-				s = itm.spells[j];
-				
-				if( s == null ) {
-					continue;
-				}
-	
-				// echo( itm.name + "(spell "+j+"): " + s.id + " -> " +  s.getName() );
-				for( h = 0 ; h < 3; h++ ) {
-					se = s.effects[h];
-					if( ! se ) {
-						continue;
-					}
-					if( se.effect == 42 ) {
-						ps = se.getProcSpell();
-						if( ps ) {
-							// echo( itm.name + "(spell "+j+" effect "+h+"): " + s.id + " -> " + ps.getName() );
-							pc.content.appendChild( this.createBuffBase( ps.icon, ps.id, true, ps.getName() ));
-							pcc ++;
-						}
-					}
-				}
-				
-				if ( s.isAura() ) {
-					continue;
-				}
-				
-				// echo( itm.name + "(spell "+j+"): " + s.id + " -> " +  s.getName() );
-				ic.content.appendChild( this.createBuffBase(s.icon, s.id, true, s.getName()) );
-				icc ++;
-			}
-			
-			for( j=0; j<itm.enchants.length; j++ ) {
-				enchant = itm.enchants[j];
-				
-				if( enchant.types[0] == 1 ) {
-					ps = enchant.spells[0];
-					pc.content.appendChild( this.createBuffBase( ps.icon, ps.id, true, ps.getName() ));
-				}
-			}
+		for( k in useSpells ) {
+			spell = useSpells[k];
+			ic.content.appendChild( this.createBuffBase(spell.icon, spell, true, spell.name) );
+		}
+		
+		for( k in procSpells ) {
+			spell = procSpells[k];
+			pc.content.appendChild( this.createBuffBase(spell.icon, spell, true, spell.name) );
 		}
 		
 		Tools.clearBoth(ic.content);
-		ic.header.innerHTML = "Items (Use-Effects)<span class='bi_cb_count'>("+icc+")</span>";
+		ic.header.innerHTML = "<a clas='bi_bc_link' href='javascript:'>Items (Use-Effects)</a><span class='bi_cb_count'>("+useSpells.length+")</span>";
 		Tools.clearBoth(pc.content);
-		pc.header.innerHTML = "Item Procs<span class='bi_cb_count'>("+pcc+")</span>";
+		pc.header.innerHTML = "<a clas='bi_bc_link' href='javascript:'>Item Procs</a><span class='bi_cb_count'>("+procSpells.length+")</span>";
 		
 		Tools.removeChilds(this.talentNode);
 		/*
@@ -112,23 +81,18 @@ BuffInterface.prototype = {
 			}
 		}
 		*/
-		if( character.chrClass != null && character.chrClass.conditionalBuffs != null ) {
-			var conditionalBuff;
-			for( i=0; i<character.chrClass.conditionalBuffs.length; i++ ) {
-				conditionalBuff = character.chrClass.conditionalBuffs[i];
-				this.testAndAdd( character, talentBuffs, conditionalBuff[0], conditionalBuff[1]);
-			}
-		}
-		this.createCategory(talentBuffs, "Talent Buffs", this.talentNode, BuffInterface.TYPE_SPELL, true );
+		this.createCategory(conditionalSpells, "Talent Buffs", this.talentNode, BuffInterface.TYPE_SPELL, true );
 		
 	},
 	
-	testAndAdd: function( character, arr, spell, testId ) {
-		if( character.auras.auraMap[testId] ) {
-			arr.push(spell);
-		}
+	isInitialised: function() {
+		return this.initialised;
 	},
-	
+	resetInitialised: function() {
+		this.initialised = false;
+		this.content.style.display = 'none';
+		this.loading.style.display = 'block';
+	},
 	/**
 	 * @param buffs
 	 */
@@ -164,6 +128,10 @@ BuffInterface.prototype = {
 		this.createCategory(buffs['Flasks'],'Flasks',this.classNode, false);
 		
 		this.createCategory(buffs['Food'],'Food',this.classNode, false);
+		
+		this.initialised = true;
+		this.content.style.display = 'block';
+		this.loading.style.display = 'none';
 	},
 	
 	createCategory: function( availableBuffs, name, node, expanded ) {
@@ -171,7 +139,7 @@ BuffInterface.prototype = {
 		var j, n;
 		var fc = null;
 		var map = {};
-		var div = document.createElement("div"), fcc_parent;
+		var div = document.createElement("div");
 		
 		c.header.className = 'collapse_h bi_collapse_h';
 		c.content.className = 'collapse_c bi_collapse_c';
@@ -188,14 +156,12 @@ BuffInterface.prototype = {
 			n++;
 		}
 		c.header.innerHTML = "<a clas='bi_bc_link' href='javascript:'>" + name + "</a><span class='bi_cb_count'>("+n+")</span>";
-		
-		fcc_parent = document.createElement("div");
-		fcc_parent.innerHTML = "Filter: ";
-		fcc_parent.className = 'bi_fcc_parent';
 	
 		fc = new FilterableCollection( map, div );
 		fc.filterControl.className = 'input input_small bi_fcc_f';
 		fc.showAll();
+		
+		fcc_parent = DOM.createAt(c.content, 'div', {'class': 'bi_fcc_parent', 'text': 'Filter'});
 		fcc_parent.appendChild(fc.filterControl);
 		
 		c.content.appendChild(fcc_parent);
@@ -222,8 +188,11 @@ BuffInterface.prototype = {
 	createBuffBase: function( icon, spell, isSelfBuff, name ) {
 		
 		var p = DOM.create('div', {'class': 'bi_buff_p'});
-		DOM.createAt( p, 'img', {'src': 'images/icons/small/'+icon+'.png', 'class': 'bi_buff'})
-		var a = DOM.createAt( p, 'a', { 'href': 'javascript:', 'text': name.length > 20 ? name.substr(0,17)+"..." : name} );
+		DOM.createAt( p, 'img', {'src': 'images/icons/small/'+icon+'.png', 'class': 'bi_buff'});
+		var a = DOM.createAt( p, 'a', { 
+			'href': 'javascript:', 
+			'text': name.length > BuffInterface.MAX_LENGTH_BUFF_NAME ? name.substr(0,BuffInterface.MAX_LENGTH_BUFF_NAME-3)+"..." : name
+		});
 		
 		a.onmouseout = function(){Tooltip.hide();};
 		a.onmousemove = function(){Tooltip.move();};

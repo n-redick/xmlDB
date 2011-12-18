@@ -148,16 +148,21 @@
 				<td class='fo_cell_m {$style}'>{$hook['PostCount']}</td>
 				<td class='fo_cell_r {$style}'>
 					<div class='forum_last_post'>";
-			/*
-			if( count($new) )
+			$latestPost = $this->database->getLatestPost($hook['ID']);
+			
+			if( $latestPost )
 			{
-				$g_content .='
-					<span class="forum_time">Posted '.date("M jS Y g:i A",(int)$new[0]['created']).'
-					by <span class="'.$user_role_to_css_class[$new[0]['role']].'">'.$new[0]['name'].'</span></span>
-					<div>'.forum_topic_link( $new[0]['flag'], $new[0]['locked'], $new[0]['topicId'], $new[0]['title'], $new[0]['posts'], $new[0]['page'], 20 ).'</div>
-				';
+				$latestPostUser = new user_data($latestPost['AuthorID']);
+				$roleCss = Forum::roleToCssClass($latestPostUser);
+				$date = Forum::timestampToString((int)$latestPost['Created']);
+				$link = Forum::threadLink($this->database->getThread($latestPost["ThreadID"]), 30, true);
+				
+				$html .="
+					<span class=\"forum_time\">Posted {$date}
+					by <span class=\"{$roleCss}\">{$latestPostUser->get_name()}</span></span>
+					<div>{$link}</div>
+				";
 			}
-			*/
 			$html .="
 					</div>
 				</td>
@@ -225,13 +230,13 @@
 		private function getThread( $thread, $page, $index ) {
 			$user = new user_data($thread['AuthorID']);
 			$roleColorCssClass = Forum::roleToCssClass($user);
-			$threadCreated = date("M jS Y g:i A",(int)$thread['Created']);
+			$threadCreated = Forum::timestampToString((int)$thread['Created']);
 			$threadLink = Forum::threadLink( $thread );
 			$pages = (int)(($thread['PostCount']-1) / Forum::POSTS_PER_PAGE + 1);
 			
 			$userPost = new user_data($thread['PostAuthorID']);
 			$roleColorCssClassPost = Forum::roleToCssClass($userPost);
-			$postCreated = date("M jS Y \a\\t  g:i A",(int)$thread['PostCreated']);
+			$postCreated = Forum::timestampToString((int)$thread['PostCreated']);
 			
 			$style = $index % 2 == 0 ? "fo_cell_bg1" : "fo_cell_bg2";
 			
@@ -246,9 +251,9 @@
 				<td class='fo_cell_m {$style}'>{$thread['PostCount']}</td>
 				<td class='fo_cell_r {$style}'>
 					<div class='forum_last_post'>
-						<span class='forum_time'>Posted {$postCreated }
+						<span class='forum_time'>{$postCreated }
 						<br />by </span><span class='{$roleColorCssClassPost}'>{$userPost->get_name()}</span>
-						<a class='forum_goto_link' href='?thread={$thread['ID']}&amp;page={$pages}#post-{$thread['PostCount']}'>&raquo;</a>
+						<a class='forum_goto_link' href='?thread={$thread['ID']}&amp;page={$pages}#{$thread['PostCount']}'>&raquo;</a>
 					</div>	
 				</td>
 			</tr>";
@@ -327,15 +332,15 @@
 		
 		private function getPost( $post, $page, $threadIndex, $thread, $editPostId = 0 ) {
 			$user = new user_data($post['AuthorID']);
-			$date = date("M jS Y \a\\t  g:i A",(int)$post['Created']);
+			$date = Forum::timestampToString((int)$post['Created']);
 			$userPosts = $this->database->getPostCountFor($post['AuthorID']);
 			$userJoined = date("M jS Y",(int)$user->get_joined());
 			$roleColorCssClass = Forum::roleToCssClass($user);
 			$mods = "";
 			
 			if( $post['ModCount'] > 0 ) {
-				$times = $post['ModCount'] > 1 ? $post['ModCount'].' times, last ' : 'once, on ';
-				$mods = "<div class='fo_post_mods'>Modified {$times}".date("M jS Y \a\\t  g:i A",(int)$post['LastCreated'])."</div>";
+				$times = $post['ModCount'] > 1 ? $post['ModCount'].' times, last ' : 'once, ';
+				$mods = "<div class='fo_post_mods'>Modified {$times}".Forum::timestampToString((int)$post['LastCreated'])."</div>";
 			}
 			
 			if( $editPostId == $post['ID'] ) {
@@ -348,7 +353,7 @@
 				</form>";
 			}
 			else {
-				$content = $post['Parsed'];
+				$content = Forum::replaceCode($post['Plain']);
 			}
 			/*
 			if( $editPostId == 0 ) {
@@ -417,15 +422,23 @@
 			</tr>";
 		}
 		
-		private static function roleToCssClass( user_data $user ) {
-			return $user->is_admin() ? 'forum_author_admin' : '';
+		public static function roleToCssClass( user_data $user ) {
+			if( $user->is_admin() ) {
+				return 'forum_author_admin';
+			}
+			else if( $user->has_donated() ) {
+				return 'forum_author_donor';
+			}
+			else {
+				return 'forum_author';
+			}
 		}
 		
 		public static function getAvailableForumCode() {
 			
 			$codes = array(
 				"Links" => array( "[url]http://example.org[/url]", "[url=http://example.org]click here[/url]"),
-				"Images" => array( "[img]http://chardev.org/images/favico.png[/img]"),
+				"Images" => array( "[img]http://chardev.org/images/site/favico.png[/img]"),
 				"Text" => array( "[i]underline[/i]", "[b]italic[/b]", "[u]bold[/u]"),
 				"Items" => array( "[item]192[/item]", "http://www.wowhead.com/item=13385")
 			);
@@ -436,7 +449,7 @@
 				$plain = "";
 				$parsed = "";
 				for( $i=0; $i<count($v); $i++ ) {
-					$str = ThreadDatabase::replaceCode($v[$i]);
+					$str = Forum::replaceCode($v[$i]);
 					$plain .= "<div class='fo_code_plain'>{$v[$i]}</div>";
 					$parsed .= "<div class='fo_code_parsed'>{$str}</div>";
 				}
@@ -458,9 +471,9 @@
 			</div>";
 		}
 		
-		private static function threadLink( $thread, $max_length = 50 )
+		public static function threadLink( $thread, $maxLength = 50, $showLastPost=false )
 		{
-			$title = shorten(htmlspecialchars_decode($thread['Title'],ENT_QUOTES),$max_length);
+			$title = shorten(htmlspecialchars_decode($thread['Title'],ENT_QUOTES),$maxLength);
 			$cssClass = "";
 			if( $thread['Flag'] & ThreadDatabase::FLAG_THREAD_STICKY )  {
 				$cssClass = "forum_topic_sticky_link";
@@ -469,13 +482,84 @@
 				$cssClass = "forum_topic_announcement_link";
 			}
 			
+			$add = "";
+			if( $showLastPost) {
+				$page = ceil(((int)$thread["PostCount"]) / Forum::POSTS_PER_PAGE);
+				$add = "&page={$page}#{$thread["PostCount"]}";
+			}
+			
 			return 	"<a 
 						title='{$thread['Title']}' 
 						class='fo_link {$cssClass}' 
-						href='?thread={$thread['ID']}'
+						href='?thread={$thread['ID']}{$add}'
 					>
 						{$title}
 					</a>";
+		}
+		
+		public static function timestampToString( $timestamp ) {
+			$today = getdate();
+			$date = getdate($timestamp);
+			$dateStr = "";
+			
+			if( $today["year"] == $date["year"] ) {
+				$dif = $today["yday"] - $date["yday"]; 
+				if( $dif == 0 ) {
+					$dateStr = "today";
+				}
+				else if( $dif == 1 ) {
+					$dateStr = "yesterday";
+				}
+				else if( $dif <= 7 ) {
+					$dateStr = $dif." days ago";
+				}
+				
+				return $dateStr . " at " . date("g:i A",$timestamp);
+			}
+			
+			return date("M jS Y \a\\t g:i A",$timestamp);
+		}
+		
+		public static function replaceCode($str){
+			$str = preg_replace("/\[url\](.*?)\[\/url\]/i","<a target='_blank' class='forum_content_link' href='$1'>$1</a>",$str);
+			$str = preg_replace("/\[url\=(.*?)\](.*?)\[\/url\]/i","<a target='_blank' class='forum_content_link' href='$1'>$2</a>",$str);
+			//	[img]
+			$str = preg_replace("/\[img\](.*?)\[\/img\]/i","<img alt='$1' src='$1'>",$str);
+			//	bold
+			$str = preg_replace("/\[b\](.*?)\[\/b\]/i","<b>$1</b>",$str);
+			//	italic
+			$str = preg_replace("/\[i\](.*?)\[\/i\]/i","<i>$1</i>",$str);
+			//	underline
+			$str = preg_replace("/\[u\](.*?)\[\/u\]/i","<u>$1</u>",$str);
+			//	quote
+			$str = preg_replace("/\[quote\](.*?)\[\/quote\]/i","<i>&bdquo;$1&rdquo;</i>",$str);
+			//	center
+			$str = preg_replace("/\[center\](.*?)\[\/center\]/i","<center>$1</center>",$str);
+			//	[item]
+			$str = preg_replace_callback("/\[item\](\d+)\[\/item\]/i",'Forum::replaceItemLink',$str);
+			$str = preg_replace_callback("/http\:\/\/www\.wowhead\.com\/\?item\=([\d]+)/i",'Forum::replaceExternItemLink',$str);
+			$str = preg_replace_callback("/http\:\/\/(?:www\.)?wowhead\.com\/item\=([\d]+)/i",'Forum::replaceExternItemLink',$str);
+			$str = preg_replace_callback("/http\:\/\/(?:www\.)?thottbot\.com\/i(?:tem\=)?([\d]+)/i",'Forum::replaceExternItemLink',$str);
+			$str = preg_replace_callback("/http\:\/\/\w+\.battle\.net\/wow\/\w+\/item\/([\d]+)/i",'Forum::replaceExternItemLink',$str);
+			$str = preg_replace_callback("/http\:\/\/www\.wowarmory\.com\/item\-info\.xml\?i\=([\d]+)/i",'Forum::replaceExternItemLink',$str);
+			return nl2br($str);
+		}
+
+		private static function replaceExternItemLink($match){
+			return $match[0]." ".Forum::replaceItemLink($match);
+		}
+	
+		private static function replaceItemLink($match){
+			
+			$ret = '';
+			if($match[1]){
+				$item_info = get_item_link($match[1]);
+				if($item_info!=-1){
+					$ret ="<a class='fo_item_link item_quality_{$item_info[1]}' href='?item=".$match[1]."' onmousemove='g_moveTooltip()' onmouseover='g_showItemTooltip(".$match[1].")' onmouseout = 'g_hideItemTooltip();'>".$item_info[0]."</a>";
+				}
+				else $ret.="<font class='grey'>Item not found (id ".$match[1].")!</font>";
+			}
+			return $ret;
 		}
 	}
 ?>

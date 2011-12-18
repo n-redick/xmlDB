@@ -5,6 +5,7 @@ EngineImpl.prototype = {
 	eventMgr: null,
 	adapter: null,
 	requestedTooltip: null,
+	settings: null,
 	addObserver: function ( observer ) {
 		this.eventMgr.addObserver( observer );
 	},
@@ -12,6 +13,10 @@ EngineImpl.prototype = {
 		
 		this.eventMgr = new GenericSubject();
 		this.eventMgr.registerEvent('character_change', ['character']);
+		this.eventMgr.registerEvent('logged_in', []);
+		this.eventMgr.registerEvent('logged_out', []);
+		
+		this.settings = settings;
 		
 		if( settings.isPlanner ) {
 			var gui = new Gui();

@@ -16,6 +16,7 @@ class ThreadDatabase {
 	private $createThreadCooldown = 120;
 	private $createPostCooldown = 60;
 	private $createThreadCooldownStmt;
+	private $latestPostStmt;
 
 	public function __construct( $dsn, $user, $password ) {
 	
@@ -43,6 +44,10 @@ class ThreadDatabase {
 		);
 		$this->increasePostVersion = $this->db->prepare(
 			"UPDATE `post` SET `Version`=`Version`+1 WHERE `ID`=?"
+		);
+		
+		$this->latestPostStmt = $this->db->prepare(
+			"SELECT max(`LatestPostID`) as LatestPostID FROM `thread` WHERE `ThreadHookID`=?"
 		);
 	}
 	
@@ -73,6 +78,23 @@ class ThreadDatabase {
 			throw new PostDoesNotExistException($postId);
 		}
 		return $record;
+	}
+	
+	public function getLatestPost( $hookId ) {
+		$this->latestPostStmt->execute(array((int)$hookId));
+		$record = $this->latestPostStmt->fetch();
+		$this->checkExecutedStatement($this->latestPostStmt);
+		if( $record && $record["LatestPostID"] ) {
+			return $this->getPost($record["LatestPostID"]);
+		} 
+		return null;
+	}
+	
+	public function getHookForPost( $postId ) {
+		$stmt = $this->db->prepare("SELECT `ThreadHookID` FROM `thread` t INNER JOIN `post` p ON t.`ID` = p.`ThreadID` WHERE p.`ID`=".(int)$postId);
+		$this->checkExecutedStatement($stmt);
+		$record = $stmt->fetch();
+		return $this->getHook($record['ThreadHookID']);
 	}
 	
 	public function getHook( $hookId ) {
@@ -114,13 +136,7 @@ class ThreadDatabase {
 		);
 		$stmt->execute( array((int)$threadId) );
 		$this->checkExecutedStatement($stmt);
-		$posts = $stmt->fetchAll();
-		
-		for( $i=0; $i<count($posts); $i++ ) {
-			$posts[$i]['Parsed'] = ThreadDatabase::replaceCode($posts[$i]['Plain']);
-		}
-		
-		return $posts;
+		return $stmt->fetchAll();
 	}
 	
 	public function getAnnouncements( $hookId, $limit, $offset ) {
@@ -425,46 +441,16 @@ class ThreadDatabase {
 		return $id;
 	}
 	
-	private static function replaceCode($str){
-		$str = preg_replace("/\[url\](.*?)\[\/url\]/i","<a target='_blank' class='forum_content_link' href='$1'>$1</a>",$str);
-		$str = preg_replace("/\[url\=(.*?)\](.*?)\[\/url\]/i","<a target='_blank' class='forum_content_link' href='$1'>$2</a>",$str);
-		//	[img]
-		$str = preg_replace("/\[img\](.*?)\[\/img\]/i","<img alt='$1' src='$1'>",$str);
-		//	bold
-		$str = preg_replace("/\[b\](.*?)\[\/b\]/i","<b>$1</b>",$str);
-		//	italic
-		$str = preg_replace("/\[i\](.*?)\[\/i\]/i","<i>$1</i>",$str);
-		//	underline
-		$str = preg_replace("/\[u\](.*?)\[\/u\]/i","<u>$1</u>",$str);
-		//	quote
-		$str = preg_replace("/\[quote\](.*?)\[\/quote\]/i","<i>&bdquo;$1&rdquo;</i>",$str);
-		//	center
-		$str = preg_replace("/\[center\](.*?)\[\/center\]/i","<center>$1</center>",$str);
-		//	[item]
-		$str = preg_replace_callback("/\[item\](\d+)\[\/item\]/i",'ThreadDatabase::replaceItemLink',$str);
-		$str = preg_replace_callback("/http\:\/\/www\.wowhead\.com\/\?item\=([\d]+)/i",'ThreadDatabase::replaceExternItemLink',$str);
-		$str = preg_replace_callback("/http\:\/\/(?:www\.)?wowhead\.com\/item\=([\d]+)/i",'ThreadDatabase::replaceExternItemLink',$str);
-		$str = preg_replace_callback("/http\:\/\/(?:www\.)?thottbot\.com\/i(?:tem\=)?([\d]+)/i",'ThreadDatabase::replaceExternItemLink',$str);
-		$str = preg_replace_callback("/http\:\/\/\w+\.battle\.net\/wow\/\w+\/item\/([\d]+)/i",'ThreadDatabase::replaceExternItemLink',$str);
-		$str = preg_replace_callback("/http\:\/\/www\.wowarmory\.com\/item\-info\.xml\?i\=([\d]+)/i",'ThreadDatabase::replaceExternItemLink',$str);
-		return nl2br($str);
-	}
-
-	private static function replaceExternItemLink($match){
-		return $match[0]." ".ThreadDatabase::replaceItemLink($match);
-	}
-
-	private static function replaceItemLink($match){
-		
-		$ret = '';
-		if($match[1]){
-			$item_info = get_item_link($match[1]);
-			if($item_info!=-1){
-				$ret ="<a class='fo_item_link item_quality_{$item_info[1]}' href='?item=".$match[1]."' onmousemove='g_moveTooltip()' onmouseover='g_showItemTooltip(".$match[1].")' onmouseout = 'g_hideItemTooltip();'>".$item_info[0]."</a>";
-			}
-			else $ret.="<font class='grey'>Item not found (id ".$match[1].")!</font>";
-		}
-		return $ret;
+	public function getRecentsPosts( $count ) {
+		$stmt = $this->db->prepare(
+			"SELECT p.`Created` as Created, p.`AuthorID` as AuthorID, p.`ThreadID` as ThreadID FROM 
+				`post` p INNER JOIN `thread` t ON p.`ID` = t.`LatestPostID` 
+			WHERE 0 = ( t.`flag` & ?) AND t.`ThreadHookID` IN (0,1,2,3)
+			GROUP BY t.`ID` ORDER BY p.`ID` DESC LIMIT 0,{$count}"
+		);
+		$stmt->execute(array(ThreadDatabase::FLAG_DELETED));
+		$this->checkExecutedStatement($stmt);
+		return $stmt->fetchAll();
 	}
 }
 
@@ -524,7 +510,7 @@ class UnableToEditPostException extends Exception {
 
 class PostDoesNotExistException extends Exception {
 	public function __construct( $postId ) {
-		parent::__construct( "The post with id {$postId} does not exist!");
+		parent::__construct( "The post with id '{$postId}' does not exist!");
 	}
 }
 

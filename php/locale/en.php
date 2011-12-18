@@ -325,7 +325,7 @@
 		"Your maximum mana. Mana allows you to cast Spells.",
 		"The average Item Level of your best equipment. Increasing this will allow you to enter more difficult dungeons using Dungeon Finder."
 	);
-	$locale['SI_BatchHeader'] = "Batch operations";
+	$locale['SI_BatchHeader'] = "Tools";
 	$locale['SI_SocketColors'] = array( 1=> "Meta", 2=> "Red", 4=> "Yellow", 8=> "Blue" );
 	$locale['SI_RemoveAllGems'] = "Remove all gems from your gear.";
 	$locale['SI_RemoveGems'] = "Remove all \"$\" from your gear.";
@@ -342,7 +342,7 @@
 	$locale['RF_ChooseReduce'] = "Choose a stat to reduce:";
 	$locale['RF_ChooseAdd'] = "Choose a stat to add:";
 	$locale['RF_ChooseStat'] = "Choose stats using the pull downs above to see the results of your reforged item.";
-	$locale['RF_BatchHeader'] = "Batch operations";
+	$locale['RF_BatchHeader'] = "Tools";
 	$locale['RF_RestoreAll'] = "Restore all items";
 	$locale['RF_ReforgeAll'] = "Reforge all items";
 	$locale['RF_ReforgeAllHelp'] = "Select one or more stats to be reduced and one ore more stats to be added. If the first redurce stat is not or the first add stat is already present, the second stat if specified is used and so forth. Only items not already being reforged are considered.";

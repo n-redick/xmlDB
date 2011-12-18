@@ -1,50 +1,42 @@
 /**
  * @constructor
- * @returns {PresenceSelector}
  */
 function PresenceSelector() {
 	this.node = document.createElement('div');
+	
+	this.eventMgr = new GenericSubject();
+	this.eventMgr.registerEvent('select_presence', ['presence_id']);
 }
 PresenceSelector.prototype = {
 	node: null,
-	__onClick: function( presenceId ) {
-		
+	eventMgr: null,
+	addPopagator: function(event, propagator) {
+		this.eventMgr.addPropagator(event, propagator);
 	},
 	update: function( availablePresences, currentPresenceId ) {
 		Tools.removeChilds(this.node);
 		
-		if( availablePresences.length == 0 ) {
+		if( availablePresences == null || availablePresences.length == 0 ) {
 			return;
 		}
-		for( var i=0; i<ps.length; i++ ) {
-			var div = document.createElement('div');
-			div.className = 'ps_presence';
-			div.style.backgroundImage = 
-				'url(images/icons/' + 
-				( availablePresences[i].id == currentPresenceId ? '' : 'g/' ) + 
-				'small/'+currentPresenceId[i].icon+'.png)';
-			this.node.appendChild(div);
+		for( var i=0; i<availablePresences.length; i++ ) {
 			
-			Listener.add( div, "mouseover", Tooltip.showSpell, Tooltip, [currentPresenceId[i].id] );
+			div = DOM.createAt( this.node, 'div', {
+				'class': 'ps_presence', 
+				'backgroundImage': 
+					'images/icons/' + 
+					( availablePresences[i].id == currentPresenceId ? '' : 'g/' ) +  
+					'small/'+availablePresences[i].icon+'.png'
+			});
+			
+			Listener.add( div, "mouseover", Tooltip.show, Tooltip, ["<div class='tooltip_spell_description'>"+availablePresences[i].description+"</div>"] );
 			div.onmouseout = function(){Tooltip.hide();};
 			div.onmousemove = function(){Tooltip.move();};
-			Listener.add( div, "click", this.__onClick, this, [currentPresenceId[i].id]	);
+			Listener.add( div, "click", function( id ) {
+				this.eventMgr.fire('select_presence', {'presence_id': id});
+			}, this, [availablePresences[i].id]	);
 		}
 		
 		Tools.clearBoth(this.node);
 	}
-};
-
-/**
- * @constructor
- * @param id
- * @param icon
- * @param description
- * @returns {AvailablePresence}
- */
-function AvailablePresence( id, icon, description ) {
-	this.id = id, this.icon = icon; this.description = description;
-}
-AvailablePresence.prototype = {
-	id: 0, icon: "", description: ""
 };

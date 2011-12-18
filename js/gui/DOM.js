@@ -6,25 +6,35 @@ var DOM = {
 	 */
 	create: function( tag, obj ) {
 		var e = document.createElement(tag);
-		for( var k in obj ) {
-			if( k == 'class' ) { e.className = obj[k]; }
-			else if( k == 'action' ) { e.action = obj[k]; } 
-			else if( k == 'clear') {e.style.clear = obj[k];}
-			else if( k == 'href') {e.href = obj[k];}
-			else if( k == 'src') {e.src = obj[k];}
-			else if( k == 'target') {e.target = obj[k];}
-			else if( k == 'backgroundImage') {
-				if( obj[k].toLowerCase() === 'none' || obj[k].toLowerCase() === 'inherit' ) {
-					e.style.backgroundImage = obj[k];
+		if( obj ) {
+			for( var k in obj ) {
+				if( k == 'class' ) { e.className = obj[k]; }
+				else if( k == 'action' ) { e.action = obj[k]; } 
+				else if( k == 'clear') {e.style.clear = obj[k];}
+				else if( k == 'display') {e.style.display = obj[k];}
+				else if( k == 'href') {e.href = obj[k];}
+				else if( k == 'src') {e.src = obj[k];}
+				else if( k == 'target') {e.target = obj[k];}
+				else if( k == 'backgroundImage') {
+					if( obj[k].toLowerCase() === 'none' || obj[k].toLowerCase() === 'inherit' ) {
+						e.style.backgroundImage = obj[k];
+					}
+					else {
+						e.style.backgroundImage = 'url(' + obj[k] + ')';
+					}
 				}
-				else {
-					e.style.backgroundImage = 'url(' + obj[k] + ')';
+				else if( k == 'text') {
+					if( tag === 'input' ) {
+						e.value = obj[k];
+					}
+					else {
+						e.innerHTML = obj[k];
+					}
 				}
+				else if( k == 'type') {e.type = obj[k];}
+				else if( k == 'value') {e.value = obj[k];}
+				else throw Error("Unknown parameter "+k+" with value "+obj[k]);
 			}
-			else if( k == 'text') {e.innerHTML = obj[k];}
-			else if( k == 'type') {e.type = obj[k];}
-			else if( k == 'value') {e.value = obj[k];}
-			else throw Error("Unknown parameter "+k+" with value "+obj[k]);
 		}
 		return e;
 	},
@@ -90,7 +100,13 @@ var DOM = {
 		if( typeof n1 === 'string' ) {
 			n1 = document.getElementById(n1);
 		}
-		n1.innerHTML = ""; n1.appendChild(n2);
+		if( typeof n2 === 'string' ) {
+			n1.innerHTML += n2;
+		}
+		else {
+			n1.innerHTML = ""; 
+			n1.appendChild(n2);
+		}
 	},
 	clear: function( n ) {
 		n.appendChild(DOM.create('div', {'clear': 'both'}));

@@ -1,15 +1,60 @@
+/**
+ * @constructor
+ */
 function ReforgeInterface() {
-	this.node = DOM.create('div');
 	this.eventMgr = new GenericSubject();
 	this.eventMgr.registerEvent('reforge', ['reduce', 'add']);
-	this.eventMgr.registerEvent('reforge_preview', ['reduce', 'add']);
+	this.eventMgr.registerEvent('reforge_all', ['reforge_array']);
+	this.eventMgr.registerEvent('reforge_preview', ['reforge_array']);
+	this.eventMgr.registerEvent('reforge_item_preview', ['reduce', 'add']);
 	this.eventMgr.registerEvent('restore', []);
+	this.eventMgr.registerEvent('restore_all', []);
 	this.eventMgr.registerEvent('remove_reforge_preview', []);
+	this.eventMgr.registerEvent('remove_reforge_item_preview', []);
+	//
+	this.node = DOM.create('div');
+	//
+	// Operations
+	this.ops = new BatchOperations();
+	DOM.addClass(this.ops.node, 'ra_group');
+	DOM.append( this.node, this.ops.node);
+	// 
+	// WoWReforge Import
+	var wowRefNode = DOM.create('form', {'action': 'javascript:;'});
+	
+	this.wowReforgeURL = DOM.createAt( wowRefNode, 'input', {'class': 'input rf_wowreforgeurl'});
+	var submitBtn = DOM.createAt( wowRefNode, 'input', {'type': 'submit', 'text': locale['RF_ImportWoWReforge'], 'class': 'button button_light'});
+	this.ops.addComplex('wowreforge_import', locale['RF_WoWReforgeImport'], wowRefNode, locale['RF_WoWReforgeImportHelp']);
+	
+	Listener.add(wowRefNode, 'submit', this.__wowReforgeImport, this, null);
+	Listener.add(submitBtn, 'mouseover', function() {
+		var refArr = this.__parseWoWReforgeInput();
+		if( refArr != null ) {
+			this.eventMgr.fire('reforge_preview', {'reforge_array': refArr});
+		}
+	}, this, null);
+	Listener.add(submitBtn, 'mouseout', function() {
+		this.eventMgr.fire('remove_reforge_preview');
+	}, this, null);
+	//
+	// Restore
+	var restoreOp = this.ops.addSimple('restore_all', locale['RF_RestoreAll'] , new Handler(function(){
+		this.eventMgr.fire('restore_all');
+	}, this));
+	Listener.add(restoreOp['node'], 'mouseover', function() {
+		this.eventMgr.fire('reforge_preview', {'reforge_array': []});
+	}, this, null);
+	Listener.add(restoreOp['node'], 'mouseout', function() {
+		this.eventMgr.fire('remove_reforge_preview');
+	}, this, null);
+	//
+	this.content = DOM.createAt( this.node, 'div');
 }
 
 ReforgeInterface.prototype = {
 	eventMgr: null,
-	node: null,
+	node: null, content: null, wowReforgeURL: null,
+	ops: null,
 	/**
 	 * @param {EquippedItem} itm
 	 */
@@ -18,7 +63,7 @@ ReforgeInterface.prototype = {
 		var re = [];
 		var i, j, v, k, cls, a, row, div;
 
-		DOM.truncate( this.node );
+		DOM.truncate( this.content );
 		
 		if( ! itm ) {
 			return;
@@ -42,13 +87,13 @@ ReforgeInterface.prototype = {
 		}
 			
 		 if( ! itm.isReforgable()) {
-			DOM.set( this.node, div );
-			DOM.createAt(this.node, 'div', {'text': 'This items is not reforgable!', 'class': 'rf_error'});
+			DOM.set( this.content, div );
+			DOM.createAt(this.content, 'div', {'text': 'This items is not reforgable!', 'class': 'rf_error'});
 			return;
 		}
 		 else if( av.length == 0 ) {
-			DOM.set( this.node, div );
-			DOM.createAt(this.node, 'div', {'text': 'This items has no reforgable stats!', 'class': 'rf_error'});
+			DOM.set( this.content, div );
+			DOM.createAt(this.content, 'div', {'text': 'This items has no reforgable stats!', 'class': 'rf_error'});
 			return;
 		}
 		
@@ -135,7 +180,7 @@ ReforgeInterface.prototype = {
 		a = DOM.createAt(sg.cells[i][0], 'a', {'class': 'button button_light link_button', 'href': 'javascript:', 'text': 'Restore'});
 		Listener.add( a, 'click', this.__restore, this, []);
 		
-		DOM.append(this.node, sg.node);
+		DOM.append(this.content, sg.node);
 		
 	},
 	__reforge: function( reduce, add ) {
@@ -145,10 +190,45 @@ ReforgeInterface.prototype = {
 		this.eventMgr.fire('restore');
 	},
 	__mouseout: function() {
-		this.eventMgr.fire('remove_reforge_preview');
+		this.eventMgr.fire('remove_reforge_item_preview');
 	},
 	__mouseover: function( reduce, add ) {
-		this.eventMgr.fire('reforge_preview', {'reduce': reduce, 'add': add});
+		this.eventMgr.fire('reforge_item_preview', {'reduce': reduce, 'add': add});
+	},
+	__wowReforgeImport: function() {
+		var refArr = this.__parseWoWReforgeInput();
+		if( refArr != null ) {
+			this.eventMgr.fire('reforge_all', {'reforge_array': refArr});
+		}
+	},
+	__parseWoWReforgeInput: function() {
+		var v = DOM.getValue(this.wowReforgeURL);
+		if( !v ) {
+			return null;
+		}
+		
+		var match = v.match(/reforge=((?:\d|-){34})/i);
+		
+		if( ! match[1] ) {
+			Tooltip.showError(TextIO.sprintf1(locale['RF_WoWReforge_UnableToParse'],v));
+			return null;
+		}
+		
+		v = match[1];
+		
+		var refArr = [];
+		for( var i = 0; i < 17; i++ ) {
+			if( v[i*2] == '-' || v[i*2+1] == '-' ) {
+				continue;
+			}
+			
+			refArr[ WOWREFORGE_SLOTS_TO_CHARDEV_SLOTS[i] ] = [
+				WOWREFORGE_TO_REFORGABLE_STATS[ parseInt(v[i*2], 10)  ],
+				WOWREFORGE_TO_REFORGABLE_STATS[ parseInt(v[i*2+1], 10)]
+			];
+		};
+		
+		return refArr;
 	}
 };
 

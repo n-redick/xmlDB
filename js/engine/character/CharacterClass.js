@@ -131,20 +131,21 @@ CharacterClass.prototype = {
 		
 	},
 	setPresence: function( presenceId ) {
+		var oldPresence = this.presence;
 		if( presenceId == 0 ) {
 			
 			this.presence = null;
 			
-			this.eventMgr.fire('presence_change', {'presence': null});
+			this.eventMgr.fire('presence_change', {'new_presence': this.presence, 'old_presence': oldPresence} );
 		}
 		else {
 			for( var i=0; i<this.presences.length; i++ ) {
 				
-				if( this.presences[i]._id == presenceId ) {
+				if( this.presences[i].id == presenceId ) {
 					
 					this.presence = new Buff( this.presences[i], 1 );
 					
-					this.eventMgr.fire('presence_change', {'presence': this.presence});
+					this.eventMgr.fire('presence_change', {'new_presence': this.presence, 'old_presence': oldPresence} );
 					
 					return;
 				}

@@ -29,6 +29,7 @@ function Character() {
 	this.eventMgr.registerEvent('buffs_change', []);
 
 	this.eventMgr.registerEvent('shapeform_change', ['new_shape','old_shape']);
+	this.eventMgr.registerEvent('presence_change', ['new_presence','old_presence']);
 	
 	var talentHandler = new Handler(function(e) {
 		this.eventMgr.refire(e);
@@ -67,7 +68,7 @@ function Character() {
 		this.eventMgr.fire('buffs_change', {});
 	},this)));
 	
-	this.classObserver = new GenericObserver(['shapeform_change'], new Handler(function(e) {
+	this.classObserver = new GenericObserver(['shapeform_change','presence_change'], new Handler(function(e) {
 		if( e.is('shapeform_change')) {
 			var oldShape = e.get('old_shape');
 			var newShape = e.get('new_shape');
@@ -85,7 +86,21 @@ function Character() {
 				}
 			}
 			this.eventMgr.refire(e);
-			//this.eventMgr.fire('shapeform_change', {'new_shape': e.get('new_shape'), 'old_shape': e.get('old_shape')});
+		}
+		else if( e.is('presence_change')) {
+
+			var oldPresence = e.get('old_presence');
+			var newPresence = e.get('new_presence');
+			
+			if( oldPresence ) {
+				this.buffs.removeInternal(oldPresence.spell.id, true);
+			}
+			
+			if( newPresence ) {
+				this.buffs.addInternal( newPresence.spell.id , true, true );
+			}
+			
+			this.eventMgr.refire(e);
 		}
 	}, this));
 	
@@ -788,7 +803,13 @@ Character.prototype = {
 		this.inventory.set(slot, itm);
 		this.calculateStats();
 		
-		this.eventMgr.fire('item_change', {'slot': slot});
+		if( slot == 16 || slot == 17 ) {
+			this.eventMgr.fire('item_change', {'slot': 16});
+			this.eventMgr.fire('item_change', {'slot': 17});
+		}
+		else {
+			this.eventMgr.fire('item_change', {'slot': slot});
+		}
 	},
 	removeItem: function( slot ) {
 		
@@ -827,8 +848,14 @@ Character.prototype = {
 		
 		this.inventory.swap(slot, index);
 		this.calculateStats();
-
-		this.eventMgr.fire('item_change', {'slot': slot});
+		
+		if( slot == 16 || slot == 17 ) {
+			this.eventMgr.fire('item_change', {'slot': 16});
+			this.eventMgr.fire('item_change', {'slot': 17});
+		}
+		else {
+			this.eventMgr.fire('item_change', {'slot': slot});
+		}
 	},
 	addEnchant: function( slot, enchant ) {
 		this.inventory.removePreview();
@@ -893,11 +920,21 @@ Character.prototype = {
 			this.calculateStats();
 		}
 	},
-	setReforgePreview: function( slot, reduce, add) {
-		this.inventory.setReforgePreview(slot, reduce, add);
+	setReforgeItemPreview: function( slot, reduce, add) {
+		var refArr = this.inventory.reforgeToArray();
+		refArr[slot] = [reduce,add];
+		this.inventory.setReforgePreview(refArr);
 		this.calculatePreviewStats();
 	},
-	removeReforgePreview: function( slot, reduce, add) {
+	setReforgePreview: function( refArr ) {
+		this.inventory.setReforgePreview(refArr);
+		this.calculatePreviewStats();
+	},
+	removeReforgeItemPreview: function() {
+		this.inventory.removePreview();
+		this.calculatePreviewStats();
+	},
+	removeReforgePreview: function() {
 		this.inventory.removePreview();
 		this.calculatePreviewStats();
 	},
@@ -906,6 +943,27 @@ Character.prototype = {
 		if( itm ) {
 			itm.restore();
 			this.calculateStats();
+		}
+	},
+	restoreAll: function() {
+		this.inventory.restoreAllItems();
+		this.calculateStats();
+		this.calculatePreviewStats();
+	},
+	reforgeAll: function( refArr ) {
+		
+		var oldRefArr = this.inventory.reforgeToArray();
+		try {
+			this.inventory.restoreAllItems();
+			this.inventory.reforgeFromArray(refArr);
+			this.calculateStats();
+			this.calculatePreviewStats();
+		}
+		catch( e ) {
+			this.inventory.reforgeFromArray(oldRefArr);
+			this.calculateStats();
+			this.calculatePreviewStats();
+			throw e;
 		}
 	},
 	//
@@ -1013,7 +1071,13 @@ Character.prototype = {
 			this.chrClass.setShapeform(shapeform);
 			this.calculateStats();
 		}
-	}
+	},
+	setPresence: function(presenceId) {
+		if( this.chrClass != null ) {
+			this.chrClass.setPresence(presenceId);
+			this.calculateStats();
+		}
+	} 
 };
 /**
  * @constructor

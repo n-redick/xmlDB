@@ -25,6 +25,10 @@ class user_data {
 			'SELECT * FROM chardev.`user` u LEFT JOIN chardev_user.`user_data` ud ON u.`userID` = ud.`UserID` WHERE u.`userID`='.(int)$id
 		));
 		
+		$this->donation = mysql_fetch_assoc(mysql_query(
+			'SELECT * FROM chardev.`donations` WHERE `userID`='.(int)$id
+		));
+		
 		if( ! $this->data ) {
 			throw new Exception("Invalid UserID");
 		}
@@ -60,6 +64,10 @@ class user_data {
 	
 	public function is_admin() {
 		return $this->data['role'] == 10;
+	}
+	
+	public function has_donated() {
+		return $this->donation && true;
 	}
 	
 	public function get_battlenet_profiles () {

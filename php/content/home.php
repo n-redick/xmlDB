@@ -2,8 +2,88 @@
 <link href="forum.css" rel="stylesheet" />
 
 <?php
-	include('php/func_forum.php');
+	require_once 'php/thread_database.php';
+	require_once 'php/user_data.php';
+	require_once 'php/forum_permissions.php';
+	require_once 'php/forum.php';
+
+	$db = new ThreadDatabase( "mysql:dbname=chardev_user;host=127.0.0.1", "root", "");
+	$forum = new Forum($db, new ForumPermissions(isset($_SESSION['user_id']) ? new user_data((int)$_SESSION['user_id']) : null));
 	
+	$threads = $db->getThreads(4, 5, 0);
+	
+	$g_content = "
+		<table cellpadding=\"0\" cellspacing=\"0\" class=\"ne_table\">
+			<colgroup>
+				<col width=\"536px\" />
+				<col width=\"404px\" />
+			</colgroup>
+			<tr>
+				<td valign=\"top\"><div class=\"ne_p\">";
+	$n = 0;
+	
+	foreach( $threads as $thread ) {
+		
+		$cssSuffix = $n!=0 ? '_old' : '';
+		$date = Forum::timestampToString($thread['Created']);
+		$author = new user_data($thread['AuthorID']);
+		$roleCss = Forum::roleToCssClass($author);
+		$post = $db->getPost($thread['InitialPostID']);
+		$content = ($n==0?Forum::replaceCode($post["Content"]):shorten($post["Content"],100)."&nbsp<a class=\"ne_read_more\" href=\"?topic=".(int)$thread["ID"]."\">read more</a>");
+		
+		$g_content .= 
+			"<div class=\"ne_title{$cssSuffix}\">{$thread['Title']}</div>
+			<div class=\"ne_header\">
+					By <span class=\"{$roleCss}\">{$author->get_name()}</span> posted {$date}
+			</div>
+			<div class=\"ne_content".($n!=0 ? " ne_content_old" : "" )."\">
+				{$content}
+			</div>
+			<div class=\"ne_cl".($n!=0 ? " ne_cl_old" : "" )."\">
+				<a class=\"fo_comment_link\" href=\"?thread=".(int)$thread["ID"]."\">".(($thread["PostCount"])<2?"No Comments":($thread["PostCount"]-1)." Comments")."</a>
+			</div>"; 
+		
+		$n++;
+	} 
+	
+	
+	$g_content .= "
+				</td>
+				<td valign=\"top\">
+					<div class=\"fo_recent_p\">
+						<div class=\"fo_recent_title\">Recent forum posts</div>";
+	
+	$recentPosts = $db->getRecentsPosts(10);
+	$n = 0;
+	foreach( $recentPosts as $post ) {
+		$date = Forum::timestampToString($post['Created']);
+		$author = new user_data($post['AuthorID']);
+		$roleCss = Forum::roleToCssClass($author);
+		$thread = $db->getThread($post['ThreadID']);
+		$hook = $db->getHook($thread['ThreadHookID']);
+		
+		$forumName = "<a class=\"fo_header_subforum_link\" href=\"?forum={$hook['ID']}\">".shorten($hook['Name'], 20)."</a>";
+		$link = Forum::threadLink($thread,60,true);
+		$g_content .= "
+						<div class=\"fo_recent" . ( $n == (count($recentPosts)-1) ? '_last' : '' ) . ( $n % 2 == 0 ? " fo_cell_bg1" : " fo_cell_bg2" ) . "\"\>
+							<div class=\"forum_time\"><span class=\"{$roleCss}\">
+								{$author->get_name()}
+								</span> {$date} in 
+								{$forumName}
+							</div>
+							<div>{$link}</div>
+						</div>";
+		
+		$n++;
+	} 
+	
+	$g_content .= "
+					</div>
+				</td>
+			</tr>
+		</table>";
+	
+/*	
 	$g_content = '
 		<table cellpadding="0" cellspacing="0" class="ne_table">
 			<colgroup>
@@ -68,5 +148,6 @@
 			</tr>
 		</table>';
 ?>
+*/
 								
 							

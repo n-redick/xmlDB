@@ -2,7 +2,6 @@
  * @constructor
  * @param {EngineImpl} engine
  * @param {Gui} gui
- * @returns {EngineGuiAdapter}
  */
 function EngineGuiAdapter( engine, gui ) {
 	
@@ -366,11 +365,17 @@ function EngineGuiAdapter( engine, gui ) {
 					e.get('name'), 
 					e.get('desc')
 				);
-			}
+		}
+		else if( e.is('update') ) {
+			this.__onUpdate();
+		}
 		else if( e.is('tab_change') ) {
 			this.guiTab = e.get('newTab');
 			if( this.guiTab == Gui.TAB_OVERVIEW ) {
 				this.updateOverviewTab();
+			}
+			else if( this.guiTab == Gui.TAB_SAVE ) {
+				this.gui.saveInterface.update( this.engine.settings.profileId != 0 && this.engine.settings.profileUserId == this.engine.settings.userId );
 			}
 		}
 		else if( e.is('csfolder_tab_change') ) {
@@ -381,7 +386,7 @@ function EngineGuiAdapter( engine, gui ) {
 			throw new Error("Unhandled event "+e.event);
 		}
 	}, this );
-	var go = new GenericObserver( ['import', 'save', 'tab_change', 'csfolder_tab_change'], gh );
+	var go = new GenericObserver( ['import', 'save', 'update', 'tab_change', 'csfolder_tab_change'], gh );
 	this.gui.eventMgr.addObserver(go);
 	//
 	//#########################################################################
@@ -448,15 +453,28 @@ function EngineGuiAdapter( engine, gui ) {
 			cc.restoreItem(this.slot);
 			this.updateReforgeTab();
 		}
+		else if( e.is('reforge_item_preview') ) {
+			cc.setReforgeItemPreview(this.slot, e.get('reduce'), e.get('add'));
+		}
+		else if( e.is('remove_reforge_item_preview') ) {
+			cc.removeReforgeItemPreview();
+		}
 		else if( e.is('reforge_preview') ) {
-			cc.setReforgePreview(this.slot, e.get('reduce'), e.get('add'));
+			cc.setReforgePreview(e.get('reforge_array'));
 		}
 		else if( e.is('remove_reforge_preview') ) {
-			cc.removeReforgePreview(this.slot);
+			cc.removeReforgePreview();
+		}
+		else if( e.is('restore_all') ) {
+			cc.restoreAll();
+		}
+		else if( e.is('reforge_all') ) {
+			cc.reforgeAll(e.get('reforge_array'));
+			this.updateReforgeTab();
 		}
 	}, this);
 	this.gui.reforgeInterface.eventMgr.addObserver(new GenericObserver(
-			['reforge', 'restore', 'remove_reforge_preview', 'reforge_preview'], 
+			['reforge', 'restore', 'remove_reforge_preview', 'reforge_preview', 'reforge_all', 'restore_all', 'reforge_item_preview', 'remove_reforge_item_preview'], 
 			reHandler
 	));
 	//
@@ -551,6 +569,12 @@ function EngineGuiAdapter( engine, gui ) {
 		if( e.is('character_change') ) {
 			this.__onCharacterChange(e.get('character'));
 		}
+		else if( e.is('logged_in')) {
+		
+		}
+		else if( e.is('logged_out')) {
+			
+		}
 	}, this)));
 }
 
@@ -594,6 +618,8 @@ EngineGuiAdapter.prototype = {
 		else {
 			this.gui.talentsGui.init(null);
 		}
+		
+		this.gui.buffInterface.resetInitialised(false);
 
 		this.updateGlyphTab();
 		
@@ -662,6 +688,14 @@ EngineGuiAdapter.prototype = {
 			this.updateReforgeTab();
 			break;
 		case Gui.TAB_BUFFS:
+				this.updateBuffsTab();
+			break;
+		}
+	},
+	updateBuffsTab: function() {
+		var cc = this.engine.getCurrentCharacter();
+		
+		if( ! this.gui.buffInterface.isInitialised() ) {
 			Buffs.getAvailableBuffs(new Handler(function(buffs, exception){
 				if( exception != null ) {
 					Tooltip.showError(exception);
@@ -670,13 +704,76 @@ EngineGuiAdapter.prototype = {
 				else {
 					this.gui.buffInterface.initialise( buffs );
 				}
-			},this), this.engine.getCurrentCharacter());
-			break;
+			},this), cc);
 		}
+		//
+		// Available buffs from items (Procs, Use) 
+		var h,i,j,itm, procSpells = [], useSpells = [];
+		for( i = 0; i < INV_ITEMS; i++ ) {
+			itm = cc.inventory.get(i);
+			if( ! itm ) {
+				continue;
+			}
+			
+			for( j = 0; j < itm.spells.length; j++ ) {
+				s = itm.spells[j];
+				
+				if( s == null ) {
+					continue;
+				}
+	
+				for( h = 0 ; h < 3; h++ ) {
+					se = s.effects[h];
+					if( ! se ) {
+						continue;
+					}
+					if( se.effect == 42 ) {
+						ps = se.getProcSpell();
+						if( ps ) {
+							procSpells.push( new SpellFacade( ps, cc ));
+						}
+					}
+				}
+				
+				if ( s.isAura() ) {
+					continue;
+				}
+				else {
+					useSpells.push( new SpellFacade( s, cc ));
+				}
+			}
+			//
+			// Engineering enchants
+			for( j=0; j<itm.enchants.length; j++ ) {
+				enchant = itm.enchants[j];
+				
+				if( enchant.types[0] == 1 ) {
+					procSpells.push( new SpellFacade( enchant.spells[0], cc ));
+				}
+			}
+		}
+		//
+		//
+		var conditionalSpells = [];
+		if( cc.chrClass != null && cc.chrClass.conditionalBuffs != null ) {
+			var conditionalBuff;
+			for( i=0; i<cc.chrClass.conditionalBuffs.length; i++ ) {
+				conditionalBuff = cc.chrClass.conditionalBuffs[i];
+
+				if( cc.auras.auraMap[conditionalBuff[0]] ) {
+					conditionalSpells.push(conditionalBuff[1]);
+				}
+			}
+		}
+
+		this.gui.buffInterface.update(useSpells, procSpells, conditionalSpells);
 	},
 	updateReforgeTab: function() {
 		var cc = this.engine.getCurrentCharacter();
-		var itm = cc.getEquippedItem(this.slot);
+		var itm;
+		if( this.slot != -1 ) {
+			itm = cc.getEquippedItem(this.slot);
+		}
 		this.gui.reforgeInterface.update(itm == null ? null : new EquippedItem(cc, itm, this.slot));
 	},
 	updateEnchantsTab: function() {
@@ -806,12 +903,32 @@ EngineGuiAdapter.prototype = {
 			Tooltip.showError(e);
 		}
 	},
+	__onUpdate: function() {
+		try {
+			var cc = Engine.getCurrentCharacter();
+			
+			CharacterIO.writeToDatabaseSession( this.engine.settings.profileId, cc, new Handler( this.__onUpdateCallback, this ));
+
+			Tooltip.showLoading();
+		}
+		catch( e ) {
+			Tooltip.showError(e);
+		}
+	},
 	__onSaveCallback: function( id, exception ) {
 		if ( exception != null ) {
 			Tooltip.showError(exception);
 		}
 		else {
-			Tooltip.show("Your profile was saved.<br /><a class='tt_profile_link' href='?profile="+id+"' target='_blank'>Click here</a> to view it.");
+			Tooltip.showHtmlDisabled("Your profile was saved.<br /><a class='tt_profile_link' href='?profile="+id+"' target='_blank'>Click here</a> to view it.");
+		}
+	},
+	__onUpdateCallback: function( id, exception ) {
+		if ( exception != null ) {
+			Tooltip.showError(exception);
+		}
+		else {
+			Tooltip.showHtmlDisabled("The profile was updated.");
 		}
 	},
 	/**

@@ -1,7 +1,6 @@
 /**
  * @constructor
  * @param {Character} character
- * @returns {Inventory}
  */
 function Inventory( character )
 {
@@ -83,20 +82,14 @@ Inventory.prototype = {
 			this.__shiftLeft(16);
 		}
 	},
-	setReforgePreview: function( slot, reduce, add ) {
-		var itm = this.items[slot][0];
+	setReforgePreview: function( refArr ) {
+		this.removePreview();
 		
-		if( itm ) {
-			this.removePreview();
-			
-			this.reforgePreview = { 'slot': slot, 'oldReduced': itm.reducedStat, 'oldAdded': itm.addedStat };
-
-			itm.restore();
-			if( reduce != -1 ) {
-				itm.reforge( reduce, add );
-			}
-		}
+		this.reforgePreview = this.reforgeToArray();
 		
+		this.restoreAllItems();
+		
+		this.reforgeFromArray(refArr);
 	},
 	// FIXME if the gem is changed while the preview is active, the gem is later removed with the preview
 	// this is fixed by removing all previews if an item/gem is equipped, see Engine
@@ -154,12 +147,8 @@ Inventory.prototype = {
 			}
 		}
 		if( this.reforgePreview ) {
-			var itm = this.items[this.reforgePreview['slot']][0];
-
-			itm.restore();
-			if( this.reforgePreview['oldReduced'] != -1 ) {
-				itm.reforge(this.reforgePreview['oldReduced'], this.reforgePreview['oldAdded']);
-			}
+			this.restoreAllItems();
+			this.reforgeFromArray(this.reforgePreview);
 			this.reforgePreview = null;
 		}
 		this.oldEnchantRef = null;
@@ -424,11 +413,16 @@ Inventory.prototype = {
 			if( ! this.items[i][0] ) {
 				continue;
 			}
-			try {
-				this.items[i][0].reforge(refArr[i][0],refArr[i][1]);
+			if( refArr[i][0] == -1 ) {
+				this.items[i][0].restore();
 			}
-			catch(e) {
-				throw e;
+			else {
+				try {
+					this.items[i][0].reforge(refArr[i][0],refArr[i][1]);
+				}
+				catch(e) {
+					throw e;
+				}
 			}
 		}
 	},
@@ -436,7 +430,7 @@ Inventory.prototype = {
 		var arr = [];
 		for( var i=0; i<INV_ITEMS; i++ ) {
 			if( this.items[i][0] ) {
-				arr.push([this.items[i][0].addedStat,this.items[i][0].reducedStat]);
+				arr.push([this.items[i][0].reducedStat,this.items[i][0].addedStat]);
 			}
 		}
 		return arr;

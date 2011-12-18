@@ -14,12 +14,15 @@ function CharacterSheet() {
 	this.eventMgr.registerEvent('remove_buff', ['spell_id']);
 	this.eventMgr.registerEvent('add_buff_stack', ['spell_id']);
 	this.eventMgr.registerEvent('select_shape', ['shape_id']);
+	this.eventMgr.registerEvent('select_presence', ['presence_id']);
 	//new CharacterSheetEventManager(); 
 	var grid, i, j, div, div2, slotGrid, wpnGrid, profDiv;
 	//
 	this.raceClassSelector = new RaceClassSelector( this );
-	this.shapeSelector = new ShapeSelector(); this.shapeSelector.addPropagator('select_shape', this.eventMgr);
+	this.shapeSelector = new ShapeSelector(); 
+	this.shapeSelector.addPropagator('select_shape', this.eventMgr);
 	this.presenceSelector = new PresenceSelector();
+	this.presenceSelector.addPopagator('select_presence', this.eventMgr);
 	this.buffBar = new BuffBar();
 	//
 	//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::

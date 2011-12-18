@@ -204,6 +204,11 @@ TooltipImpl.prototype = {
 		DOM.set( this.overlay, node);
 		this.__center(node);
 	},
+	showHtmlDisabled: function(html) {
+		html += "<br /><span class=\"tt_close_notice\">Left click or hit escape to continue.</span>";
+		this.showDisabled(DOM.createAt(DOM.create('div',{'class':'tt_msg_c'}), 'div', { 'text':html, 'class': 'tt_msg' }));
+		this.overlay.onclick = function(){Tooltip.enable();};
+	},
 	enable: function() {
 		Tools.removeChilds(this.overlay);
 		this.overlay.style.display = "none";

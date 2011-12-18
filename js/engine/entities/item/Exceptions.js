@@ -3,7 +3,6 @@
  * @param {number} red
  * @param {number} add
  * @param {number} cause
- * @returns {InvalidReforgeException}
  */
 function InvalidReforgeException( itm, red, add, cause ) {
 	this.cause = cause;
@@ -12,10 +11,13 @@ function InvalidReforgeException( itm, red, add, cause ) {
 	this.reduced = red;
 }
 InvalidReforgeException.prototype = {
-		cause: null,
-		itm: null,
-		add: -1,
-		red: -1
+	cause: null,
+	itm: null,
+	add: -1,
+	red: -1,
+	toString: function() {
+		return "Unable to reforge "+itm+", reducing "+this.red+" and adding "+this.add+( this.cause ? "!\n Cause:" + this.cause.toString() : ""); 
+	}
 };
 InvalidReforgeException.CAUSE_NO_REDUCE_STATS = 0;
 InvalidReforgeException.CAUSE_NO_ADD_STATS = 1;
@@ -29,7 +31,6 @@ InvalidReforgeException.CAUSE_ALREADY_REFORGED = 6;
  * @constructor
  * @param {Item} itm
  * @param {number} cause
- * @returns {InvalidItemException}
  */
 function InvalidItemException( itm, cause ) {
 	this.cause = cause;
@@ -60,7 +61,6 @@ InvalidItemException.CAUSE_UNIQUE = 3;
  * @param {Item} gem
  * @param {number} itm
  * @param {number} cause
- * @returns {InvalidGemException}
  */
 function InvalidGemException( gem, itm, cause ) {
 	this.cause = cause;

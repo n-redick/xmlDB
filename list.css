@@ -1,8 +1,8 @@
-.li_filter_p{ margin-bottom: 10px;}
+.li_filter_p{ margin-bottom: 10px; border: 1px dotted #555; background-color: #343030; border-right: none; border-right: none;}
 
-.li_fc_header {font-size: 16px; font-family: georgia, serif; padding: 5px; color: #00C0D8; border-bottom: 2px solid #00C0D8;}
+.li_fc_header {font-size: 16px; font-family: georgia, serif; padding: 5px; color: #808080;}
 
-.li_fc_content { padding: 10px; border: 1px solid #333; border-top: none; background-color: #3C3838;}
+.li_fc_content { padding: 10px;}
 
 .li_sort_link { color: #808078; }
 .li_sort_link_active{ font-weight: bold; color: #ffcc00; }

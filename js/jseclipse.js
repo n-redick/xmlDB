@@ -32,3 +32,9 @@ function MD5( any ) { return ""; }
  * @returns {HTMLElement}
  */
 document.createElement = function( str ) { return null;};
+
+/**
+ * @constructor
+ * @param str
+ */
+function Error(str){}

@@ -31,6 +31,7 @@ CharacterIO._readCharacter_callback = function( request, handler )
 CharacterIO._writeCharacter_callback = function( request, handler, character )
 {
 	var id = 0;
+	var exception = null;
 	try {
 		id = Ajax.getResponseObject(request);
 	}
@@ -106,6 +107,8 @@ CharacterIO.writeToDatabaseSession = function( id , character, handler )
  */
 CharacterIO.readFromDatabase = function(id,handler)
 {
+	// TODO: get profile returns { 'character': char, 'user_id': user }, 
+	// callback expect only char
 	Ajax.request(
 		'php/interface/profiles/get_profile.php' + TextIO.queryString({ 'id': id }),
 		new Handler( CharacterIO._readCharacter_callback, CharacterIO ),

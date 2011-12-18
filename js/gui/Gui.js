@@ -4,6 +4,7 @@ function Gui() {
 	this.eventMgr = new GenericSubject();
 	this.eventMgr.registerEvent("import", ["name", "server", "region" ]);
 	this.eventMgr.registerEvent("save", ["name", "desc" ]);
+	this.eventMgr.registerEvent("update", []);
 	this.eventMgr.registerEvent("tab_change", ["newTab", "oldTab"]);
 	this.eventMgr.registerEvent("csfolder_tab_change", ["newTab", "oldTab"]);
 	
@@ -77,7 +78,10 @@ function Gui() {
 //	
 //
 	this.importInterface = new ImportInterface(new Handler( this.__onImport, this));
-	this.saveInterface = new SaveInterface(new Handler( this.__onSave, this));
+	this.saveInterface = new SaveInterface();
+	
+	this.saveInterface.eventMgr.addPropagator('save', this.eventMgr);
+	this.saveInterface.eventMgr.addPropagator('update', this.eventMgr);
 	
 	this.folder = new TabFolder(
 		[sheetGrid.node,talentTab,this.overview.node,this.importInterface.node,this.saveInterface.node,this.profilesParent],

@@ -2547,7 +2547,7 @@ function get_profile( $profile_id ) {
 	
 	$record = mysql_fetch_assoc(mysql_db_query(
 		$GLOBALS['g_profile_db'],
-		"SELECT `Serialized` FROM `chardev_characters` WHERE `ID`='".(int)$profile_id."' ORDER BY `History` ASC",
+		"SELECT `UserID`, `Serialized` FROM `chardev_characters` WHERE `ID`='".(int)$profile_id."' ORDER BY `History` ASC",
 		$GLOBALS['g_db_con']
 	));
 	
@@ -2589,7 +2589,7 @@ function get_profile( $profile_id ) {
 				}
 			}
 		}
-		return $r;
+		return array( "character" => $r, "user_id" => $record["UserID"] );
 	}
 	else {
 		return null;
