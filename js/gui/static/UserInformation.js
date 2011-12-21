@@ -1,3 +1,9 @@
+/**
+ * @constructor
+ * @param {number} userId
+ * @param {Object} data
+ * @param {string} targetElementId
+ */
 function UserInformationImpl( userId, data, targetElementId ) {
 	this.data = data;
 	this.targetElementId = targetElementId;
@@ -64,6 +70,12 @@ UserInformationImpl.prototype = {
 	targetElementId: ""
 };
 
+/**
+ * @constructor
+ * @param {string} key
+ * @param {Object} data
+ * @param {Editable} editable
+ */
 function UserEditableObserver( key, data, editable ) {
 	GenericObserver.call( this, ['change'], new Handler( this.__onChange, this )); 
 	this.key = key;
@@ -72,7 +84,7 @@ function UserEditableObserver( key, data, editable ) {
 	this.editable.addObserver(this);
 }
 
-UserEditableObserver.prototype = GenericObserver.prototype;
+UserEditableObserver.prototype = new GenericObserver([],null);
 UserEditableObserver.prototype.key = "";
 UserEditableObserver.prototype.data = null;
 UserEditableObserver.prototype.editable = null;

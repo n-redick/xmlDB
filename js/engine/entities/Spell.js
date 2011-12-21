@@ -1,8 +1,6 @@
 /**
  * @constructor
- * 
  * @param {Array} serialized
- * @returns {Spell}
  */
 function Spell( serialized ) {
 	var i;

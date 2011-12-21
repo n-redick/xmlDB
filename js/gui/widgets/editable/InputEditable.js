@@ -1,7 +1,10 @@
+/**
+ * @constructor
+ */
 function InputEditable() {
 	Editable.call(this);
 	
-	this.div = DOM.create('div');
+	this.div = DOM.create('div', {});
 	
 	this.input = new Input();
 
@@ -26,7 +29,7 @@ InputEditable.prototype.setData = function(data) {
 	this.input.setValue(data);
 	this.disabled = false;
 	
-	v = this.input.getValue();
+	var v = this.input.getValue();
 	
 	this.div.innerHTML = v ? v : "<span class='ui_data_nothing'>None</span>";
 	DOM.set(this.node, this.div);

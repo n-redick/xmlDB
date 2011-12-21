@@ -1,7 +1,6 @@
 /**
  * @constructor
  * @param {TalentFacade} talent
- * @returns {TalentIcon}
  */
 function TalentIcon( talent ) {
 	var layeredDiv = new LayeredDiv(6);

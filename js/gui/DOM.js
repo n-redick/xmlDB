@@ -2,7 +2,7 @@ var DOM = {
 	/**
 	 * @param tag
 	 * @param obj
-	 * @returns {HTMLElement}
+	 * @returns {Element}
 	 */
 	create: function( tag, obj ) {
 		var e = document.createElement(tag);
@@ -15,6 +15,8 @@ var DOM = {
 				else if( k == 'href') {e.href = obj[k];}
 				else if( k == 'src') {e.src = obj[k];}
 				else if( k == 'target') {e.target = obj[k];}
+				else if( k == 'name') {e.name = obj[k];}
+				else if( k == 'id') {e.id = obj[k];}
 				else if( k == 'backgroundImage') {
 					if( obj[k].toLowerCase() === 'none' || obj[k].toLowerCase() === 'inherit' ) {
 						e.style.backgroundImage = obj[k];
@@ -33,6 +35,8 @@ var DOM = {
 				}
 				else if( k == 'type') {e.type = obj[k];}
 				else if( k == 'value') {e.value = obj[k];}
+				else if( k == 'title') {e.title = obj[k];}
+				else if( k == 'checked') {e.checked = obj[k];}
 				else throw Error("Unknown parameter "+k+" with value "+obj[k]);
 			}
 		}
@@ -42,7 +46,7 @@ var DOM = {
 	 * @param parent
 	 * @param tag
 	 * @param obj
-	 * @returns {HTMLElement}
+	 * @returns {Element}
 	 */
 	createAt: function ( parent, tag, obj ) {
 		var e = DOM.create(tag,obj);
@@ -104,7 +108,9 @@ var DOM = {
 			n1.innerHTML += n2;
 		}
 		else {
-			n1.innerHTML = ""; 
+			while(n1.firstChild) {
+				n1.removeChild(n1.firstChild);
+			}
 			n1.appendChild(n2);
 		}
 	},
@@ -133,10 +139,12 @@ var DOM = {
 		return n1;
 	},
 	truncate: function( n ) {
-		n.innerHTML = "";
+		while(n.firstChild) {
+			n.removeChild(n.firstChild);
+		}
 	},
 	/**
-	 * @param {HTMLElement|string} n
+	 * @param {Element|string} n
 	 * @returns {string|null}
 	 */
 	getValue: function( n ) {
@@ -145,7 +153,10 @@ var DOM = {
 		}
 		if( n != null ) {
 			var nn = n.nodeName.toLowerCase();
-			if( nn  === 'input' || nn == 'textarea' ) {
+			if( nn  === 'input' && n.type == 'checkbox' ){
+				return n.checked;
+			}
+			else if( nn  === 'input' || nn == 'textarea' ) {
 				return n.value;
 			}
 			else if( nn === 'select' ){
@@ -175,7 +186,7 @@ var ChardevHTML = {
 		Listener.add( node, 'mouseover', Tooltip.showMovable, Tooltip, [html] );
 	},
 	shadow: function( node, text ) {
-		var s = DOM.createAt( node, 'span');
+		var s = DOM.createAt( node, 'span', {});
 		s.innerHTML = "<span style='position: absolute'>" + text + "<span style='color: #808080; position: absolute; top: -1px; left: 1px;'>"+text+"</span></span>";
 	},
 	buttonLightStyleFor: function( node ) {

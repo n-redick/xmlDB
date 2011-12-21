@@ -1,9 +1,9 @@
 /**
- * @param variable
- * @param operator
- * @param value
- * @param type
- * @returns {InputFilter}
+ * @constructor
+ * @param {string} variable
+ * @param {string} operator
+ * @param {string} value
+ * @param {number} type
  */
 function InputFilter( name, variable, operator, value, type ) {
 	AbstractFilter.call( this, name, variable );
@@ -33,7 +33,7 @@ function InputFilter( name, variable, operator, value, type ) {
 	this.node.className = "fi_p";
 }
 
-InputFilter.prototype = new AbstractFilter();
+InputFilter.prototype = new AbstractFilter("","");
 InputFilter.prototype.operatorSelect = null;
 InputFilter.prototype.input = null;
 InputFilter.prototype.valueType = InputFilterData.TYPE_NUMERIC;

@@ -15,7 +15,7 @@ for( $i=0; $i<count($js_files); $i++ ) {
 write_to_file ( 'window["CHARDEV_CORE_BUILD"]='.($build+1).';', '../../js/build.js' );
 
 system( 
-	"cd ../../ && java -jar c:\_projekte\compiler.jar "
+	"cd ../../ && java -jar ../compiler.jar "
 	.$joined
 	." --js ./js/build.js "
 	." --compilation_level ADVANCED_OPTIMIZATIONS --js_output_file ./js/all_optimised.js --externs ./js/cc_externs.js --warning_level VERBOSE" 

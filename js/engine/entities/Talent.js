@@ -4,7 +4,6 @@
  * @constructor
  * @param {number} tree
  * @param {Array} serialized
- * @returns {Talent}
  */
 function Talent( tree, serialized ){
 	var i;

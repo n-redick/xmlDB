@@ -1,7 +1,6 @@
 /**
  * @constructor
  * @param serialized
- * @returns {GemProperties}
  */
 function GemProperties ( serialized ) {
 	this.enchant = new SpellItemEnchantment( serialized[0]);

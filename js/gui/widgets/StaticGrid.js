@@ -2,7 +2,6 @@
  * @constructor
  * @param {number} rows
  * @param {number} cols
- * @returns {StaticGrid}
  */
 function StaticGrid( rows, cols ){
 	var i,j;

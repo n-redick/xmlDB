@@ -34,7 +34,6 @@
 	}
 	
 ?>
-<script type="text/javascript" src="js/gui/static/Forum.js"></script>
 <script type="text/javascript">
 	var g_forum_posts = null;
 </script>

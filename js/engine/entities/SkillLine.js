@@ -1,8 +1,6 @@
 /**
  * @constructor
- * @param {Array}
- *            serialized
- * @returns {SkillLine}
+ * @param {Array} serialized
  */
 function SkillLine(serialized) {
 	this.id = serialized[0];

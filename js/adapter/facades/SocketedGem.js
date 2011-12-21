@@ -3,7 +3,6 @@
  * @param character
  * @param gem
  * @param socket
- * @returns {SocketedGem}
  */
 function SocketedGem( character, gem, socket ) {
 	this.__gem = gem;

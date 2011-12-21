@@ -1,9 +1,8 @@
 /**
  * @constructor
- * @param childNodes
+ * @param {Object} childNodes
  * @param linkNames
  * @param cssClass
- * @returns {TabFolder}
  */
 function TabFolder( childNodes, linkNames, cssClass ) {
 	

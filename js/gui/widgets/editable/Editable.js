@@ -1,3 +1,6 @@
+/**
+ * @constructor
+ */
 function Editable() {
 	this.node = document.createElement("div");
 	

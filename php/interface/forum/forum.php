@@ -117,6 +117,38 @@
 				}
 				
 				break;
+			case 'lock_thread':
+				if( ! isset($_POST['thread'])) {
+					ajax_response::die_on_error("No thread found!");
+				}
+				$threadId = (int)$_POST['thread'];
+				$thread = $db->getThread($threadId);
+				
+				if( $permissions->mayLockAnyThreads($thread['ThreadHookID'])) {
+					$db->lockThread($threadId);
+					echo json_encode($thread['ID']);
+				}
+				else {
+					ajax_response::die_on_error("You are not allowed to lock this thread!");
+				}
+				
+				break;
+			case 'unlock_thread':
+				if( ! isset($_POST['thread'])) {
+					ajax_response::die_on_error("No thread found!");
+				}
+				$threadId = (int)$_POST['thread'];
+				$thread = $db->getThread($threadId);
+				
+				if( $permissions->mayLockAnyThreads($thread['ThreadHookID'])) {
+					$db->unlockThread($threadId);
+					echo json_encode($thread['ID']);
+				}
+				else {
+					ajax_response::die_on_error("You are not allowed to unlock this thread!");
+				}
+				
+				break;
 			default: ajax_response::die_on_error("No action given!");
 		}
 	}

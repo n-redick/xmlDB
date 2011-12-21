@@ -1,7 +1,10 @@
+/**
+ * @constructor
+ */
 function PostEditable() {
 	Editable.call(this);
 	
-	this.div = DOM.create('div');
+	this.div = DOM.create('div', {});
 
 	this.form = DOM.create('form',{'action':'javascript:'});
 	this.textArea = DOM.createAt( this.form, 'textarea',{'class': 'textarea fo_edit'});

@@ -208,7 +208,7 @@
 
 .forum_author_donor
 {
-	color:#FFFF00;
+	color:#00DD00;
 }
 
 .forum_author_admin
@@ -223,6 +223,13 @@
 
 .forum_topic_link:hover{
 	color: white;
+}
+
+.forum_topic_locked_link{
+	color:#999;
+}
+.forum_topic_locked_link:hover{
+	color:#666;
 }
 
 .forum_topic_sticky_link{
@@ -241,30 +248,6 @@
 
 .forum_topic_announcement_link:hover{
 	color:#FF9000;
-}
-
-.forum_topic_link_locked{
-	color:#808080;
-}
-
-.forum_topic_link_locked:hover{
-	color:#c0c0c0;
-}
-
-.forum_topic_sticky_link_locked{
-	color:#B090F0;
-}
-
-.forum_topic_sticky_link_locked:hover{
-	color:#CC90FF;
-}
-
-.forum_topic_announcement_link_locked{
-	color:#F06000;
-}
-
-.forum_topic_announcement_link_locked:hover{
-	color:#900000;
 }
 
 .forum_last_post

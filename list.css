@@ -19,6 +19,10 @@
 .li_filter_grp { padding: 5px; }
 .li_filter_select { margin-left: 2px; margin-bottom: 2px; }
 
+.il_prop {height: 20px; display: none;}
+.il_prop_note{ display: block; float: left; color: #808080; line-height: 20px;}
+.il_prop_check{ display: block; float: left; }
+
 .fi_op_select{margin-right: 1px;}
 .fi_in{}
 .fi_in_min { width: 50px; }
@@ -106,11 +110,13 @@
 	border-top: 1px solid #343030;
 }
 
+.pl_delete_link {float: right;}
+
 .pl_level_p {
-	font-size: 14px; padding-right: 8px; text-align: right; color: #404040;
+	margin-left: 5px; font-size: 14px; padding-right: 5px; text-align: right; color: #c0c0c0;
 }
 
-.pl_link { color: #00c0db; margin-left: 5px;}
+.pl_link { color: #00a8bd; margin-left: 5px; font-family: georgia, serif;}
 
 .pl_icon { border: 1px solid #404038; height: 24px; width: 24px; margin: 1px; }
 .pl_ih_info {font-size: 11px;}

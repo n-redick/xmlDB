@@ -1,7 +1,6 @@
 /**
  * @constructor
  * @param {Array} serialized
- * @returns {SpellEquippedItems}
  */
 function SpellEquippedItems ( serialized ) {
 	this.classId = serialized[0];

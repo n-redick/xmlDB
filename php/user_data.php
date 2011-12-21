@@ -53,6 +53,10 @@ class user_data {
 	public function get_avatar () {
 		return $this->data['Avatar'];
 	}
+
+	public function get_language () {
+		return $this->data['Language'];
+	}
 	
 	public function get_forum_signature() {
 		return $this->data['ForumSignature'];
@@ -153,6 +157,10 @@ class user_data {
 	
 	public function set_region( $region ) {
 		return $this->set_chardev_user_data( "Region", $region );
+	}
+	
+	public function set_avatar( $avatar ) {
+		return $this->set_chardev_user_data( "Avatar", $avatar );
 	}
 	
 	private function set_chardev_user_data( $key, $value ) {

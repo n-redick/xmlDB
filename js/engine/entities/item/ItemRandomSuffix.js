@@ -1,7 +1,6 @@
 /**
  * @constructor
  * @param {Array} serialized
- * @returns {ItemRandomSuffix}
  */
 function ItemRandomSuffix( serialized ) {
 	this.id = 0 - serialized[0];

@@ -1,6 +1,5 @@
 /**
  * @constructor
- * @returns {Collapsable}
  */
 function Collapsable() {
 	this.node = document.createElement("div");

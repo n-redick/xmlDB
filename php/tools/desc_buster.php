@@ -422,6 +422,11 @@
 	function getEffect( $spell, $effect_nr, $prefix, $mod ) {
 		$effectResult = mysql_query("SELECT * FROM `spelleffect` WHERE `SpellID` = ".$spell['ID']." AND `Index` = ".($effect_nr - 1));
 		$effectRecord = mysql_fetch_assoc($effectResult);
+		if( ! $effectRecord ) {
+			echo "Failed to read spell effect ".($effect_nr - 1).", fallen back to 0.\n";
+			$effectResult = mysql_query("SELECT * FROM `spelleffect` WHERE `SpellID` = ".$spell['ID']." AND `Index` = 0");
+			$effectRecord = mysql_fetch_assoc($effectResult);		
+		}
 		$return_value = "";
 		$value = abs($effectRecord['Value']);
 		$dice = abs($effectRecord['Dice']);

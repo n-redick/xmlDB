@@ -1,6 +1,5 @@
 /**
  * @constructor
- * @returns {RandomPropertyInterface}
  */
 function RandomPropertyInterface() {
 	this.node = document.createElement("div");

@@ -1,7 +1,6 @@
 /**
  * @constructor
- * @param layers
- * @returns {LayeredDiv}
+ * @param {number} layers
  */
 function LayeredDiv(layers) {
 	if( layers > 0 ) {
@@ -19,4 +18,7 @@ function LayeredDiv(layers) {
 	}
 }
 
-LayeredDiv.prototype.layers = null;
+LayeredDiv.prototype = {
+	/** @type {Array} **/	
+	layers: null
+};

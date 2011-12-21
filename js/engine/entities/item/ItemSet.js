@@ -1,8 +1,6 @@
 /**
  * @constructor
- * @param {Array}
- *            serialized
- * @returns {ItemSet}
+ * @param {Array} serialized
  */
 function ItemSet(serialized) {
 	var i;

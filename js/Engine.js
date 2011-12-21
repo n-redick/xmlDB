@@ -1,4 +1,9 @@
-function EngineImpl() { /***/ }
+/**
+ * @constructor
+ */
+function EngineImpl() {
+	/* do nothing */
+}
 
 EngineImpl.prototype = {
 	characterMgr: null,
@@ -49,6 +54,9 @@ EngineImpl.prototype = {
 		}
 		
 	},
+	/**
+	 * @return {Character}
+	 */
 	getCurrentCharacter: function() {
 		return this.characterMgr.getCurrentCharacter();
 	},
@@ -60,32 +68,32 @@ EngineImpl.prototype = {
 	},
 	showItemTooltip: function( itemId ) {
 		Tooltip.show("Loading Tooltip...");
-		Engine.requestedTooltip = { 'item': itemId };
+		this.requestedTooltip = { 'item': itemId };
 		ItemCache.asyncGet( itemId, new Handler(
 			function( id ) {
 				var itm = ItemCache.get( id );
 				if( itm != null ) {
-					if( Engine.requestedTooltip != null && Engine.requestedTooltip['item'] == id ) {
+					if( this.requestedTooltip != null && this.requestedTooltip['item'] == id ) {
 						Tooltip.showMovable( ItemTooltip.getHTML( itm , null) );
-						Engine.requestedTooltip = null;
+						this.requestedTooltip = null;
 					}
 				}
-			}, window
+			}, this
 		), [itemId]);
 	},
 	showSpellTooltip: function( spellId ) {
 		Tooltip.show("Loading Tooltip...");
-		Engine.requestedTooltip = { 'spell': spellId };
+		this.requestedTooltip = { 'spell': spellId };
 		SpellCache.asyncGet( spellId, new Handler(
 			function( id ) {
 				var itm = SpellCache.get( id );
 				if( itm != null ) {
-					if( Engine.requestedTooltip != null && Engine.requestedTooltip['spell'] == id ) {
-						Tooltip.showMovable( SpellTooltip.getHTML( itm , null) );
-						Engine.requestedTooltip = null;
+					if( this.requestedTooltip != null && this.requestedTooltip['spell'] == id ) {
+						Tooltip.showMovable( SpellTooltip.getHTML( itm , null, 0, null) );
+						this.requestedTooltip = null;
 					}
 				}
-			}, window
+			}, this
 		), [spellId]);
 	}
 };

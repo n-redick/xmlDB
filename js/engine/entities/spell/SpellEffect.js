@@ -12,7 +12,6 @@
  * 
  * @constructor
  * @param {Array} serialized
- * @returns {SpellEffect}
  */
 function SpellEffect(serialized){
 	this.procValue = serialized[0];

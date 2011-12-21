@@ -27,7 +27,7 @@ DatabaseIO.getCharacterClass_callback = function(request, handler )
 		error = parseInt(request.getResponseHeader("error"), 10);
 		if ( error )
 		{
-			throw new GenericAjaxException(error);
+			throw new GenericAjaxException("DatabaseIO.getCharacterClass");
 		}
 	}
 	else {
@@ -63,7 +63,7 @@ DatabaseIO.getCharacterRace_callback = function(request, handler )
 		error = parseInt(request.getResponseHeader("error"), 10);
 		if ( error )
 		{
-			throw new GenericAjaxException(error);
+			throw new GenericAjaxException("DatabaseIO.getCharacterRace");
 		}
 	}
 	else {

@@ -1,6 +1,5 @@
 /**
  * @constructor
- * @returns {Overview}
  */
 function Overview() {
 	this.node = DOM.create('div', { 'class': 'ov_p' });
@@ -70,7 +69,7 @@ Overview.prototype = {
 			this.__addItem( itmParent, characterFacade.items[i] );
 		}
 		
-		statContainer = DOM.createAt( this.node, 'div', {'class' : 'ov_stats_container'});
+		var statContainer = DOM.createAt( this.node, 'div', {'class' : 'ov_stats_container'});
 		
 		this.statCollapsables = [];
 		
@@ -89,7 +88,7 @@ Overview.prototype = {
 			this.statCollapsables[i].node.className = 'cs_st_p';
 			this.statCollapsables[i].content.className = 'ov_st_c';
 			
-			div = DOM.createAt( this.statCollapsables[i].header, 'div', {'class': 'stat_title_p'} );
+			var div = DOM.createAt( this.statCollapsables[i].header, 'div', {'class': 'stat_title_p'} );
 			DOM.createAt( div, 'a', {'class': 'stat_title', 'text': locale['CS_StatGroups'][i], 'href': 'javascript:'} );
 			
 			statContainer.appendChild(this.statCollapsables[i].node);
@@ -175,7 +174,7 @@ Overview.prototype = {
 			
 			if( commentCount > 0 ) {
 				for( var i=0; i<commentCount; i++ ) {
-					div = DOM.createAt( this.commentsContainer, 'div', {'class': 'co_c row_bg'+(1+i%2)});
+					var div = DOM.createAt( this.commentsContainer, 'div', {'class': 'co_c row_bg'+(1+i%2)});
 					DOM.createAt( div, 'div', {'class': 'co_header', 'text': cs[i]['UserName']+", <span class='co_time'>"+cs[i]['Created']+"</span>"});
 					DOM.createAt( div,	'div', {'class': 'co_content', 'text': cs[i]['Content']});
 				}

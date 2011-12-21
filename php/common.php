@@ -1330,7 +1330,7 @@ function get_spells( $arguments, $flags, $order, $page ) {
 					$GLOBALS["g_error"] = "Value ".$match[3]." is invalid";
 				}
 				
-				$where .= ( $where?" AND ":"" ) ."(sei.`ItemSubClassMask`&" .(1<<(int)$arr[1]). ") != 0 AND sei.`ItemClassID`=".(int)$arr[0];
+				$where .= ( $where?" AND ":"" ) ."((sei.`ItemSubClassMask`&" .(1<<(int)$arr[1]). ") != 0 OR sei.`ItemSubClassMask`=0) AND sei.`ItemClassID`=".(int)$arr[0];
 				
 				break;
 			case "isenchant":
@@ -2080,7 +2080,15 @@ function get_glyph( $id ) {
 	}
 	$record = mysql_fetch_assoc(mysql_db_query(
 		$GLOBALS['g_game_db'],
-		"SELECT * FROM `glyphproperties` WHERE `ID`=".(int)$id,
+		"SELECT 
+			gp.`ID`, 
+			gp.`Type`, 
+			gp.`SpellID`, 
+			i.`ID` as ItemID 
+		FROM `glyphproperties` gp 
+			LEFT JOIN `spelleffect` se ON gp.`ID` = se.`SecondaryEffect` AND se.`Aura` = '74'
+			LEFT JOIN `item_sparse` i ON i.`SpellID2` = se.`SpellID`
+		WHERE gp.`ID`=".(int)$id,
 		$GLOBALS['g_db_con']
 	));
 		
@@ -2093,7 +2101,8 @@ function read_glyph( $record ) {
 		$glyph = array(
 			(int)$record['ID'],
 			(int)$record['Type'],
-			get_spell((int)$record['SpellID'])
+			get_spell((int)$record['SpellID']),
+			(int)$record['ItemID']
 		);
 	}
 	

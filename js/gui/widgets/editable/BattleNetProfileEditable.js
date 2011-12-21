@@ -1,3 +1,7 @@
+/**
+ * @constructor
+ * @param {Object} realms
+ */
 function BattleNetProfileEditable( realms ) {
 	var show = [], n = 0, form, btn, div;
 	
@@ -111,7 +115,7 @@ BattleNetProfileEditable.prototype.realmSelect = null;
 BattleNetProfileEditable.prototype.regionSelect = null;
 
 BattleNetProfileEditable.prototype.setData= function( profiles ) {
-	var profile, div, span, a;
+	var profile, div;
 	
 	this.profiles = profiles;
 	this.content.innerHTML = "";
@@ -122,44 +126,24 @@ BattleNetProfileEditable.prototype.setData= function( profiles ) {
 		div = document.createElement("div");
 		div.className = 'group bnpm_entry';
 
-		a = document.createElement("a");
-		a.className = 'remove bnpm_remove';
-		a.href = 'javascript:';
+		var a = DOM.createAt(div,'a',{'href': 'javascript:;', 'class': 'remove bnpm_remove'});
 		Listener.add( a, 'click', this.__onRemove, this, [profile, div] );
-		div.appendChild(a);
 		
-		span = document.createElement("span");
-		span.innerHTML = profile['Name'];
-		span.className = 'bnpm_name';
-		div.appendChild(span);
+		DOM.createAt(div,'span',{'text': profile['Name'], 'class': 'bnpm_name'});
 		
-		span = document.createElement("span");
-		span.innerHTML = ", " + profile['Level'] + " " + locale['CharacterRace'][profile['CharacterRaceID']] + " ";
-		div.appendChild(span);
+		DOM.createAt(div,'span',{'text': ", " + profile['Level'] + " " + locale['CharacterRace'][profile['CharacterRaceID']] + " "});
+
+		DOM.createAt(div,'span',{'text': locale['CharacterClass'][profile['CharacterClassID']], 'class': 'character_class_'+profile['CharacterClassID']+' bnpm_chrclass'});
 		
-		span = document.createElement("span");
-		span.innerHTML = locale['CharacterClass'][profile['CharacterClassID']];
-		span.className = 'character_class_'+profile['CharacterClassID']+' bnpm_chrclass';
-		if( profile['CharacterClassID'] == PRIEST ) {
-			span.className +=' character_class_5_white_bg_fix';
-		}
-		else if( profile['CharacterClassID'] == ROGUE ) {
-			span.className +=' character_class_4_white_bg_fix';
-		}
-		div.appendChild(span);
+		DOM.createAt(div,'span',{'text': ", " + profile['Region'].toUpperCase()+"-"+profile['Realm'], 'class': 'bnpm_origin'});
 		
-		span = document.createElement("span");
-		span.innerHTML = ", " + profile['Region'].toUpperCase()+"-"+profile['Realm'];
-		span.className = 'bnpm_origin';
-		div.appendChild(span);
+		DOM.createAt(div,'br',{});
 		
-		div.appendChild(DOM.create('br'));
-		
-		div.appendChild(DOM.create('a', {
+		DOM.createAt(div,'a', {
 			'href': TextIO.queryString({'planner':'','name': profile['Name'], 'realm': profile['Realm'], 'region': profile['Region'] }),
 			'text': "Static link to import this character from Battle.net into chardev",
 			'class': "bnpm_static_link"
-		}));
+		});
 		
 		this.content.appendChild(div);
 	}

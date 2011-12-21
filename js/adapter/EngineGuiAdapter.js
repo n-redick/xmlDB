@@ -132,6 +132,7 @@ function EngineGuiAdapter( engine, gui ) {
 	this.itemList = new ItemList();
 	//
 	this.itemList.gui.show( false );
+	this.itemList.gui.propagateParent.style.display = "block";
 	//
 	var ilHandler = new Handler(function( e ){
 		var cc;
@@ -153,12 +154,12 @@ function EngineGuiAdapter( engine, gui ) {
 				try {
 					cc.addItem( this.slot, e.get('entity').clone() );
 				}
-				catch( e ) {
-					if( e instanceof InvalidItemException ) {
-						Tooltip.showError(e);
+				catch( ex ) {
+					if( ex instanceof InvalidItemException ) {
+						Tooltip.showError(ex);
 					}
 					else {
-						Tools.rethrow(e);
+						Tools.rethrow(ex);
 					}
 				}
 			}
@@ -171,8 +172,15 @@ function EngineGuiAdapter( engine, gui ) {
 
 				this.__propagateFilterSettings('name',args);
 				this.__propagateFilterSettings('quality',args);
-				this.__propagateFilterSettings('lvl',args);
+				this.__propagateFilterSettings('level',args);
 				this.__propagateFilterSettings('reqlvl',args);
+				
+				if( DOM.getValue(this.itemList.gui.propagateCheckbox)) {
+					var cs = this.itemList.filterMgr.customFilters;
+					for( var k in cs) {
+						this.__propagateFilterSettings(cs[k].variable, cs[k].getArgumentString());
+					}
+				}
 				
 				this.storedItemFilters[this.slot] = args;
 				//
@@ -197,48 +205,8 @@ function EngineGuiAdapter( engine, gui ) {
 	//
 	//#########################################################################
 	//
-	this.profileList = new ProfileList();
-	this.profileList.gui.showFilter(true);
-	//
-	var plHandler = new Handler(function( e ){
-		var cc;
-		if( e.is('show_tooltip') ) {
-//			cc = this.engine.getCurrentCharacter();
-//			Tooltip.showMovable( SpellTooltip.getHTML(e.get('entity'), cc) );
-//			cc.setEnchantPreview( this.slot, e.get('entity'));
-		}
-		else if( e.is('move_tooltip') ) {
-//			Tooltip.move();
-		}
-		else if( e.is('hide_tooltip') ) {
-//			Tooltip.hide();
-//			this.engine.getCurrentCharacter().removeEnchantPreview();
-		}
-		else if( e.is('click') ) {
-//			cc = this.engine.getCurrentCharacter();
-//			if( cc && this.slot != -1 && cc.getEquippedItem(this.slot) != null ) {
-//				cc.addEnchant( this.slot, e.get('entity').effects[0].secondaryEffect );
-//			}
-		}
-		else if( e.is('update') ) {
-			new ListBackEndProxy("php/interface/profiles/get_profiles.php").update(this.profileList);
-//			if( this.slot != -1 ) {
-//				this.storedGemFilters[this.slot] = this.gemList.getArgumentString();
-//				//
-//				// TODO: propagation of common attributes like quality etc.
-//			}
-		}
-	}, this);
-	//
-	var plObserver = new GenericObserver([
-		'show_tooltip',
-		'move_tooltip',
-		'hide_tooltip',
-		'update',
-		'click'
-	], plHandler);
-	//
-	this.profileList.addObserver(plObserver);
+	var profileAdapter = new ProfilesAdapter();
+	this.profileList = profileAdapter.profileList;
 	//
 	//#########################################################################
 	//
@@ -252,7 +220,7 @@ function EngineGuiAdapter( engine, gui ) {
 		var cc;
 		if( e.is('show_tooltip') ) {
 			cc = this.engine.getCurrentCharacter();
-			Tooltip.showMovable( SpellTooltip.getHTML(e.get('entity'), cc) );
+			Tooltip.showMovable( SpellTooltip.getHTML(e.get('entity'), cc, 0, null) );
 			cc.setEnchantPreview( this.slot, e.get('entity'));
 		}
 		else if( e.is('move_tooltip') ) {
@@ -316,12 +284,12 @@ function EngineGuiAdapter( engine, gui ) {
 				try {
 					cc.addGem( this.slot, this.socket, e.get('entity').clone() );
 				}
-				catch( e ) {
-					if( e instanceof InvalidItemException ) {
-						Tooltip.showError(e);
+				catch( ex ) {
+					if( ex instanceof InvalidItemException ) {
+						Tooltip.showError(ex);
 					}
 					else {
-						Tools.rethrow(e);
+						Tools.rethrow(ex);
 					}
 				}
 			}
@@ -403,8 +371,8 @@ function EngineGuiAdapter( engine, gui ) {
 					try {
 						cc.addGlyph( e.get('glyph').__glyph);
 					}
-					catch( e ) {
-						Tooltip.showError(e);
+					catch( ex ) {
+						Tooltip.showError(ex);
 					}
 					this.updateGlyphTab();
 				}
@@ -429,8 +397,8 @@ function EngineGuiAdapter( engine, gui ) {
 					try {
 						cc.addBuff( e.get('id') );
 					}
-					catch( e ) {
-						Tooltip.showError(e);
+					catch( ex ) {
+						Tooltip.showError(ex);
 					}
 					this.updateGlyphTab();
 				}
@@ -472,9 +440,29 @@ function EngineGuiAdapter( engine, gui ) {
 			cc.reforgeAll(e.get('reforge_array'));
 			this.updateReforgeTab();
 		}
+		else if( e.is('wowreforge_export') ) {
+			var profile = this.engine.getCurrentCharacter().toBattleNetProfile();;
+			var metaData = "{\"BasedOn\" : null,\"CanUpdate\" : false,\"Data\" : null,\"Origin\" : \"chardev.org\",\"SourceLink\" : null}";
+			var form = document.createElement("form");
+			form.method = "POST";
+			form.action = "http://wowreforge.com/Profiles/Import";
+			form.name = "wowreforge_export";
+			form.target = "_blank";
+			form.id = "wowreforge_export";
+			form.style.display = "none";
+			
+			DOM.createAt( form, 'input', {'type': 'hidden', 'name': 'profile', 'value': profile});
+			DOM.createAt( form, 'input', {'type': 'hidden', 'name': 'metadata', 'value': metaData});
+			
+			document.body.appendChild(form);
+			
+			DOM.get("wowreforge_export").submit();
+			
+			document.body.removeChild(form);
+		}
 	}, this);
 	this.gui.reforgeInterface.eventMgr.addObserver(new GenericObserver(
-			['reforge', 'restore', 'remove_reforge_preview', 'reforge_preview', 'reforge_all', 'restore_all', 'reforge_item_preview', 'remove_reforge_item_preview'], 
+			['wowreforge_export', 'reforge', 'restore', 'remove_reforge_preview', 'reforge_preview', 'reforge_all', 'restore_all', 'reforge_item_preview', 'remove_reforge_item_preview'], 
 			reHandler
 	));
 	//
@@ -506,7 +494,7 @@ function EngineGuiAdapter( engine, gui ) {
 			this.gemList.filterMgr.hideFilter('class', true);
 			
 			this.gemList.set( 
-				(cc._chrClass != null ? 'usablebyclass.eq.'+(1<<(cc._chrClass._id-1))+';' : '') +
+				(cc.chrClass != null ? 'usablebyclass.eq.'+(1<<(cc.chrClass.id-1))+';' : '') +
 				"issocketablegem.eq.1;class.eq.3;subclass.ba."+iscm+";" + 
 				"gemreqitemlvl.le."+itm.level+";",
 				null,
@@ -530,7 +518,7 @@ function EngineGuiAdapter( engine, gui ) {
 		}
 		else if( e.is('socket_used_gem') ) {
 			cc = this.engine.getCurrentCharacter();
-			itm = cc.getEquippedItem( this.slot );
+			itm = cc.getEquippedItem( this.slot, 0 );
 			cc.addGem( this.slot, e.get('socket'), ItemCache.get(e.get('gemId')) );
 		}
 		else {
@@ -548,7 +536,7 @@ function EngineGuiAdapter( engine, gui ) {
 	//
 	var reObserver = new GenericObserver(['change'], new Handler( function( e ){
 		if( e.is('change') ) {
-			cc = this.engine.getCurrentCharacter();
+			var cc = this.engine.getCurrentCharacter();
 			cc.setItemRandomEnchantment( this.slot, e.get('randomEnchantmentId') );
 		}
 		else {
@@ -619,7 +607,7 @@ EngineGuiAdapter.prototype = {
 			this.gui.talentsGui.init(null);
 		}
 		
-		this.gui.buffInterface.resetInitialised(false);
+		this.gui.buffInterface.resetInitialised();
 
 		this.updateGlyphTab();
 		
@@ -708,7 +696,7 @@ EngineGuiAdapter.prototype = {
 		}
 		//
 		// Available buffs from items (Procs, Use) 
-		var h,i,j,itm, procSpells = [], useSpells = [];
+		var h,i,j,itm, procSpells = [], useSpells = [], s, ps, enchant, se;
 		for( i = 0; i < INV_ITEMS; i++ ) {
 			itm = cc.inventory.get(i);
 			if( ! itm ) {
@@ -772,7 +760,7 @@ EngineGuiAdapter.prototype = {
 		var cc = this.engine.getCurrentCharacter();
 		var itm;
 		if( this.slot != -1 ) {
-			itm = cc.getEquippedItem(this.slot);
+			itm = cc.getEquippedItem(this.slot, 0);
 		}
 		this.gui.reforgeInterface.update(itm == null ? null : new EquippedItem(cc, itm, this.slot));
 	},
@@ -830,8 +818,8 @@ EngineGuiAdapter.prototype = {
 		var cc = this.engine.getCurrentCharacter();
 		var args =  this.storedItemFilters[this.slot];
 		
-		sl = cc.chardevSlotToBlizzardSlotMask(this.slot);
-		icl = cc.chardevSlotToItemClass(this.slot);
+		var sl = cc.chardevSlotToBlizzardSlotMask(this.slot);
+		var icl = cc.chardevSlotToItemClass(this.slot);
 		
 		this.itemList.setItemConstraints( sl, icl[0], icl[1] );
 		
@@ -954,7 +942,7 @@ EngineGuiAdapter.prototype = {
 		var itm, gem;
 		var cc = this.engine.getCurrentCharacter();
 		for( var i=0; i<Inventory.SLOTS; i++ ) {
-			itm = cc.getEquippedItem(i);
+			itm = cc.getEquippedItem(i, 0);
 			if( itm == null ) {
 				continue;
 			}

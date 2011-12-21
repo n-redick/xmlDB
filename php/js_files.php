@@ -13,8 +13,7 @@
 		array( "js/common/", "LinkedList.js"),
 		array( "js/common/", "Compression.js"),
 		array( "js/common/", "NotImplementedException.js"),
-		array( "js/common/extern/", "json2.js"),
-		array( "js/common/extern/", "md5.js"),
+		array( "js/common/", "IllegalArgumentException.js"),
 		
 		array( "js/events/", "GenericEvent.js"),
 		array( "js/events/", "GenericSubject.js"),
@@ -68,6 +67,11 @@
 		array( "js/gui/", "DOM.js"),
 		array( "js/gui/", "Gui.js"),
 		
+		array( "js/gui/static/", "Forum.js"),
+		array( "js/gui/static/", "UserInformation.js"),
+		array( "js/gui/static/", "PostEditableObserver.js"),
+		array( "js/gui/static/", "AvatarPicker.js"),
+		
 		array( "js/gui/tooltip/", "ItemTooltip.js"),
 		array( "js/gui/tooltip/", "SpellTooltip.js"),
 		array( "js/gui/tooltip/", "Tooltip.js"),
@@ -115,6 +119,7 @@
 		array( "js/adapter/", "CharacterCharacterSheetAdapter.js"),
 		array( "js/adapter/", "EngineGuiAdapter.js"),
 		array( "js/adapter/", "TalentsAdapter.js"),
+		array( "js/adapter/static/", "ProfilesAdapter.js"),
 		array( "js/adapter/facades/", "EquippedItem.js"),
 		array( "js/adapter/facades/", "SocketedGem.js"),
 		array( "js/adapter/facades/", "AvailableItemRandomEnchantment.js"),
@@ -148,11 +153,13 @@
 		array( "js/gui/list/profile_list/", "ProfileList.js"),
 		array( "js/gui/list/profile_list/", "ProfileListGui.js"),
 		
-		array( "js/gui/list/profile_list/", "ProfileList.js"),
-		array( "js/gui/list/profile_list/", "ProfileListGui.js"),
-		
 		
 		array( "js/gui/talents/", "TalentsGui.js"),
 		array( "js/gui/talents/", "TalentIcon.js"),
+	);
+	
+	$js_extern_files  = array(
+		array( "js/common/extern/", "json2.js"),
+		array( "js/common/extern/", "md5.js")
 	);
 ?>

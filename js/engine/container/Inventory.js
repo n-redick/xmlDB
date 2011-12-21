@@ -430,7 +430,7 @@ Inventory.prototype = {
 		var arr = [];
 		for( var i=0; i<INV_ITEMS; i++ ) {
 			if( this.items[i][0] ) {
-				arr.push([this.items[i][0].reducedStat,this.items[i][0].addedStat]);
+				arr[i]=[this.items[i][0].reducedStat,this.items[i][0].addedStat];
 			}
 		}
 		return arr;

@@ -1,7 +1,6 @@
 /**
  * @constructor
  * @param {Character} character
- * @returns {Stats}
  */
 function Stats( character ){
 	this.character = character;
@@ -120,7 +119,7 @@ Stats.prototype.reset = function() {
 	this.melee = [0,0,0,0,0,0,0,0,0,0];
 	this.ranged = [[0,0],0,0,0,0,0,0,0];
 	this.spell = [0,0,0,0,0,0,0,0];
-	this.defense = [0,0,0,0,0];
+	this.defense = [0,0,0,0,0,0,0];
 	this.resistance = [0,0,0,0,0];
 	
 	this.health = 0;
@@ -849,6 +848,13 @@ Stats.prototype.calculate = function( preview, noBuffs  ) {
 	else {
 		this.dodge = baseEffects[49] + this.dodgeRating / COMBAT_RATINGS[2][level-1];
 	}	
+	this.resilienceRating = this.ratings[24] + 
+	Math.min(
+		this.ratings[14] + baseEffects[189][14],
+		this.ratings[15] + baseEffects[189][15],
+		this.ratings[16] + baseEffects[189][16]
+	);
+	this.resilienceDamageReduction = (1 - Math.pow( 0.99 , ( this.resilienceRating / COMBAT_RATINGS[15][level-1] )));
 	//
 	//#########################################################################
 	//
@@ -914,13 +920,9 @@ Stats.prototype.calculate = function( preview, noBuffs  ) {
 	this.defense[2] = this.parry;
 	
 	this.defense[3] = this.block;
-	this.defense[4] = 
-		this.ratings[24] + 
-		Math.min(
-			this.ratings[14] + baseEffects[189][14],
-			this.ratings[15] + baseEffects[189][15],
-			this.ratings[16] + baseEffects[189][16]
-		); //resilience
+	this.defense[4] = this.resilienceRating; //resilience
+	this.defense[5] = 5 + this.dodge + this.parry;
+	this.defense[6] = 5 + this.dodge + this.block + this.parry;
 	
 	this.resistance[0] = this.resisSchool[6];
 	this.resistance[1] = this.resisSchool[2];

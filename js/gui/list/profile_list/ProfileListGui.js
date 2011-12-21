@@ -1,11 +1,12 @@
 /**
  * @constructor
- * @returns {ProfileListGui}
+ * @param {Object} categories
  */
 function ProfileListGui( categories) {
 	ListGui.call(this, categories );
+	this.eventMgr.registerEvent('delete', ['profile_id', 'desc']);
 }
-ProfileListGui.prototype = new ListGui();
+ProfileListGui.prototype = new ListGui(null);
 ProfileListGui.prototype.newStaticFilter = function( filter ) {
 	var v = filter.variable;
 	if ( v == 'ismine' ) {
@@ -14,7 +15,7 @@ ProfileListGui.prototype.newStaticFilter = function( filter ) {
 };
 ProfileListGui.prototype.deserialize = function( data ) {
 	var i;
-	var a, span;
+	var a;
 	var grid;
 	var column = 0;
 	var cellStyle;
@@ -56,11 +57,12 @@ ProfileListGui.prototype.deserialize = function( data ) {
 		cellStyle = "pl_cell "+ ( i%2 == 0 ? "pl_cell_bg0" : "pl_cell_bg1");
 
 		
-		row = grid.addJoinedRow();
+		var row = grid.addJoinedRow();
+		var name = data[i][2] ? data[i][2] : "Profile #"+data[i][0];
 
 		grid.cells[row][0].className = cellStyle + " pl_inline_header";
 		
-		a = DOM.createAt( grid.cells[row][0], 'a', { 'href': '?profile='+data[i][0], 'class': 'pl_link', 'text': ( data[i][2] ? data[i][2] : "Profile #"+data[i][0] )} )
+		a = DOM.createAt( grid.cells[row][0], 'a', { 'href': '?profile='+data[i][0], 'class': 'pl_link', 'text': name } );
 		
 		if( data[i][3] ) {
 			a.onmouseout = function(){Tooltip.hide();};
@@ -69,7 +71,7 @@ ProfileListGui.prototype.deserialize = function( data ) {
 		}
 		grid.cells[row][0].appendChild(a);
 		
-		DOM.createAt( grid.cells[row][0] , 'span', {'class': 'pl_ih_info', 'text': "&nbsp;Created: "+data[i][7]+"&nbsp;"} )
+		DOM.createAt( grid.cells[row][0] , 'span', {'class': 'pl_ih_info', 'text': "&nbsp;Created: "+data[i][7]+"&nbsp;"} );
 		
 //			if( this.onclickHandler ) {
 //				a = document.createElement("a");
@@ -99,6 +101,13 @@ ProfileListGui.prototype.deserialize = function( data ) {
 		grid.cells[row][column++].innerHTML = "<div style='background-image:url(images/site/race_class/small/" + data[i][5] + ".png)' class='pl_icon' ></div>";
 		
 		grid.cells[row][column].className = cellStyle;
+		
+		if( g_settings.userId == data[i][1] ) {
+			var delLink = DOM.createAt( grid.cells[row][column], 'a', {'class': 'close pl_delete_link', 'href': 'javascript:;'} );
+			Listener.add(delLink, 'click', function(id, name){
+				this.eventMgr.fire('delete', {'profile_id': id, 'desc': name });
+			}, this, [data[i][0], name]);
+		}
 	}
 	this.setContent(grid.node);
 };

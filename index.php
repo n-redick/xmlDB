@@ -10,7 +10,7 @@
 	include_once './php/session.php';
 	include_once './php/language.php';
 	
-	$build_number = "8.2b"; $build = file_get_contents('.build');
+	$build_number = "9.0b"; $build = file_get_contents('.build');
 	
 	define("PAGE_HOME",0);
 	define("PAGE_PLANNER",1);
@@ -77,6 +77,9 @@ echo '
 		}
 	};
 </script>
+
+<script src="js/common/extern/md5.js" type="text/javascript"></script>
+<script src="js/common/extern/json2.js" type="text/javascript"></script>
 <?php 
 	$page = PAGE_HOME;
 	$show_ads = isset($_SESSION['donated']) && $_SESSION['donated'] ? false : true;
@@ -97,15 +100,18 @@ echo '
 /* ]]> */
 </script>";
 
-//if( isset($_GET['debug'])) {
+if( isset($_GET['debug'])) {
 	include 'php/js_files.php';
 	for( $i = 0; $i<count($js_files); $i++ ) {
 		echo "<script src='".$js_files[$i][0].$js_files[$i][1]."?".$build."' type='text/javascript'></script>\n"; 
 	}
-//}
-//else {
-//	echo "<script src='js/all_optimised.js?".$build."' type='text/javascript'></script>"; 
-//}
+//	for( $i = 0; $i<count($js_extern_files); $i++ ) {
+//		echo "<script src='".$js_extern_files[$i][0].$js_extern_files[$i][1]."?".$build."' type='text/javascript'></script>\n"; 
+//	}
+}
+else {
+	echo "<script src='js/all_optimised.js?".$build."' type='text/javascript'></script>"; 
+}
 	//
 	//	Content includes
 	//
@@ -241,7 +247,12 @@ echo '
 			</div>
 			<div class="ix_content_p">
 				<div class="ix_content_b">
-						<div class="ix_content" id="content">
+						<div class="ix_content" id="content">		
+	
+							<noscript>
+								<div class='ix_noscript'>JavaScript is Disabled!</div>
+							</noscript>
+						
 							<?php if(isset($g_content)) echo $g_content; ?>
 						</div>
 				</div> 
@@ -275,8 +286,9 @@ echo '
 				<a class="ix_bottom_link" href='?members'>Members</a>
 				<a class="ix_bottom_link" href='?credits'>Credits</a>
 				<a class="ix_bottom_link" href='?notice'>Site Notice</a>
+				<a class="ix_bottom_link" href='chardev7/?character'>Pre 4.0.1 chardev</a>
 			</div>
-			<div class="ix_copy">&copy; 2007-2011 chardev.org - Design and Code by Martin Wa&szlig;mann<?php if( isset($build_number) ) { echo " - Build: ".$build_number; } ?></div>
+			<div class="ix_copy">&copy; 2007-2011 chardev.org - Design and Code by Martin Wa&szlig;mann - Build:<?php echo $build_number; ?><span id='chardev_core_version'></span></div>
 			<div class="ix_disclaimer">World of Warcraft and Blizzard Entertainment are trademarks or registered trademarks of Blizzard Entertainment in the U.S. and/or other countries.</div>
 		</div>
 	</div>

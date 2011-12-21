@@ -1,6 +1,6 @@
 /**
  * @constructor
- * @param {String} event
+ * @param {string} event
  * @param {Object} keyValuePairs
  * @param {GenericSubject} subject
  * @param {GenericObserver} observer
@@ -18,7 +18,7 @@ GenericEvent.prototype = {
 	subject: null,
 	observer: null,
 	/**
-	 * @param {String} key
+	 * @param {string} key
 	 */
 	get: function( key ) {
 		if( ! this.__kvps.hasOwnProperty(key) ) {
@@ -30,13 +30,16 @@ GenericEvent.prototype = {
 	getArgs: function() {
 		return this.__kvps;
 	},
+	/**
+	 * @param {string} event
+	 */
 	is: function( event ) {
 		if( GenericEvent.DEBUG ) {
 			if( ! this.subject.isRegisteredEvent(event) ) {
-				throw new Error("The event "+event+" is not registered for the subject!")
+				throw new Error("The event "+event+" is not registered for the subject!");
 			}
 			if( ! this.observer.listensTo(event) ) {
-				throw new Error("The event "+event+" is not registered for the observer!")
+				throw new Error("The event "+event+" is not registered for the observer!");
 			}
 		}
 		return this.event === event;

@@ -2,7 +2,6 @@
  * @constructor
  * @param {Spell} spell
  * @param {Character} characterScope
- * @returns {SpellFacade}
  */
 function SpellFacade( spell, characterScope ) {
 	this.__spell = spell;
@@ -19,7 +18,7 @@ SpellFacade.prototype = {
 		return this.__spell.getDescription( this.__character );
 	},
 	getTooltip: function() {		
-		return SpellTooltip.getHTML(this.__spell, this.__character);
+		return SpellTooltip.getHTML(this.__spell, this.__character, 0, null);
 	},
 	getExtendedTooltip: function( type, args) {		
 		return SpellTooltip.getHTML(this.__spell, this.__character, type, args);

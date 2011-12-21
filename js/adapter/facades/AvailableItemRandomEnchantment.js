@@ -1,6 +1,6 @@
 /**
+ * @constructor
  * @param {ItemRandomEnchantment} randomEnchant
- * @returns {AvailableItemRandomEnchantment}
  */
 function AvailableItemRandomEnchantment( randomEnchant ) {
 	this.id = randomEnchant.id;

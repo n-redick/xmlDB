@@ -1,3 +1,6 @@
+/**
+ * @constructor
+ */
 function CharacterSheet() {
 	this.eventMgr = new GenericSubject();
 	this.eventMgr.registerEvent('race_select', ['race_id']);
@@ -11,8 +14,8 @@ function CharacterSheet() {
 	this.eventMgr.registerEvent('item_left_click', ['slot','index']);
 	this.eventMgr.registerEvent('item_tooltip_show', ['slot','index']);
 	this.eventMgr.registerEvent('item_tooltip_hide', ['slot','index']);
-	this.eventMgr.registerEvent('remove_buff', ['spell_id']);
-	this.eventMgr.registerEvent('add_buff_stack', ['spell_id']);
+	this.eventMgr.registerEvent('remove_buff', ['id']);
+	this.eventMgr.registerEvent('add_stack', ['id']);
 	this.eventMgr.registerEvent('select_shape', ['shape_id']);
 	this.eventMgr.registerEvent('select_presence', ['presence_id']);
 	//new CharacterSheetEventManager(); 
@@ -24,6 +27,8 @@ function CharacterSheet() {
 	this.presenceSelector = new PresenceSelector();
 	this.presenceSelector.addPopagator('select_presence', this.eventMgr);
 	this.buffBar = new BuffBar();
+	this.buffBar.eventMgr.addPropagator('remove_buff', this.eventMgr);
+	this.buffBar.eventMgr.addPropagator('add_stack', this.eventMgr);
 	//
 	//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 	//
@@ -332,7 +337,11 @@ CharacterSheet.prototype = {
 		this.slots[slot].hideTooltip(index);
 	}
 };
-
+/**
+ * @constructor
+ * @param {number} id
+ * @param {number} level
+ */
 function SkilledPrimaryProfession( id, level ) {
 	this.id = id;
 	this.level = level;

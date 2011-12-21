@@ -4,6 +4,7 @@
 <script type="text/javascript">
 	var g_serialized = null;
 	var g_argString = "";
+	var g_page = 0;
 </script>
 
 <?php
@@ -37,63 +38,17 @@ if( isset($_GET['items']) && $_GET['items'] ) {
 ?>
 
 <script type="text/javascript">
-	var g_item = null;
-	var tt = new TooltipImpl();
 	function g_onLoad() {
 	
-		if( g_serialized ) {
-		
-			var il = new ItemList();
-			
-			il.showStaticLinks(true);
-			
-			il.setData( g_serialized );
-			
-			if( g_argString ) {
-			
-				il.set(g_argString, "", "", g_page);
-				
-				il.gui.showFilter( true );
-			}
-			
-			document.getElementById('list_parent').appendChild(il.gui.node);
-			
-			var ilHandler = new Handler(function( e ){
-				if( e.is('show_tooltip') ) {
-					g_showItemTooltip( e.get('entity').id );
-				}
-				else if( e.is('move_tooltip') ) {
-					g_moveTooltip();
-				}
-				else if( e.is('hide_tooltip') ) {
-					g_hideTooltip();
-				}
-				else if( e.is('update') ) {
-					window.location.search = TextIO.queryString({ 
-						'items': il.getArgumentString().replace(/\;/g,"_"), 
-						'p': il.page, 
-						'o': il.order+"."+(il.orderDirection==List.ORDER_ASC?'asc':'desc')+"_" });
-				}
-			}, this);
-			
-			var ilObserver = new GenericObserver([
-				'show_tooltip',
-				'move_tooltip',
-				'hide_tooltip',
-				'update',
-			], ilHandler);
-			
-			il.addObserver(ilObserver);
-		}
-		
-		DOM.get('dbi_search').focus();
+		g_staticItemList(g_serialized, g_page, g_argString, 'list_parent');
+		document.getElementById('dbi_search').focus();
 	}
 </script>
 
 <?php
 
 $search_form = "
-		<form onsubmit='document.getElementById(\"dbi_submit\").value = \"name.wlike.\" + Tools.removeDots(document.getElementById(\"dbi_search\").value) + \"_\";' action='?' method='GET'>
+		<form onsubmit='document.getElementById(\"dbi_submit\").value = \"name.wlike.\" + g_removeDots(document.getElementById(\"dbi_search\").value) + \"_\";' action='?' method='GET'>
 			<input class='input" .( $il_show ? "" : " dbi_search_input_large" ) . "' id='dbi_search' />
 			<input type='hidden' name='items' id='dbi_submit' />
 		</form>";

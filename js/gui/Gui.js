@@ -1,3 +1,6 @@
+/**
+ * @constructor
+ */
 function Gui() {
 	this.characterSheet = new CharacterSheet();
 	
@@ -117,7 +120,6 @@ Gui.TAB_OVERVIEW = 2;
 Gui.TAB_SAVE = 4;
 
 Gui.prototype = {
-	characterSheetProxy: null,
 	characterSheet: null,
 	eventMgr: null,
 	folder: null,
@@ -145,12 +147,6 @@ Gui.prototype = {
 		});
 	},
 	__onUpdate: function(){},
-	/**
-	 * @param {CharacterProxy} characterProxy
-	 */
-	setCharacterProxy: function(characterProxy) {
-		this.characterSheetProxy.setCharacterProxy(characterProxy);
-	},
 	/**
 	 * @param {ItemListGui} itemListGui
 	 */

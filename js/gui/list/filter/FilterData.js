@@ -1,6 +1,7 @@
 /**
  * @constructor
- * @param variable
+ * @param {string} name
+ * @param {string} variable
  * returns {FilterData}
  */
 function FilterData( name, variable ) {
@@ -22,8 +23,9 @@ FilterData.prototype = {
 
 /**
  * @constructor
- * @param variable
- * returns {InputFilterData}
+ * @param {string} name
+ * @param {string} variable
+ * @param {number} expectedValueType
  */
 function InputFilterData( name, variable, expectedValueType ) {
 	FilterData.call( this, name, variable );
@@ -32,9 +34,11 @@ function InputFilterData( name, variable, expectedValueType ) {
 InputFilterData.TYPE_NUMERIC = 0;
 InputFilterData.TYPE_NUMERIC_EUQAL = 1;
 InputFilterData.TYPE_STRING_SIMPLE = 2;
-InputFilterData.prototype = new FilterData();
+InputFilterData.prototype = new FilterData("","");
 InputFilterData.prototype.expectedValueType = InputFilterData.TYPE_NUMERIC;
 /**
+ * @param {string} operator
+ * @param {string} value
  * @returns {AbstractFilter}
  */
 InputFilterData.prototype.getFilter = function( operator, value ) {
@@ -42,14 +46,16 @@ InputFilterData.prototype.getFilter = function( operator, value ) {
 };
 /**
  * @constructor
- * @param variable
- * returns {RangeInputFilterData}
+ * @param {string} name
+ * @param {string} variable
  */
 function RangeInputFilterData( name, variable ) {
 	FilterData.call( this, name, variable );
 } 
-RangeInputFilterData.prototype = new FilterData();
+RangeInputFilterData.prototype = new FilterData("","");
 /**
+ * @param {string} operator
+ * @param {string} value
  * @returns {AbstractFilter}
  */
 RangeInputFilterData.prototype.getFilter = function( operator, value ) {
@@ -57,17 +63,19 @@ RangeInputFilterData.prototype.getFilter = function( operator, value ) {
 };
 /**
  * @constructor
- * @param variable
- * @param options
- * @returns {SingleSelectFilterData}
+ * @param {string} name
+ * @param {string} variable
+ * @param {Object} options
  */
 function SingleSelectFilterData( name, variable, options ) {
 	FilterData.call( this, name, variable );
 	this.options = options;
 }
-SingleSelectFilterData.prototype = new FilterData();
+SingleSelectFilterData.prototype = new FilterData("","");
 SingleSelectFilterData.prototype.options = null;
 /**
+ * @param {string} operator
+ * @param {string} value
  * @returns {AbstractFilter}
  */
 SingleSelectFilterData.prototype.getFilter = function( operator, value ) {
@@ -75,17 +83,19 @@ SingleSelectFilterData.prototype.getFilter = function( operator, value ) {
 };
 /**
  * @constructor
- * @param variable
- * @param options
- * @returns {MultiSelectFilterData}
+ * @param {string} name
+ * @param {string} variable
+ * @param {Object} options
  */
 function MultiSelectFilterData( name, variable, options ) {
 	FilterData.call( this, name, variable );
 	this.options = options;
 }
-MultiSelectFilterData.prototype = new FilterData();
+MultiSelectFilterData.prototype = new FilterData("","");
 MultiSelectFilterData.prototype.options = null;
 /**
+ * @param {string} operator
+ * @param {string} value
  * @returns {AbstractFilter}
  */
 MultiSelectFilterData.prototype.getFilter = function( operator, value ) {

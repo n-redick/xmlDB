@@ -1,6 +1,5 @@
 /**
  * @constructor
- * @returns {CharacterManager}
  */
 function CharacterManager( ) {
 	this.characters = [];
@@ -30,7 +29,7 @@ CharacterManager.prototype = {
 			
 			if( k == this.cursor ) {
 				if( this.characters.length == 0 ) {
-					this.cursor == -1;
+					this.cursor = -1;
 				}
 				else {
 					if( this.cursor > 0 ) {

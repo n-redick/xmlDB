@@ -4,7 +4,6 @@
  * @param {string} icon
  * @param {Character} character
  * @param {Spell} spell
- * @returns {AvailableBuff}
  */
 function AvailableBuff( name, icon,  spell, character ) {
 	this.spell = new SpellFacade(spell, character);

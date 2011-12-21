@@ -1,12 +1,7 @@
 /**
- * @author LeMartin
- */
-
-/**
  * @constructor
  * @param {CharacterSheet} characterSheet
  * @param {number} slot
- * @returns {ItemSlot}
  */
 function ItemSlot( characterSheet, slot)
 {
@@ -58,7 +53,7 @@ function ItemSlot( characterSheet, slot)
 		
 		this.historyItems[i].layers[2].className = 'cs_is_hi_event_p';
 		
-		a = DOM.createAt( this.historyItems[i].layers[2], 'a', {'class': 'cs_is_hi_event', 'href':'javascript:'} )
+		var a = DOM.createAt( this.historyItems[i].layers[2], 'a', {'class': 'cs_is_hi_event', 'href':'javascript:'} )
 		a.oncontextmenu = function(){return false;};
 		
 		Listener.add( a, 'mouseover', this.showTooltip, this, [i+1] );
@@ -78,7 +73,6 @@ ItemSlot.prototype = {
 	characterSheet: null,
 	items: [], itemParent: null, historyItems: [], historyItemsParent: [],
 	/**
-	 * @param {number} slot
 	 * @param {number} index
 	 */
 	showTooltip: function( index ) {

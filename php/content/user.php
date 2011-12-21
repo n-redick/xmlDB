@@ -7,6 +7,8 @@
 	
 	$g_ui_user_data = null;
 	$g_show_profiles = false;
+	$g_avatar_pickable = false;
+	$g_current_avatar = "";
 	
 	if( isset($_GET["user"]) ) {
 	
@@ -25,34 +27,33 @@
 
 	function show_user_info( $user_id, $category ) {
 	
-		$result = mysql_query("SELECT * FROM chardev.`user` WHERE `userID` = ".(int) $user_id);
 		
-		if( ! $result ) {
-			return "<div class='ui_user_not_found'>User not found!</div>";
-		}
-		else {
-			
+		try { 
+			$user = new user_data($user_id);
 			$query = "?user=".$user_id;
-			
-			$user = mysql_fetch_assoc($result);
 			
 			$categories["User Information"] = "";
 			$categories["Profiles"] = "profiles";
 			
 			if( is_user_you( $user )) {
 				$categories["Account Deletion"] = "deletion";
+				$GLOBALS["g_avatar_pickable"] = true;
+				$GLOBALS["g_current_avatar"] = $user->get_avatar();
 			}
 			
 			$content = "
 <div class='ui_wrapper'>
-	<div class='ui_left'>".show_avatar($user)."
+	<div class='ui_left'><div class='ui_avatar_p' id='ui_avatar_parent'>".show_avatar($user)."</div>
 		<div class='ui_categories'>
 		".show_category_links( $category, $categories, "", $query, "category")."
 		</div>
 	</div>
 	<div class='ui_right'>
-		<div class='ui_name'>".$user['name']."</div>
-		<div class='ui_role'>".($user['role'] == 10 ? "Admin" : "User")."</div>
+		<div class='ui_name'>".$user->get_name()."</div>
+		<div class='ui_role'>".(
+			$user->is_admin() ? 
+				"Admin" : (
+					$user->has_donated() ? "Donor" : "User"))."</div>
 		".show_category( $category, $user )."
 	</div>
 	<div style='clear: both'></div>
@@ -61,13 +62,16 @@
 			
 			return $content;
 		}
+		catch( Exception $e ) {
+			return "<div class='ui_user_not_found'>User not found!</div>";
+		}
 	}
 	
-	function show_avatar( $user ) {
+	function show_avatar( user_data $user ) {
 
 		$ret_value = "";
-		if( $user['avatar'] /*&& file_exists('images/icons/large/'.$user['avatar'].'.png')*/ ) {
-			$ret_value = "<div class='ui_avatar_p'><img class='ui_avatar_img' src='images/icons/large/".$user['avatar'].".png'' /></div>";
+		if( $user->get_avatar() /*&& file_exists('images/icons/large/'.$user['avatar'].'.png')*/ ) {
+			$ret_value = "<img class='ui_avatar_img' src='images/icons/large/".$user->get_avatar().".png'' />";
 		}
 		return $ret_value;
 	}
@@ -93,7 +97,7 @@
 		return $ret_value;
 	}
 	
-	function show_category( $category, $user ) {
+	function show_category( $category, user_data $user ) {
 		switch( $category ) {
 			case "profiles": 
 				return show_profiles( $user );
@@ -104,11 +108,11 @@
 		}
 	}
 	
-	function show_profiles( $user ) {
+	function show_profiles( user_data $user ) {
 		$GLOBALS["g_show_profiles"] = true;
 		return "<div id='ui_profiles_parent' class='ui_profiles_p'><div class='loading'>Loading...</div></div>";;
 	}
-	function show_deletion( $user ) {
+	function show_deletion( user_data $user ) {
 	
 		
 		if( isset($_GET['action']) && $_GET['action'] === 'delete_me' && isset($_POST['confirm']) ) {
@@ -127,7 +131,7 @@
 		</div>
 		<div class='ui_da_zb'>Enough with the questions.</div>
 		<div class='ui_da_btn_p'>
-			<form method='POST' action='?user=".$user['userID']."&category=deletion&action=delete_me'>
+			<form method='POST' action='?user=".$user->get_id()."&category=deletion&action=delete_me'>
 				<input 
 					type='submit' 
 					class='button button_light ui_da_btn'
@@ -151,7 +155,7 @@
 			</div>
 		</div>
 		<div class='ui_da_btn_p'>
-			<form method='POST' action='?user=".$user['userID']."&category=deletion&action=delete_me'>
+			<form method='POST' action='?user=".$user->get_id()."&category=deletion&action=delete_me'>
 				<input 
 					type='submit' 
 					class='button button_light ui_da_btn'
@@ -168,26 +172,22 @@
 		";
 		return $html;
 	}
-	function show_default( $user ) {
-	
-		$record = mysql_fetch_assoc(mysql_query( "SELECT * FROM chardev_user.`user_data` WHERE `UserID`=".(int)$user['userID'] ));
+	function show_default( user_data $user ) {
 	
 		$is_you = false;
 		if( is_user_you( $user )) {
 			$is_you = true;
 		}
 		
-		$ud = new user_data((int)$user['userID']);
-		
 		$GLOBALS['g_ui_user_data'] = array(
 			"ForumSignature" => array(
 				"label" => "Forum Signature", 
-				"data" => $record['ForumSignature'],
+				"data" => $user->get_forum_signature(),
 				"editable" => "input"
 			),
 			"Region" => array(
 				"label" => "Region", 
-				"data" => $record['Region'],
+				"data" => $user->get_region(),
 				"editable" => "select",
 				"options" => array(
 					"us"=>"United States",
@@ -199,7 +199,7 @@
 			),
 			"Language" => array(
 				"label" => "Preferred Language", 
-				"data" => $record['Language'],
+				"data" => $user->get_language(),
 				"editable" => "select",
 				"options" => array(
 					0=>"English",
@@ -216,7 +216,7 @@
 			$GLOBALS['g_ui_user_data']["BattleNetProfiles"] = array(
 				"label" => "Battle.net Profiles",
 				"editable" => "battlenetprofilemanager",
-				"data" => $ud->get_battlenet_profiles(),
+				"data" => $user->get_battlenet_profiles(),
 				"realms" => get_realm_lists()
 			);
 		}
@@ -224,12 +224,10 @@
 		return "<div id='user_information_parent'><div class='loading'>Loading...</div></div>";
 	}
 	
-	function is_user_you ( $user ) {
-		return isset($_SESSION['user_id']) && $user['userID'] == $_SESSION['user_id'];
+	function is_user_you ( user_data $user ) {
+		return isset($_SESSION['user_id']) && $user->get_id() == $_SESSION['user_id'];
 	}
 ?>
-<script type="text/javascript" src="js/gui/static/UserInformation.js"></script>
-<script type="text/javascript" src="js/adapter/static/ProfilesAdapter.js"></script>
 <script type="text/javascript">
 	var g_ui_user_data = null;
 	var g_ui_user_id;
@@ -241,21 +239,16 @@
 	g_ui_user_data = ".json_encode($GLOBALS['g_ui_user_data'] ).";
 	g_ui_user_id = ".(int)$user_id.";
 	g_ui_show_profiles = ".json_encode($g_show_profiles).";
+	g_avatar_pickable = ".json_encode($g_avatar_pickable).";
+	g_current_avatar = ".json_encode($g_current_avatar)."
 </script>"; 
 ?>
 
 <script type="text/javascript">
 	function g_onLoad() {
-		if( g_ui_user_data ) {
-			new UserInformationImpl( g_ui_user_id, g_ui_user_data, 'user_information_parent' );
-		}
-		else if( g_ui_show_profiles ) {
-			var pa = new ProfilesAdapter();
-			pa.profileList.gui.showFilter(false);
-			pa.profileList.filterMgr.hideFilter('ismine', true);
-			pa.profileList.set("ismine.eq.1;", null, null, 1);
-			pa.profileList.update();
-			DOM.set('ui_profiles_parent',  pa.getNode())
+		g_showUserInformation(g_ui_user_id,g_ui_user_data,g_ui_show_profiles);
+		if( g_avatar_pickable ) {
+			g_createAvatarPicker('ui_avatar_parent',g_current_avatar);
 		}
 	}
 </script> 

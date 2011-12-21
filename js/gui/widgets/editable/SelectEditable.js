@@ -1,9 +1,13 @@
+/**
+ * @constructor
+ * @param {Object} options
+ */
 function SelectEditable( options ) {
 	Editable.call(this);
 	
 	this.options = options;
 	
-	this.div = DOM.create("div");
+	this.div = DOM.create("div", {});
 	
 	this.select = SingleSelect.fromObject(options);
 	this.select.node.className += ' single_select_focussable';
@@ -26,7 +30,7 @@ SelectEditable.prototype.setData = function(data) {
 	this.select.setValue(data);
 	this.disabled = false;
 	
-	v = this.options[data];
+	var v = this.options[data];
 	
 	this.div.innerHTML = v ? v : "<span class='ui_data_nothing'>None</span>";
 	DOM.set(this.node, this.div);

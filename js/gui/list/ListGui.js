@@ -1,5 +1,6 @@
 /**
- * @returns {ListGui}
+ * @constructor
+ * @param {Object} categories
  */
 function ListGui( categories ) {
 	
@@ -170,7 +171,7 @@ ListGui.prototype = {
 	},
 	setStaticFilter: function( staticFilter ) {
 		if( staticFilter ) {
-			for( k in staticFilter ) {
+			for( var k in staticFilter ) {
 				this.staticFilter[staticFilter[k]] = true;
 			}
 		}
@@ -300,7 +301,6 @@ ListGui.prototype = {
 /**
  * @constructor
  * @param {ListGui} parentGui
- * @returns {CustomFilter}
  */
 function CustomFilter( parentGui ){
 	this.parentGui = parentGui;
@@ -341,7 +341,11 @@ function CustomFilter( parentGui ){
 }
 
 CustomFilter.prototype = {
-	node: null, select: null, filterParent: null, filter: null,
+	node: null, 
+	select: null, 
+	filterParent: null, 
+	/** @type {AbstractFilter} **/
+	filter: null,
 	parentGui: null,
 	onChange: function() {
 		var i = this.select.selectedIndex; 

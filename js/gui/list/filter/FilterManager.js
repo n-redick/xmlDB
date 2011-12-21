@@ -1,3 +1,6 @@
+/**
+ * @constructor
+ */
 function FilterManager() {
 	this.eventMgr = new GenericSubject();
 	this.eventMgr.registerEvent("set_argument_string", []);
@@ -34,7 +37,7 @@ FilterManager.prototype = {
 		
 		this.data = data; 
 		
-		for( k in staticVariables ) {
+		for( var k in staticVariables ) {
 			this.staticVariables[staticVariables[k]] = true;
 		}
 		

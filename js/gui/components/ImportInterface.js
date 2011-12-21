@@ -1,3 +1,7 @@
+/**
+ * @constructor
+ * @param {Handler} onImportHandler
+ */
 function ImportInterface( onImportHandler ) {
 	var div, form, a;
 	this.onImportHandler = onImportHandler;
@@ -75,7 +79,7 @@ function ImportInterface( onImportHandler ) {
 			
 			DOM.createAt(a,'span', {'text': ", " + profile['Level'] + " " + locale['CharacterRace'][profile['CharacterRaceID']] + " "});
 			
-			span = DOM.createAt(a,'span', {
+			var span = DOM.createAt(a,'span', {
 				'class': 'character_class_'+profile['CharacterClassID']+' bnpm_chrclass',
 				'text': locale['CharacterClass'][profile['CharacterClassID']]
 			});

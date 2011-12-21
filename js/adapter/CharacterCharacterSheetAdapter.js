@@ -5,7 +5,7 @@
  */
 function CharacterCharacterSheetAdapater( character, sheet ) {
 	
-	character.addObserver( new GenericObserver([
+	this.characterObserver = new GenericObserver([
 		'class_change','race_change','level_change',
 		'item_change','profession_change','profession_level_change',
 		'character_loaded','stats_change','preview_stats_change',
@@ -50,13 +50,16 @@ function CharacterCharacterSheetAdapater( character, sheet ) {
 		else {
 			throw new Error("Unhandled event: "+e.event);
 		}
-	}, this)));
+	}, this));
+	character.addObserver(this.characterObserver);
 	
-	sheet.addObserver( new GenericObserver([
+	
+	this.sheetObserver = new GenericObserver([
 		'race_select','class_select','level_select','profession_select',
 		'profession_level_select','stat_tooltip_show','stat_tooltip_hide',
 		'item_left_click','item_right_click','item_tooltip_show',
-		'item_tooltip_hide', 'select_shape', 'select_presence'
+		'item_tooltip_hide', 'select_shape', 'select_presence', 'remove_buff', 
+		'add_stack'
 	], new Handler( function( e ) {
 		if( e.is('race_select')) {
 			DatabaseIO.getCharacterRace( 
@@ -137,13 +140,7 @@ function CharacterCharacterSheetAdapater( character, sheet ) {
 		else if( e.is('select_presence')) {
 			this.character.setPresence(e.get('presence_id'));
 		}
-		else {
-			throw new Error("Unhandled event: "+e.event);
-		}
-	}, this)));
-	
-	sheet.buffBar.eventMgr.addObserver(new GenericObserver(['remove_buff', 'add_stack'], new Handler( function(e) {
-		if( e.is('remove_buff') ) {
+		else if( e.is('remove_buff') ) {
 			character.removeBuff(e.get('id'));
 		}
 		else if( e.is('add_stack') ) {
@@ -152,7 +149,8 @@ function CharacterCharacterSheetAdapater( character, sheet ) {
 		else {
 			throw new Error("Unhandled event: "+e.event);
 		}
-	}, this)));
+	}, this));
+	sheet.addObserver(this.sheetObserver);
 	
 	this.sheet = sheet;
 	this.character = character;
@@ -162,6 +160,7 @@ function CharacterCharacterSheetAdapater( character, sheet ) {
 
 CharacterCharacterSheetAdapater.prototype = {
 	sheet: null, character: null,
+	sheetObserver: null, characterObserver: null,
 	//
 	//#########################################################################
 	//
@@ -196,8 +195,8 @@ CharacterCharacterSheetAdapater.prototype = {
 	//#########################################################################
 	//
 	detach: function() {
-		this.character.removeObserver( this );
-		this.sheet.removeObserver( this );
+		this.character.removeObserver( this.characterObserver );
+		this.sheet.removeObserver( this.sheetObserver );
 	},
 	init: function() {
 		this.updateProfessions();
@@ -208,7 +207,7 @@ CharacterCharacterSheetAdapater.prototype = {
 		this.updateLevel();
 		this.updateBuffs();
 	},
-	updateClass: function( newClass ) {
+	updateClass: function() {
 		this.sheet.showStatGroups(this.character.chrClass == null ? - 1 : this.character.chrClass.id);
 		this.sheet.updateLevelSelector( this.character.getMinLevel(), Character.MAX_LEVEL);
 
@@ -222,7 +221,7 @@ CharacterCharacterSheetAdapater.prototype = {
 		this.updatePresenceSelector();
 		this.updateRaceClassSelector();
 		this.updateEquipment();
-		this.updateLevel(this.character.level);
+		this.updateLevel();
 	},
 	updateShapeSelector: function() {
 		if( this.character.chrClass != null ) {
@@ -261,10 +260,10 @@ CharacterCharacterSheetAdapater.prototype = {
 			this.sheet.presenceSelector.update( null, 0);
 		}
 	},
-	updateRace: function( newRace ) {
+	updateRace: function() {
 		this.updateRaceClassSelector();
 	},
-	updateLevel: function( level ) {
+	updateLevel: function() {
 		this.sheet.updateLevel(this.character.level);
 		this.updateEquipment();
 	},

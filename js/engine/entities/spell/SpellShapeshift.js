@@ -1,7 +1,6 @@
 /**
  * @constructor
  * @param {Array} serialized
- * @returns {SpellShapeshift}
  */
 function SpellShapeshift ( serialized ) {
 	this.f2 = serialized[0];

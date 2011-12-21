@@ -1,6 +1,5 @@
 /**
  * @constructor
- * @returns {BuffBar}
  */
 function BuffBar () {
 	this.node = DOM.create('div', {'class': 'bb_p'});
@@ -23,7 +22,7 @@ BuffBar.prototype = {
 		}
 	},
 	/**
-	 * @param {ActiveBuff} b
+	 * @param {ActiveBuff} activeBuff
 	 */
 	__showBuff : function( activeBuff ) {
 		var d = DOM.createAt( this.node, 'div', {'class': 'bb_buff', 'backgroundImage': 'images/icons/small/'+activeBuff.icon+'.png'});

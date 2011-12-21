@@ -2,7 +2,6 @@
  * @constructor
  * @param {Object} map
  * @param {Element} parent
- * @returns {FilterableCollection}
  */
 function FilterableCollection( map, parent ) {
 	this.map = {};

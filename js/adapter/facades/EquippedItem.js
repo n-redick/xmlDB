@@ -1,9 +1,8 @@
-
 /**
  * @constructor
  * @param {Character} character
  * @param {Item} itm
- * @returns {EquippedItem}
+ * @param {number} slot
  */
 function EquippedItem ( character, itm, slot ) {
 	this.id=itm.id,

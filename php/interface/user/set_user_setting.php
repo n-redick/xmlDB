@@ -21,6 +21,9 @@
 		else if( isset($_GET['Region']) ) {
 			echo json_encode($ud->set_region($_GET['Region']));
 		}
+		else if( isset($_GET['Avatar']) ) {
+			echo json_encode($ud->set_avatar($_GET['Avatar']));
+		}
 		else if( isset($_GET['Language']) ) {
 			echo json_encode($ud->set_language($_GET['Language']));
 		}

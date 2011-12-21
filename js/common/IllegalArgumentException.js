@@ -1,3 +1,6 @@
+/**
+ * @constructor
+ */
 function IllegalArgumentException() {
 	Error.call(this);
 }

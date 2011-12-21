@@ -1,8 +1,9 @@
 /**
  * @constructor
- * @returns {ItemRandomEnchantment}
  */
-function ItemRandomEnchantment() {/**/}
+function ItemRandomEnchantment() {
+	/* do nothing */
+}
 
 ItemRandomEnchantment.prototype = {
 	id : 0,

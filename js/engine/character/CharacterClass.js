@@ -11,7 +11,7 @@ function CharacterClass( serialized ) {
 	//
 	var i,j=0;
 	this.serialized = serialized;
-	this.stats = new Array();
+	this.stats = [];
 	this.level = -1; 
 	this.shapes = null;
 	this.glyphs = [[null,null,null],[null,null,null],[null,null,null]];
@@ -57,18 +57,26 @@ function CharacterClass( serialized ) {
 	this.conditionalBuffs = serialized[8];
 }
 CharacterClass.prototype = {
+	/** @type{GenericSubject} **/
 	eventMgr : null,
+	/** @type{number} **/
 	id: 0,
+	/** @type{string} **/
 	name: "",
+	/** @type{number} **/
 	level: 0,
+	/** @type{number} **/
 	shapeform: 0,
+	/** @type{Shapeform} **/
 	shape: null,
 	shapes: null,
 	shapesRef: null,
+	/** @type{Array} **/
 	glyphs: null,
 	availableGlyphs: null,
 	availableGlyphSlots: 0,
 	talents: null,
+	/** @type{Buff} **/
 	presence: null,
 	presences: null,
 	classSpells: null,

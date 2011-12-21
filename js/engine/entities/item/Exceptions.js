@@ -1,4 +1,5 @@
 /**
+ * @constructor
  * @param {Item} itm
  * @param {number} red
  * @param {number} add
@@ -16,7 +17,7 @@ InvalidReforgeException.prototype = {
 	add: -1,
 	red: -1,
 	toString: function() {
-		return "Unable to reforge "+itm+", reducing "+this.red+" and adding "+this.add+( this.cause ? "!\n Cause:" + this.cause.toString() : ""); 
+		return "Unable to reforge "+this.itm+", reducing "+this.red+" and adding "+this.add+( this.cause ? "!\n Cause:" + this.cause.toString() : ""); 
 	}
 };
 InvalidReforgeException.CAUSE_NO_REDUCE_STATS = 0;
@@ -59,7 +60,7 @@ InvalidItemException.CAUSE_UNIQUE = 3;
 /**
  * @constructor
  * @param {Item} gem
- * @param {number} itm
+ * @param {Item} itm
  * @param {number} cause
  */
 function InvalidGemException( gem, itm, cause ) {

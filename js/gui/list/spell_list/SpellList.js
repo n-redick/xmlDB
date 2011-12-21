@@ -1,3 +1,6 @@
+/**
+ * @constructor
+ */
 function SpellList() {
 	List.call( 
 		this,
@@ -46,4 +49,4 @@ SpellList.ENCHANT_LIST = 0;
 SpellList.BUFF_LIST = 1;
 SpellList.SPELL_LIST = 2;
 
-SpellList.prototype = new List;
+SpellList.prototype = new List(null,null,null,"");

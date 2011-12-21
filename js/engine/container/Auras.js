@@ -260,15 +260,15 @@ Auras.prototype = {
 		//
 		if ( sp.equippedItems != null && sp.equippedItems.classId != -1) 
 		{
-			if ( sp.equippedItems.classId == this.mainHandItemClass[0] &&  sp.equippedItems.itemSubClassMask & 1<<this.mainHandItemClass[1]) 
+			if ( sp.equippedItems.classId == this.mainHandItemClass[0] &&  sp.equippedItems.subClassMask & 1<<this.mainHandItemClass[1]) 
 			{
 				this.__addEffects(sp,this.effects[1],stacks,isBuff,selfBuff);
 			}
-			if ( sp.equippedItems.classId == this.offHandItemClass[0] &&  sp.equippedItems.itemSubClassMask & 1<<this.offHandItemClass[1]) 
+			if ( sp.equippedItems.classId == this.offHandItemClass[0] &&  sp.equippedItems.subClassMask & 1<<this.offHandItemClass[1]) 
 			{
 				this.__addEffects(sp,this.effects[2],stacks,isBuff,selfBuff);
 			}
-			if ( sp.equippedItems.classId == this.rangedItemClass[0] &&  sp.equippedItems.itemSubClassMask & 1<<this.rangedItemClass[1]) 
+			if ( sp.equippedItems.classId == this.rangedItemClass[0] &&  sp.equippedItems.subClassMask & 1<<this.rangedItemClass[1]) 
 			{
 				this.__addEffects(sp,this.effects[3],stacks,isBuff,selfBuff);
 			}	

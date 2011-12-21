@@ -1,3 +1,9 @@
+/**
+ * @constructor
+ * @param {string}name
+ * @param {string} variable
+ * @param {string} value
+ */
 function RangeInputFilter( name, variable, value ) {
 	AbstractFilter.call( this, name, variable );
 
@@ -26,7 +32,7 @@ function RangeInputFilter( name, variable, value ) {
 	this.node.className = "fi_p";
 }
 
-RangeInputFilter.prototype = new AbstractFilter();
+RangeInputFilter.prototype = new AbstractFilter("","");
 RangeInputFilter.prototype.operatorSelect = null;
 RangeInputFilter.prototype.inputMin = null;
 RangeInputFilter.prototype.inputMax = null;

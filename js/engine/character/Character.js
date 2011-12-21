@@ -115,29 +115,43 @@ function Character() {
 Character.MAX_LEVEL = 85;
 
 Character.prototype = {
+	/** @type{GenericSubject} **/
 	eventMgr: null,
+	/** @type{GenericObserver} **/
 	talentObserver: null,
+	/** @type{GenericObserver} **/
 	classObserver: null,
+	/** @type{CharacterRace} **/
 	chrRace: null,
+	/** @type{CharacterClass} **/
 	chrClass: null,
+	/** @type{number} **/
 	level: Character.MAX_LEVEL,
+	/** @type{Inventory} **/
 	inventory: null,
+	/** @type{Buffs} **/
 	buffs: null,
+	/** @type{Object} **/
 	primaryProfessions: null,
+	/** @type{Stats} **/
 	stats: null,
+	/** @type{Stats} **/
 	previewStats: null,
+	/** @type{Auras} **/
 	auras: null,
+	/** @type{string} **/
 	description: "",
+	/** @type{string} **/
 	name: "",
 	__lastSaved: null,
 	/**
-	 * @param {CharacterObserver} observer
+	 * @param {GenericObserver} observer
 	 */
 	addObserver: function( observer ) {
 		this.eventMgr.addObserver(observer);
 	},
 	/**
-	 * @param {CharacterObserver} observer
+	 * @param {GenericObserver} observer
 	 */
 	removeObserver: function( observer ) {
 		this.eventMgr.removeObserver(observer);
@@ -250,7 +264,7 @@ Character.prototype = {
 	//
 	/**
 	 * @param {Item} itm
-	 * @returns {Boolean}
+	 * @returns {boolean}
 	 */
 	canWear: function( itm ) {
 		if( itm.itemClass == 4 ) {
@@ -789,6 +803,120 @@ Character.prototype = {
 		this.chrClass.setPresence(presence);
 		//
 		return s;
+	},
+	toBattleNetProfile: function() {
+		var i, j, enchant, itemsObj = { 'averageItemLevel': 0, 'averageItemLevelEquipped': 0 },
+		slot, ttParamsObj, itm, talentObj,
+		talents = this.chrClass != null ? this.chrClass.talents : null, glyph,
+		glyphs = [[],[],[]], primaryProfessions= [];
+	
+		for( i=0; i<INV_ITEMS; i++ ) {
+			itm = this.inventory.items[i][0];
+			if( itm == null ) {
+				continue;
+			}
+			
+			slot = SLOT_TO_NAME[i]; 
+			
+			
+			ttParamsObj= {};
+			
+			for( j=0; j<itm.enchants.length; j++ ) {
+				enchant = itm.enchants[j];
+				if( enchant.types[0] == 7 ) {
+					ttParamsObj['tinker'] = enchant.id;
+				}
+				else {
+					ttParamsObj['enchant'] = enchant.id;
+				}
+			}
+			
+			for( j=0; j<3; j++ ) {
+				if( itm.gems[j] ) {
+	        		ttParamsObj['gem'+j] = itm.gems[j].id;
+	        	}
+			}
+			
+			if( itm.hasAdditionalSocket() ) {
+				ttParamsObj['extraSocket'] = true;
+			}
+			
+			if( itm.reducedStat != -1 && itm.addedStat != -1 ) {
+				ttParamsObj['reforge'] = STAT_TO_REFORGABLE_STAT[itm.reducedStat] * 7 + 
+					113 + STAT_TO_REFORGABLE_STAT[itm.addedStat] - ( itm.addedStat > itm.reducedStat ? 1 : 0 )
+				;
+			}
+			
+			if( itm.selectedRandomEnchantment ) {
+				ttParamsObj['suffix'] = itm.selectedRandomEnchantment.id;
+			}
+			
+			itemsObj[slot] = {
+				'icon': itm.icon,
+				'id':itm.id,
+				'name':itm.name,
+				'quality': itm.quality,
+				'tooltipParams': ttParamsObj
+			};
+		}
+		
+	
+		if( this.chrClass ) {
+			
+			for( i=0; i<this.chrClass.glyphs.length; i++ ) {
+				for( j=0; j<this.chrClass.glyphs[i].length; j++ ) {
+					glyph = this.chrClass.glyphs[i][j];
+					if( glyph ) {
+						glyphs[i].push({
+							'glyph': glyph.id,
+							'item': glyph.itemId,
+							'name': glyph.spell.name,
+							'icon': glyph.spell.icon
+						});
+					}
+				}
+			}
+			//TODO add missing values to talent obj
+			talentObj = [{
+				'selected': true,
+				'name':talents.selectedTree != -1 ? talents.treeNames[talents.selectedTree] : "None",
+				'icon': "",
+				'build':talents.getDistribution(true).join(""),
+				'trees': [],
+				'glyphs': {
+					'prime':glyphs[2],
+					'major':glyphs[0],
+					'minor':glyphs[1]
+				}
+			}];
+		}
+		else {
+			talentObj = null;
+		}
+		
+		for( i=0; i<2; i++ ) {
+			var p = this.primaryProfessions[i];
+			if( p ) {
+				primaryProfessions.push({ 
+					'id': p.id,
+					'name': ID_TO_PROFESSION[p.id], 
+					'rank': p.level
+				});
+			}
+		}
+		
+		return JSON.stringify({
+			'name': this.name,
+			'race': ( this.chrRace != null ? this.chrRace.id : 0 ),
+			'class': ( this.chrClass != null ? this.chrClass.id : 0 ),	
+			'level': this.level,
+			'items': itemsObj,
+			'talents':talentObj,
+			'professions':{
+				'primary': primaryProfessions,
+				'secondary': []
+			}
+		});
 	},
 	//
 	//

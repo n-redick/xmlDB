@@ -1,3 +1,9 @@
+/**
+ * @constructor
+ * @param {number} id
+ * @param {Object} serialized
+ * @param {boolean} isPet
+ */
 function Talents( id, serialized, isPet) {
 	this.eventMgr = new GenericSubject();
 	this.eventMgr.registerEvent('talents_reset', []);
@@ -9,7 +15,7 @@ function Talents( id, serialized, isPet) {
 	this.eventMgr.registerEvent('talents_init', []);
 	
 	this.id = id;
-    this.petId = false;
+    this.petId = 0;
     this.isPet = isPet;
     this.trees = (isPet ? 1 : 3);
     this.rows = (isPet ? 6 : 11);
@@ -66,9 +72,9 @@ function Talents( id, serialized, isPet) {
     			if( this.talents[h][i][j] == null ) {
     				continue;
     			}
-    			tmp = this.talents[h][i][j];
+    			var tmp = this.talents[h][i][j];
     			for( var k=0; k<TALENT_REQ_ID_COUNT; k++ ) {
-	    			reqId = tmp.requiredIds[k];
+	    			var reqId = tmp.requiredIds[k];
 	    			if( reqId ) {
 	        	    	tmp.setRequiredTalent( k, talentIdMap[reqId] );
 	    			}
@@ -114,14 +120,20 @@ Talents.prototype = {
 	treeIconSources: [],
 	treeDescriptions: [],
 	/**
-	 * @param {number} tree
+	 * @param {GenericObserver} observer
 	 */
 	addObserver: function(observer){
 		this.eventMgr.addObserver(observer);
 	},
+	/**
+	 * @param {GenericObserver} observer
+	 */
 	removeObserver: function(observer){
 		this.eventMgr.removeObserver(observer);
 	},
+	/**
+	 * @param {number} tree
+	 */
 	selectTree: function( tree ) {
 		this.selectedTree = tree;
 		this.__reset(true);

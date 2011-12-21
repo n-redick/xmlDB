@@ -1,3 +1,6 @@
+/**
+ * @constructor
+ */
 function GlyphInterface() {
 	this.node = DOM.create('div', {'class': 'gi_p'});
 	this.eventMgr = new GenericSubject();
@@ -52,9 +55,9 @@ GlyphInterface.prototype = {
 			}
 			gids[character.glyphs[i].id] = true;
 			
-			div = DOM.createAt( t, 'div', {'class': 'gi_glyph_c'});
+			var div = DOM.createAt( t, 'div', {'class': 'gi_glyph_c'});
 			DOM.createAt( div, 'img', {'class': 'gi_glyph_icon', 'src': 'images/icons/half/'+character.glyphs[i].getIcon()+".png"});
-			a = DOM.createAt( div, 'a', {'class': 'gi_glyph', 'href': 'javascript:', 'text': character.glyphs[i].getName()});
+			var a = DOM.createAt( div, 'a', {'class': 'gi_glyph', 'href': 'javascript:', 'text': character.glyphs[i].getName()});
 			a.oncontextmenu = function(){return false;};
 			ChardevHTML.addTooltip(a, character.glyphs[i].getTooltip()+"<div class='gi_note'>Right click to remove</div>");
 			//Listener.add( a, 'contextmenu', this.eventMgr.fire, this.eventMgr, ['remove_glyph', {'glyph': character.glyphs[i]}]);

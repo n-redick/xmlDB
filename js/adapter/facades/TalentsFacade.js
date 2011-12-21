@@ -1,7 +1,7 @@
 /**
+ * @constructor
  * @param {Talents} talents
  * @param {Character} characterScope
- * @returns {TalentsFacade}
  */
 function TalentsFacade( talents, characterScope ) {
 	this.__talents = talents;

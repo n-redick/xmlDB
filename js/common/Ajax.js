@@ -28,12 +28,35 @@ var Ajax = {
 			};
 		}
 		else {
-			request.onreadystatechange = function(){/**/};
+			request.onreadystatechange = function(){
+				/* do nothing */
+			};
 		}
 		
 		request.setRequestHeader("Content-Type","application/x-www-form-urlencoded; Charset=utf-8");		
 		request.send(TextIO.urlEncode(kvps));
-	}	
+	},
+	/**
+	 * @return {XMLHttpRequest}
+	 */
+	getRequestObject: function()
+	{
+		var request = null;
+		if (window.XMLHttpRequest) {
+		  // If IE7, Mozilla, Safari, and so on: Use native object.
+		  request = new XMLHttpRequest();
+		}
+		else {
+		  if (window.ActiveXObject) {
+			  // ...otherwise, use the ActiveX control for IE5.x and IE6.
+			  request = new ActiveXObject('MSXML2.XMLHTTP.3.0');
+		  }
+		  else {
+		  	throw new XMLHttpException();
+		  }
+		}
+		return request;
+	}
 };
 
 /**
@@ -157,8 +180,8 @@ Ajax.getResponseObject = function( response )  {
 			
 			var obj = eval( '(' + response.responseText + ')' );
 			
-			if( response.getResponseHeader("auto_redirect") ) {
-				window.location.href = obj;
+			if( response.getResponseHeader("auto_redirect")) {
+				window.location.href = obj.toString();
 			}
 			
 			return obj;
@@ -175,31 +198,8 @@ Ajax.getResponseObject = function( response )  {
 };
 
 /**
- * @return {XMLHttpRequest}
- */
-Ajax.getRequestObject = function()
-{
-	var request = null;
-	if (window.XMLHttpRequest) {
-	  // If IE7, Mozilla, Safari, and so on: Use native object.
-	  request = new XMLHttpRequest();
-	}
-	else {
-	  if (window.ActiveXObject) {
-		  // ...otherwise, use the ActiveX control for IE5.x and IE6.
-		  request = new ActiveXObject('MSXML2.XMLHTTP.3.0');
-	  }
-	  else {
-	  	throw XMLHttpException();
-	  }
-	}
-	return request;
-};
-
-/**
  * @constructor
  * @param url
- * @returns {InvalidURLException}
  */
 function InvalidURLException ( url ) {
 	this.url = url;
@@ -210,7 +210,6 @@ InvalidURLException.prototype = {
 /**
  * @constructor
  * @param {XMLHttpRequest} response
- * @returns {BadResponseCodeException}
  */
 function BadResponseException( response ) {
 	this.response = response;
@@ -220,19 +219,19 @@ BadResponseException.prototype = {
 };
 /**
  * @constructor
- * @returns {XMLHttpException}
  */
-function XMLHttpException() {/**/}
+function XMLHttpException() {
+	/* do nothing */
+}
 /**
  * @constructor
  * @param {string} message
- * @returns {GenericAjaxException}
  */
 function GenericAjaxException( message ) {
 	this.message = message;
 }
 GenericAjaxException.prototype = {
-	message : null,
+	message : "",
 	toString: function() {
 		return this.message;
 	}

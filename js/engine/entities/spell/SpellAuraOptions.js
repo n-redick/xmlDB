@@ -1,7 +1,6 @@
 /**
  * @constructor
  * @param {Array} serialized
- * @returns {SpellAuraOptions}
  */
 function SpellAuraOptions( serialized ) {
 	this.stacks = serialized[0];

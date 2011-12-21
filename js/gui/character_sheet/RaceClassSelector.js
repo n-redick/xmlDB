@@ -22,7 +22,6 @@ var CHR_RACE_ORDER = [[1,3,4,7,11,22],[2,5,6,8,10,9]];
 /**
  * @constructor
  * @param {CharacterSheet} characterSheet
- * @returns {RaceClassSelector}
  */
 function RaceClassSelector( characterSheet ) {
 	

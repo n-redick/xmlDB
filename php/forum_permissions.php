@@ -26,6 +26,20 @@
 			return $this->loggedInUser && $this->loggedInUser->get_role() == 10;
 		}
 		
+		public function mayLockAnyThreads( $threadHook ) {
+			if( $this->loggedInUser && $this->loggedInUser->get_role() == 10 ) {
+				switch( $threadHook ) {
+					case 1: return true;
+					case 2: return true;
+					case 3: return true;
+					case 4: return true;
+					case 5: return true;
+					default: return false;
+				}
+			}
+			return false;
+		}
+		
 		public function mayDeleteAnyThreads( $threadHook ) {
 			if( $this->loggedInUser && $this->loggedInUser->get_role() == 10 ) {
 				switch( $threadHook ) {

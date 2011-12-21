@@ -35,6 +35,9 @@ var F_SLT_MSK = [
 ];
 var F_SLT_MSK_WPN = 1<<13|1<<15|1<<17|1<<21|1<<22;
 
+/**
+ * @constructor
+ */
 function ItemList() {
 	List.call( 
 		this,
@@ -99,7 +102,7 @@ ItemList.ORDER_SPEED = "delay";
 ItemList.ORDER_SLOT = "slot";
 ItemList.ORDER_SCORE = "weightedscore";
 
-ItemList.prototype = new List();
+ItemList.prototype = new List(null,null,null,"");
 ItemList.prototype.weaponSlot = false;
 ItemList.prototype.slotMask= 0;
 ItemList.prototype.itemClass= 0;

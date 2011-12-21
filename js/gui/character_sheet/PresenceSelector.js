@@ -21,7 +21,7 @@ PresenceSelector.prototype = {
 		}
 		for( var i=0; i<availablePresences.length; i++ ) {
 			
-			div = DOM.createAt( this.node, 'div', {
+			var div = DOM.createAt( this.node, 'div', {
 				'class': 'ps_presence', 
 				'backgroundImage': 
 					'images/icons/' + 

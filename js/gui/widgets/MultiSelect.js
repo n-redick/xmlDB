@@ -1,7 +1,6 @@
 /**
  * @constructor
  * @param show
- * @returns {MultiSelect}
  */
 function MultiSelect( show ) {
 	var i;

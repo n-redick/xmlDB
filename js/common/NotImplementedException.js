@@ -2,7 +2,6 @@
  * @constructor
  * @param className
  * @param methodName
- * @returns {NotImplementedException}
  */
 function NotImplementedException ( className, methodName ) {
 	Error.call( this );

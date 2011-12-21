@@ -1,3 +1,10 @@
+/**
+ * @constructor
+ * @param {string}name
+ * @param {string} variable
+ * @param {string} value
+ * @param {Object} options
+ */
 function SingleSelectFilter( name, variable, value, options ) {
 	AbstractFilter.call( this, name, variable );
 	
@@ -10,7 +17,7 @@ function SingleSelectFilter( name, variable, value, options ) {
 	this.node.appendChild(this.select.node);
 }
 
-SingleSelectFilter.prototype = new AbstractFilter();
+SingleSelectFilter.prototype = new AbstractFilter("","");
 SingleSelectFilter.prototype.select = null;
 
 SingleSelectFilter.prototype.getArgumentString = function() {

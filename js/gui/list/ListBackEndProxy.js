@@ -1,3 +1,7 @@
+/**
+ * @constructor
+ * @param {string} baseURL
+ */
 function ListBackEndProxy( baseURL ) {
 	this.baseURL = baseURL;
 	

@@ -1,7 +1,12 @@
 var TalentTooltip = {
 	/**
-	 * @param {Talent} talent
+	 * 
+	 * @param {Talents} talents
+	 * @param {number} tree
+	 * @param {number} row
+	 * @param {number} col
 	 * @param {Character} characterScope
+	 * @returns {string}
 	 */
 	getHTML: function( talents, tree, row, col, characterScope ) {
 		var talent = talents.talents[tree][row][col];

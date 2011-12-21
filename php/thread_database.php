@@ -70,6 +70,26 @@ class ThreadDatabase {
 		$this->db->commit();
 	}
 	
+	public function lockThread( $threadId ) {
+		$thread = $this->getThread($threadId);
+	
+		$this->db->beginTransaction();
+		$stmt = $this->db->prepare("UPDATE `thread` SET `flag`=`flag`|? WHERE `ID`=?");
+		$stmt->execute(array( ThreadDatabase::FLAG_LOCKED, $threadId));
+		$this->checkExecutedStatement($stmt);
+		$this->db->commit();
+	}
+	
+	public function unlockThread( $threadId ) {
+		$thread = $this->getThread($threadId);
+		$this->db->beginTransaction();
+		$stmt = $this->db->prepare("UPDATE `thread` SET `flag`=`flag`&? WHERE `ID`=?");
+		echo (-1&~ThreadDatabase::FLAG_LOCKED);
+		$stmt->execute(array( (-1&~ThreadDatabase::FLAG_LOCKED), $threadId));
+		$this->checkExecutedStatement($stmt);
+		$this->db->commit();
+	}
+	
 	public function getPost( $postId ) {
 		$this->postStmt->execute(array((int)$postId));
 		$this->checkExecutedStatement($this->postStmt);

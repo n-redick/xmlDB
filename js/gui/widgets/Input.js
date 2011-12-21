@@ -1,3 +1,6 @@
+/**
+ * @constructor
+ */
 function Input(  ) {
 	this.node = document.createElement("input");
 	this.node.className = "input";

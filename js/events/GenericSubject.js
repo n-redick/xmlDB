@@ -9,7 +9,7 @@ GenericSubject.prototype = {
 	__events: {},
 	/**
 	 * @param {string} event
-	 * @param {array} args
+	 * @param {Array} args
 	 */
 	registerEvent: function( event, args ) {
 		if( this.__events.hasOwnProperty(event) ) {
@@ -29,7 +29,7 @@ GenericSubject.prototype = {
 	},
 	/**
 	 * @param {string} event
-	 * @param {object} args
+	 * @param {Object} args
 	 */
 	fire: function( event, args ) {
 		var e = this.getRegisteredEvent(event);;
@@ -128,7 +128,7 @@ GenericSubject.prototype = {
 			var event = observer.events[ek];
 			var e = this.getRegisteredEvent(event);
 			
-			observers = e["observers"];
+			var observers = e["observers"];
 			
 			for( var k in observers ) {
 				if( observer == observers[k] ) {

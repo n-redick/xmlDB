@@ -1,6 +1,9 @@
 /**
+ * @constructor
  * @param {ListGui} gui
- * @returns {List}
+ * @param {Object} filterData
+ * @param {Object} staticVariables
+ * @param {string} order
  */
 function List(  gui, filterData, staticVariables, order ) {
 	
@@ -15,7 +18,6 @@ function List(  gui, filterData, staticVariables, order ) {
 	this.eventMgr.registerEvent('move_tooltip', []);
 	this.eventMgr.registerEvent('hide_tooltip', []);
 	
-	(['update','show_tooltip', 'hide_tooltip', 'move_tooltip', 'click']);
 	this.filterMgr = new FilterManager(); 
 	this.gui = gui;
 	

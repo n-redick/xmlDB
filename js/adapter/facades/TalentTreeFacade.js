@@ -1,8 +1,8 @@
 /**
  * @constructor
  * @param {Talents} talents
- * @param tree
- * @returns {TalentTreeFacade}
+ * @param {number} tree
+ * @param {Character} characterScope
  */
 function TalentTreeFacade( talents, tree, characterScope ) {
 	var i,j;

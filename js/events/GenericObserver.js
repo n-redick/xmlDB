@@ -1,9 +1,13 @@
 /**
  * @constructor
- * @param {array} eventsToListenTo
+ * @param {Array} eventsToListenTo
  * @param {Handler} handler
  */
 function GenericObserver( eventsToListenTo, handler ) {
+	if( eventsToListenTo == null || handler == null ) {
+		return null;
+	}
+	
 	if( typeof eventsToListenTo !== 'object' ) {
 		throw new Error("Given events to listen to are not the correct type!");
 	}

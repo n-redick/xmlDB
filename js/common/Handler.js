@@ -2,7 +2,6 @@
  * @constructor
  * @param {Function} handler
  * @param {Object} scope
- * @returns {Handler}
  */
 function Handler ( handler, scope ) {
 	this.handler = handler;

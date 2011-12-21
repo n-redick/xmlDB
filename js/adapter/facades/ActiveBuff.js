@@ -2,7 +2,6 @@
  * @constructor
  * @param {Buff} buff
  * @param {Character} characterScope
- * @returns {ActiveBuff}
  */
 function ActiveBuff ( buff, characterScope) {
 	this.__buff = buff;
@@ -17,6 +16,6 @@ ActiveBuff.prototype = {
 		return this.__buff.stacks;
 	},
 	getTooltip: function() {
-		return SpellTooltip.getHTML( this.__buff.spell, this.__characterScope);
+		return SpellTooltip.getHTML( this.__buff.spell, this.__characterScope, 0, null);
 	}
 };

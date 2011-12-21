@@ -1,6 +1,6 @@
 <!-- css -->
-<link href="character_sheet.css" rel="stylesheet" />
-<link href="talent_sheet.css" rel="stylesheet" />
+<link href="character_sheet.css?<?php echo $build; ?>" rel="stylesheet" />
+<link href="talent_sheet.css?<?php echo $build; ?>" rel="stylesheet" />
 <?php
 	$profileLoadError = null;
 	$profile_id = isset($_GET['profile']) ? (int)$_GET['profile'] : 0;

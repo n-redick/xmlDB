@@ -87,7 +87,7 @@ Buffs.getAvailableBuffs = function( handler, characterScope ) {
 		catch( e ) {
 			handler.notify([null,e]);
 		}
-	}, this), []);
+	}, Buffs), []);
 },
 
 Buffs.prototype = {
@@ -112,7 +112,7 @@ Buffs.prototype = {
 			this.removeInternal(this.professionBuffIds[i], true);
 		}
 		for( i=0; i<spellIds.length; i++ ) {
-			this.addInternal(spellIds[i], true);
+			this.addInternal(spellIds[i], true, false);
 		}
 		this.professionBuffIds = spellIds;
 	},

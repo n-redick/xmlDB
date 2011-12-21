@@ -1,6 +1,7 @@
 /**
+ * @constructor
  * @param {Glyph} glyph
- * @returns {GlyphFacade}
+ * @param {Character} characterScope
  */
 function GlyphFacade( glyph, characterScope ) {
 	this.__glyph = glyph;
@@ -19,7 +20,7 @@ GlyphFacade.prototype = {
 		return this.__glyph.type;
 	},
 	getTooltip: function() {
-		return SpellTooltip.getHTML( this.__glyph.spell, this.__character);
+		return SpellTooltip.getHTML( this.__glyph.spell, this.__character, 0, null);
 	},
 	getIcon: function() {
 		return this.__glyph.spell.icon;

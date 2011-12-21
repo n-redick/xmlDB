@@ -1,8 +1,6 @@
 /**
  * @constructor
- * @param {Array}
- *            serialized
- * @returns {SpellScaling}
+ * @param {Array} serialized
  */
 function SpellScaling(serialized) {
 	this.castTimeStart = serialized[0];

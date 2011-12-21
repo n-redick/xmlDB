@@ -1,11 +1,18 @@
+/**
+ * @constructor
+ */
 function ProfileList() {
+	var gui = new ProfileListGui(List.toCategories(ProfileList.FILTER_DATA));
 	List.call( 
 		this,
-		new ProfileListGui(List.toCategories(ProfileList.FILTER_DATA)),
+		gui,
 		List.toPlainFilterData(ProfileList.FILTER_DATA),
 		['ismine'],
 		ProfileList.ORDER_ID
 	);
+	
+	this.eventMgr.registerEvent('delete', ['profile_id', 'desc']);
+	this.gui.eventMgr.addPropagator('delete', this.eventMgr);
 }
 
 ProfileList.FILTER_DATA = {};
@@ -17,4 +24,4 @@ ProfileList.FILTER_DATA["none"] = [
 ];
 
 ProfileList.ORDER_ID = 'id';
-ProfileList.prototype = new List();
+ProfileList.prototype = new List(null,null,null,"");

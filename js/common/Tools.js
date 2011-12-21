@@ -237,3 +237,5 @@ Tools.removeDots = function( str ) {
 	if( ! str ) return str;
 	return str.replace( /\./, " " );
 };
+
+window["g_removeDots"] = Tools.removeDots;

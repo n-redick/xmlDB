@@ -634,7 +634,7 @@ Item.prototype = {
 	isUniqueEquipped: function() {return (this.typeMask & (1<<19)) != 0; },
 	isMeleeWeapon: function(){
 		return this.itemClass == 2 
-			&& ((1<<this.itemSubClass) & 1<<( 0 + 4 + 5 + 6 + 7 + 8 + 10 + 13 + 15 ));
+			&& ((1<<this.itemSubClass) & ((1<<0) + (1<<4) + (1<<5) + (1<<6) + (1<<7) + (1<<8) + (1<<10) + (1<<13) + (1<<15) ));
 	},
 	isStatPresent: function( stat ) {
 		var i, enchant;

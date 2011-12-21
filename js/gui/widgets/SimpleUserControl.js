@@ -1,20 +1,15 @@
 /**
  * @constructor
- * @returns {SimpleUserControl}
  */
-function SimpleUserControl() {/**/}
+function SimpleUserControl() {
+	/* do nothing */
+}
 
 SimpleUserControl.prototype = {
 	/**
-	 * @type {HTMLDivElement}
+	 * @type {Element}
 	 */
 	node: null,
-	/**
-	 * @returns {any}
-	 */
 	getValue: function(){throw new NotImplementedException('SimpleUserControl','getValue');},
-	/**
-	 * @param {any} value
-	 */
 	setValue: function(value){throw new NotImplementedException('SimpleUserControl','setValue');}
 };

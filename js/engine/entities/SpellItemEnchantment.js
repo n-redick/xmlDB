@@ -1,7 +1,6 @@
 /**
  * @constructor
  * @param {Array} serialized
- * @returns {SpellItemEnchantment}
  */
 function SpellItemEnchantment(serialized) {
 	var i;
@@ -49,7 +48,7 @@ SpellItemEnchantment.prototype = {
 	slotMask : 0,
 
 	/**
-	 * @param {Character} characterScope
+	 * @param {Character} character
 	 * @returns {boolean}
 	 */
 	isGemActive : function( character ){
@@ -140,7 +139,7 @@ SpellItemEnchantment.prototype = {
 		return this.requiredCharacterLevel <= 1 || character != null && this.requiredCharacterLevel <= character.level;
 	},
 	/**
-	 * @param {Character} characterScope
+	 * @param {Character} character
 	 * @returns {boolean}
 	 */
 	fitsSkillLineRequirements : function( character ) {
@@ -176,7 +175,7 @@ SpellItemEnchantment.prototype = {
 		
 		html += Tools.addTr1(
 			"<span "+( fitsSkillReqs && fitsLevelReqs ? ( fitsGemConditions ? "class='green'" : "class='grey'" ):"class='red'")+">"+
-			( this.types[0] == 7 && this.spells[0] ? locale["use"]+": " + TextIO.nl2br(this.spells[0].getDescription(characterScope)) : this.description ) + 
+			( this.types[0] == 7 && this.spells[0] ? locale["use"]+": " + this.spells[0].getDescription(characterScope).join("<br />") : this.description ) + 
 			"</span>"
 		);
 		

@@ -1,3 +1,6 @@
+/**
+ * @constructor
+ */
 function TalentsGui() {
     this.node = document.createElement("div");
     this.node.className = "ts_c";
@@ -156,7 +159,7 @@ TalentsGui.prototype = {
 	    this.resetAllLink = document.createElement('a');
 	    this.resetAllLink.className = 'remove talent_reset_link';
 	    this.resetAllLink.href = 'javascript:';
-	    Listener.add(this.resetAllLink, "click", this.onReset, this);
+	    Listener.add(this.resetAllLink, "click", this.onReset, this, []);
 	    //	header
 	    
 	    this.requiredLevelSpan = document.createElement("div");
@@ -191,7 +194,6 @@ TalentsGui.prototype = {
 		    this.treeNodes[i] = document.createElement("div");
 			//
 	    	borderColor = ( i == 0 ? '#D0A000' : ( i == 1 ? '#A00000' : '#2E4D99' ));
-	    	titleGrid = new StaticGrid(1,3);
 	        //	icon
 	        this.treeIcons[i] = document.createElement("img");
 	        this.treeIcons[i].className = 'ts_tree_icon';

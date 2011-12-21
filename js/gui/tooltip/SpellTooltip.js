@@ -128,7 +128,7 @@ var SpellTooltip = {
 		//
 		//	desc
 		//
-		html += Tools.addTr1("<span class='tooltip_spell_description'>"+TextIO.nl2br(spell.getDescription(characterScope))+"</span>");
+		html += Tools.addTr1("<span class='tooltip_spell_description'>"+spell.getDescription(characterScope).join("<br />")+"</span>");
 		return html + "</table>";
 	}
 };

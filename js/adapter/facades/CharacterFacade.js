@@ -1,7 +1,6 @@
 /**
  * @constructor
  * @param {Character} character
- * @returns {CharacterFacade}
  */
 function CharacterFacade( character ) {
 	var itm, i, j;

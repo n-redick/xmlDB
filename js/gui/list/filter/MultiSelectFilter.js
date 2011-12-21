@@ -1,3 +1,10 @@
+/**
+ * @constructor
+ * @param {string}name
+ * @param {string} variable
+ * @param {string} value
+ * @param {Object} options
+ */
 function MultiSelectFilter( name, variable, value, options ) {
 	AbstractFilter.call( this, name, variable );
 	
@@ -10,7 +17,7 @@ function MultiSelectFilter( name, variable, value, options ) {
 	this.node.appendChild(this.select.node);
 }
 
-MultiSelectFilter.prototype = new AbstractFilter();
+MultiSelectFilter.prototype = new AbstractFilter("","");
 MultiSelectFilter.prototype.select = null;
 
 MultiSelectFilter.prototype.getArgumentString = function() {

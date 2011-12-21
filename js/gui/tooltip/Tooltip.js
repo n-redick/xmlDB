@@ -1,3 +1,6 @@
+/**
+ * @constructor
+ */
 function TooltipImpl() {
 	this.errorNode = document.createElement("div");
 	this.errorNode.className = 'tt_msg_c';
@@ -8,11 +11,15 @@ TooltipImpl.prototype = {
 	//
 	//
 	//	
+	/** @type {Element} **/
 	div: null,
+	/** @type {Element} **/
 	content: null,
+	/** @type {Element} **/
 	overlay: null,
 	disabled: false,
 	errorShown: false,
+	/** @type {Element} **/
 	errorNode: null,
 	x: 0, y: 0,
 	__layoutGrid: null,
@@ -177,9 +184,9 @@ TooltipImpl.prototype = {
 	//
 	//
 	initialise: function() {
-		Listener.add( window,"mousemove",Tooltip.handleMove, Tooltip, null );
-		Listener.add( window,"keydown",Tooltip.handleKeyDown, Tooltip, null );
-		Listener.add( window,"keyup",Tooltip.handleKeyUp, Tooltip, null );
+		Listener.add( document,"mousemove",Tooltip.handleMove, Tooltip, null );
+		Listener.add( document,"keydown",Tooltip.handleKeyDown, Tooltip, null );
+		Listener.add( document,"keyup",Tooltip.handleKeyUp, Tooltip, null );
 	},
 	showSlot: function(html,caller) {	
 		

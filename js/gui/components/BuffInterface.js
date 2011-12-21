@@ -8,10 +8,10 @@ function BuffInterface() {
 	this.node = DOM.create( 'div', {'class': 'bi_p'});
 	
 	this.content = DOM.createAt( this.node, 'div', {'display': 'none'});
-	this.classNode = DOM.createAt( this.content, 'div');
-	this.itemNode = DOM.createAt( this.content, 'div');
-	this.talentNode = DOM.createAt( this.content, 'div');
-	this.procNode = DOM.createAt( this.content, 'div');
+	this.classNode = DOM.createAt( this.content, 'div',{});
+	this.itemNode = DOM.createAt( this.content, 'div',{});
+	this.talentNode = DOM.createAt( this.content, 'div',{});
+	this.procNode = DOM.createAt( this.content, 'div',{});
 	
 	this.loading = DOM.createAt( this.node, 'div', {'class': 'bi_loading'});
 }
@@ -34,9 +34,9 @@ BuffInterface.prototype = {
 	
 	/**
 	 * @public
-	 * @param {array} useSpells
-	 * @param {array} procSpells
-	 * @param {array} conditionalSpells
+	 * @param {Array} useSpells
+	 * @param {Array} procSpells
+	 * @param {Array} conditionalSpells
 	 */
 	update: function( useSpells, procSpells, conditionalSpells) {
 		
@@ -81,7 +81,7 @@ BuffInterface.prototype = {
 			}
 		}
 		*/
-		this.createCategory(conditionalSpells, "Talent Buffs", this.talentNode, BuffInterface.TYPE_SPELL, true );
+		this.createCategory(conditionalSpells, "Talent Buffs", this.talentNode, true );
 		
 	},
 	
@@ -161,7 +161,7 @@ BuffInterface.prototype = {
 		fc.filterControl.className = 'input input_small bi_fcc_f';
 		fc.showAll();
 		
-		fcc_parent = DOM.createAt(c.content, 'div', {'class': 'bi_fcc_parent', 'text': 'Filter'});
+		var fcc_parent = DOM.createAt(c.content, 'div', {'class': 'bi_fcc_parent', 'text': 'Filter'});
 		fcc_parent.appendChild(fc.filterControl);
 		
 		c.content.appendChild(fcc_parent);

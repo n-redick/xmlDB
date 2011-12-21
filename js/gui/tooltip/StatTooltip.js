@@ -148,7 +148,7 @@ var StatTooltip = {
 						tmp += "<tr><td class='tt_miss_level'>"+(character.level+i)+"</td><td class='tt_miss'>"+TextIO.formatFloat2(Math.max(0, DW_MISS_BASE[i]-stats.melee[5]))+"%</td></tr>";
 					}
 					tmp += "<tr><td colspan='2'>"+
-							this.__statCapNotice( DW_MISS_BASE[3], stats.melee[5], COMBAT_RATINGS[5][character.level-1] )
+							StatTooltip.__statCapNotice( DW_MISS_BASE[3], stats.melee[5], COMBAT_RATINGS[5][character.level-1] )
 							+"</td></tr>";
 					
 					tmp += "<tr><td class='tt_miss_g' colspan='2'>"+locale['TT_SpecialAttacks']+"</td></tr>";
@@ -162,7 +162,7 @@ var StatTooltip = {
 				}
 				
 				tmp += "<tr><td colspan='2'>"+
-						this.__statCapNotice( MELEE_MISS_BASE[3], stats.melee[5], COMBAT_RATINGS[5][character.level-1] )
+						StatTooltip.__statCapNotice( MELEE_MISS_BASE[3], stats.melee[5], COMBAT_RATINGS[5][character.level-1] )
 						+"</td></tr>";
 				
 				tmp += "</table>";
@@ -222,10 +222,10 @@ var StatTooltip = {
 				//
 				tmp += "<tr><td class='tt_miss_title_l'>"+locale['TT_TargetLevel']+"</td><td class='tt_miss_title_r'>"+locale['TT_DodgeChance']+"</td></tr>";
 				//
-				tmp += this.__levelChanceRows( character.level, ENEMY_DODGE, mhExt, ohExt );
+				tmp += StatTooltip.__levelChanceRows( character.level, ENEMY_DODGE, mhExt, ohExt );
 				//
 				tmp += "<tr><td colspan='2'>"+
-						this.__statCapNotice( ENEMY_DODGE[3], mhExt, ratingPerCent )
+						StatTooltip.__statCapNotice( ENEMY_DODGE[3], mhExt, ratingPerCent )
 						+"</td></tr>";
 				//
 				//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -236,10 +236,10 @@ var StatTooltip = {
 				//
 				tmp += "<tr><td class='tt_miss_title_l'>"+locale['TT_TargetLevel']+"</td><td class='tt_miss_title_r'>"+locale['TT_ParryChance']+"</td></tr>";
 				//
-				tmp += this.__levelChanceRows( character.level, ENEMY_PARRY, mhExt, ohExt );
+				tmp += StatTooltip.__levelChanceRows( character.level, ENEMY_PARRY, mhExt, ohExt );
 				//
 				tmp += "<tr><td colspan='2'>"+
-				this.__statCapNotice( ENEMY_PARRY[3], mhExt, ratingPerCent )
+				StatTooltip.__statCapNotice( ENEMY_PARRY[3], mhExt, ratingPerCent )
 						+"</td></tr>";
 				//
 				//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -307,7 +307,7 @@ var StatTooltip = {
 				}
 
 				tmp += "<tr><td colspan='2'>"+
-						this.__statCapNotice( RANGED_MISS_BASE[3], stats.ranged[5], COMBAT_RATINGS[6][character.level-1] )
+						StatTooltip.__statCapNotice( RANGED_MISS_BASE[3], stats.ranged[5], COMBAT_RATINGS[6][character.level-1] )
 						+"</td></tr>";
 				
 				tmp += "</table>";
@@ -369,7 +369,7 @@ var StatTooltip = {
 					tmp += "<tr><td class='tt_miss_level'>"+(character.level+i)+"</td><td class='tt_miss'>"+TextIO.formatFloat2(Math.max(0, SPELL_MISS_BASE[i]-stats.spell[2]))+"%</td></tr>";
 				}
 				tmp += "<tr><td colspan='2'>"+
-						this.__statCapNotice( SPELL_MISS_BASE[3], stats.spell[2], COMBAT_RATINGS[7][character.level-1] )
+						StatTooltip.__statCapNotice( SPELL_MISS_BASE[3], stats.spell[2], COMBAT_RATINGS[7][character.level-1] )
 						+"</td></tr>";
 				tmp += "</table>";
 				html += Tools.addTr1(tmp);
@@ -446,7 +446,7 @@ var StatTooltip = {
 			case 4:
 				html += Tools.addTr1( 
 							TextIO.sprintf1( locale['TT_StatText']['Resilience'],
-								TextIO.formatFloat2(stats.defense[4]/COMBAT_RATINGS[15][character.level-1])
+								TextIO.formatFloat2(stats.resilienceDamageReduction * 100)
 							));
 				break;
 			}

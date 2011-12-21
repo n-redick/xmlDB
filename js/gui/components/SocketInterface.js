@@ -16,7 +16,7 @@ function SocketInterface() {
 	this.eventMgr.registerEvent('remove_all_gems_by_id', ['gemId']);
 	
 	var a;
-	this.node = DOM.create('div');
+	this.node = DOM.create('div',{});
 	this.sockets = [new LayeredDiv(5),new LayeredDiv(5),new LayeredDiv(5)];
 	
 	this.ops = new BatchOperations();
@@ -68,21 +68,33 @@ SocketInterface.BATCH_OP_SOCK_ALL_COL = 2;
 SocketInterface.BATCH_OP_REM_ALL_SAME_GEM = 3;
 
 SocketInterface.prototype = {
+	/** @type {number} **/
 	selectedSocket: -1,
+	/** @type {Element} **/
 	tooltip: null,
+	/** @type {Element} **/
 	node: null,
+	/** @type {Element} **/
 	main: null,
+	/** @type {Array} **/
 	sockets: [],
-	itemRef: null,
+	/** @type {number} **/
 	slot: 0,
+	/** @type {CharacterFacade} **/
 	character: null,
+	/** @type {Element} **/
 	usedGemParent: null,
+	/** @type {EquippedItem} **/
 	itm: null,
+	/** @type {GenericSubject} **/
 	eventMgr: null,
+	/** @type {Element} **/
 	listParent: null,
+	/** @type {BatchOperations} **/
 	ops: null,
-
+	/** @type {TooltipImpl} **/
 	internalTooltip: null,
+	
 	setShow: function( b ) {
 		if( b ) {
 			this.main.style.display = "block";
@@ -129,7 +141,7 @@ SocketInterface.prototype = {
 
 		DOM.truncate(this.socketParent);
 		
-		div = DOM.createAt( this.socketParent ,'div');
+		div = DOM.createAt( this.socketParent ,'div',{});
 		for( i=0; i<itm.socketColors.length; i++ ) {
 			
 			if( itm.socketColors[i] > 0 || bsSocket ) {
@@ -229,9 +241,6 @@ SocketInterface.prototype = {
 				break;
 			}
 		}
-		
-		
-		this.update(this.character, this.slot, this.selectedSocket);
 	},
 	
 	selectSocket: function( socket ) {

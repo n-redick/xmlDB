@@ -1,7 +1,6 @@
 /**
  * @constructor
  * @param {Array} show
- * @returns {SingleSelect}
  */
 function SingleSelect( show ) {
 	this.node = document.createElement("select");

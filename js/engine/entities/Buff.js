@@ -1,7 +1,7 @@
 /**
  * @constructor
  * @param {Spell} spell
- * @returns {Buff}
+ * @param {number} stacks
  */
 function Buff( spell, stacks ) {
 	this.spell = spell;

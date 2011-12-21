@@ -2,7 +2,6 @@
  * @constructor
  * @param {Character} character
  * @param {Object} serialized
- * @returns {CharacterRace}
  */
 function CharacterRace ( character, serialized ) {
 	this.character = character;
@@ -60,7 +59,7 @@ CharacterRace.prototype = {
 			case WORGEN: return chrClassId != PALADIN && chrClassId != SHAMAN;
 			case BLOODELF: return chrClassId != DRUID && chrClassId != SHAMAN;
 			case GOBLIN: return chrClassId != DRUID && chrClassId != PALADIN;
-			case ORC: return chrClassId != DRUID && chrClassId != SHAMAN && chrClassId != PRIEST;
+			case ORC: return chrClassId != DRUID && chrClassId != PRIEST;
 			case TAUREN: return chrClassId != MAGE && chrClassId != ROGUE && chrClassId != WARLOCK;
 			case TROLL: return chrClassId != PALADIN;
 			case FORSAKEN: return chrClassId != DRUID && chrClassId != PALADIN && chrClassId != SHAMAN;

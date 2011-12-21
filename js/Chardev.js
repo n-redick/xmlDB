@@ -9,13 +9,17 @@ var Chardev = {
 			window['g_register'] = Chardev.register;
 			window['g_requestPasswordChange'] = Chardev.requestPasswordChange;
 			window['g_requestPasswordRecovery'] = Chardev.requestPasswordRecovery;
-			window['g_editUserData'] = Chardev.editUserData;
-			window['g_saveUserData'] = Chardev.saveUserData;
 			window['g_deleteThread'] = Chardev.deleteThread;
+			window['g_lockThread'] = Chardev.lockThread;
+			window['g_unlockThread'] = Chardev.unlockThread;
 			window['g_makePostEditable'] = Chardev.makePostEditable;
+			window['g_showUserInformation'] = Chardev.showUserInformation;
+			window['g_createAvatarPicker'] = Chardev.createAvatarPicker;
+			window['g_staticItemList'] = Chardev.staticItemList;
+			window['g_addItemTooltipTo'] = Chardev.addItemTooltipTo;
 		},
 		makePostEditable: function( arr ) {
-			e = new PostEditable();
+			var e = new PostEditable();
 			new PostEditableObserver(arr['PostID'], arr['Data'], e);
 			DOM.set('p'+arr['PostID']+'_content', e.node);
 			e.edit(true);
@@ -73,7 +77,7 @@ var Chardev = {
 						return;
 					}
 
-					Tooltip.showHTML(response[1]);
+					Tooltip.showHtmlDisabled(response[1]);
 					return;
 					
 				}
@@ -296,6 +300,37 @@ var Chardev = {
 				Tooltip.showError(e);
 			}
 		},
+		lockThread : function ( threadId ){
+			Tooltip.showLoading();
+			Ajax.post(
+				'php/interface/forum/forum.php', {
+					'action': 'lock_thread',
+					'thread': threadId
+				},
+				new Handler(Chardev.__lockTopic_callback, Chardev),
+				null
+			);
+		},
+		unlockThread : function ( threadId ){
+			Tooltip.showLoading();
+			Ajax.post(
+				'php/interface/forum/forum.php', {
+					'action': 'unlock_thread',
+					'thread': threadId
+				},
+				new Handler(Chardev.__lockTopic_callback, Chardev),
+				null
+			);
+		},
+		__lockTopic_callback : function ( request ) {
+			try {
+				var obj = Ajax.getResponseObject(request);
+				window.location.search = '?thread=' + obj;
+			}
+			catch( e ) {
+				Tooltip.showError(e);
+			}
+		},
 
 		lockTopic : function (_tid){
 			Ajax.request(
@@ -366,6 +401,88 @@ var Chardev = {
 			catch( e ) {
 				Tooltip.showError(e);
 				document.getElementById('edit_submit').disabled = false;
+			}
+		},
+		showUserInformation: function( userId, userData, profiles ) {
+			if( userData ) {
+				new UserInformationImpl( userId, userData, 'user_information_parent' );
+			}
+			else if( profiles ) {
+				var pa = new ProfilesAdapter();
+				pa.profileList.gui.showFilter(false);
+				pa.profileList.filterMgr.hideFilter('ismine', true);
+				pa.profileList.set("ismine.eq.1;", null, null, 1);
+				pa.profileList.update();
+				DOM.set('ui_profiles_parent',  pa.getNode());
+			}
+		},
+		createAvatarPicker: function( parentId, currentAvatar ) {
+			new AvatarPicker(parentId, currentAvatar);
+		},
+		staticItemList: function( serialized, page, argString, parent ) {
+			if( serialized ) {
+				
+				var il = new ItemList();
+				
+				il.showStaticLinks(true);
+				
+				il.setData( serialized );
+				
+				if( argString ) {
+				
+					il.set(argString, "", "", page);
+					
+					il.gui.showFilter( true );
+				}
+				
+				document.getElementById(parent).appendChild(il.gui.node);
+				
+				var ilHandler = new Handler(function( e ){
+					if( e.is('show_tooltip') ) {
+						Engine.showItemTooltip.call(Engine,e.get('entity').id);
+					}
+					else if( e.is('move_tooltip') ) {
+						Tooltip.move();
+					}
+					else if( e.is('hide_tooltip') ) {
+						Tooltip.hide();
+					}
+					else if( e.is('update') ) {
+						window.location.search = TextIO.queryString({ 
+							'items': il.getArgumentString().replace(/\;/g,"_"), 
+							'p': il.page, 
+							'o': il.order+"."+(il.orderDirection==List.ORDER_ASC?'asc':'desc')+"_" });
+					}
+				}, this);
+				
+				var ilObserver = new GenericObserver([
+					'show_tooltip',
+					'move_tooltip',
+					'hide_tooltip',
+					'update'
+				], ilHandler);
+				
+				il.addObserver(ilObserver);
+			}
+		},
+		addItemTooltipTo: function( serialized, ttParent, iconParent ) {
+			if(serialized) {
+				var tt = new TooltipImpl();
+				var iconNode = document.getElementById(iconParent);
+				var img;
+				var item;
+				item = new Item(serialized);
+				
+				tt.show(ItemTooltip.getHTML(item));
+				
+				document.getElementById(ttParent).appendChild(tt.div);
+				
+				tt.div.style.position = "relative";
+				
+				img = document.createElement('img');
+				img.className = 'dbi_icon';
+				img.src = 'images/icons/large/' + item.icon + '.png';
+				iconNode.appendChild(img);
 			}
 		}
 };

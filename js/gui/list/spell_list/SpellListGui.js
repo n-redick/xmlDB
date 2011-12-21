@@ -1,13 +1,17 @@
+/**
+ * @constructor
+ * @param {Object} categories
+ */
 function SpellListGui( categories ) {
 	ListGui.call( this, categories );
 }
 
-SpellListGui.prototype = new ListGui;
+SpellListGui.prototype = new ListGui(null);
 
 SpellListGui.prototype.deserialize = function( data ) {
 	var column = 0, i, cellStyle;
 	
-	grid = new StaticGrid(
+	var grid = new StaticGrid(
 			data.length,
 			3
 		);
@@ -32,14 +36,14 @@ SpellListGui.prototype.deserialize = function( data ) {
 	
 	for( i=1; i < data.length; i++ ) {
 		column = 0;
-		tmp = new Spell(data[i]);
+		var tmp = new Spell(data[i]);
 		SpellCache.set(tmp);
 		
 		grid.rows[i].className = 'il_row'+(i%2);
 		
 		cellStyle = "il_cell "+ ( i%2 == 0 ? "il_cell_bg0" : "il_cell_bg1");
 		
-		a = document.createElement("a");
+		var a = document.createElement("a");
 		a.className = 'il_link';
 		a.innerHTML = tmp.name;
 //		a.onmouseout = function(){Tooltip.hidePreview();};
@@ -59,7 +63,7 @@ SpellListGui.prototype.deserialize = function( data ) {
 		grid.cells[i][column].className = cellStyle;
 		grid.cells[i][column++].appendChild(a);
 		
-		reqChrLevel = "None";
+		var reqChrLevel = "None";
 		for( var j=0; j<tmp.effects.length; j++ ) {
 			if(  tmp.effects[j] && tmp.effects[j].aura == 53 && tmp.effects[j].secondaryEffect != null ) {
 				reqChrLevel = tmp.effects[j].secondaryEffect.requiredCharacterLevel;

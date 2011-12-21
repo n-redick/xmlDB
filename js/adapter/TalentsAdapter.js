@@ -3,7 +3,6 @@
  * @param {Talents} talents
  * @param {TalentsGui} talentsGui
  * @param {Character} characterScope
- * @returns {TalentsAdapter}
  */
 function TalentsAdapter( talents, talentsGui, characterScope ) {
 	var tHandler = new Handler(function( e ){

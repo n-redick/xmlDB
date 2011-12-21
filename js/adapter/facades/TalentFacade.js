@@ -1,6 +1,6 @@
 /**
+ * @constructor
  * @param {Talent} talent
- * @returns {TalentFacade}
  */
 function TalentFacade( talent ) {
 	this.__talent = talent;

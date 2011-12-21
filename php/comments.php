@@ -2,6 +2,7 @@
 
 require_once 'thread_database.php';
 require_once 'user_data.php';
+require_once 'forum.php';
 
 class Comments {
 
@@ -30,7 +31,7 @@ class Comments {
 			$user = new user_data($posts[$i]['AuthorID']);
 			
 			$comments[] = array(
-				"Content" => $posts[$i]['Parsed'],
+				"Content" => Forum::replaceCode($posts[$i]['Plain']),
 				"ID" => $posts[$i]['ID'],
 				"Created" => date("M jS Y \a\\t  g:i A",(int)$posts[$i]['Created']),
 				"UserName" => $user->get_name(),

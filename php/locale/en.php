@@ -310,7 +310,7 @@
 		array("Damage","DPS","Attack Power","Speed","Haste","Hit Chance","Crit Chance","Expertise","Mastery"),
 		array("Damage","DPS","Attack Power","Speed","Haste","Hit Chance","Crit Chance","Mastery"),
 		array("Spell Power","Haste","Hit Chance","Penetration","Mana Regen","Combat Regen","Crit Chance","Mastery"),
-		array("Armor","Dodge","Parry","Block","Resilience"),
+		array("Armor","Dodge","Parry","Block","Resilience","Avoidance", "CTC"),
 		array("Arcane","Fire","Nature","Frost","Shadow")
 	);
 	$locale['CS_Energy'] = array(
@@ -544,7 +544,14 @@
 	$locale['GI_Empty'] = "Empty glyph slot";
 	$locale['GI_NotAvailable'] = "Unlocked at level $";
 	
-	$locale['TT_StatTitle_Defense'] = array("Armor $","Dodge Chance $%","Parry Chance $%","Block Chance $%","Resilience $");
+	$locale['TT_StatTitle_Defense'] = array(
+		"Armor $",
+		"Dodge Chance $%",
+		"Parry Chance $%",
+		"Block Chance $%",
+		"Resilience $",
+		"Chance to avoid attacks $%",
+		"Combat table coverage $%");
 	
 	$locale['ERR_UniqueItem'] = 'You\'re already wearing $!';
 	$locale['ERR_UniqueGem'] = 'You can use $ only once!';
@@ -604,9 +611,11 @@
 	$locale['BI_BuffAlreadyActive'] = "$ is already active!";
 	
 	$locale['RF_ImportWoWReforge'] = "Import";
+	$locale['RF_ExportWoWReforge'] = "Export";
 	$locale['RF_WoWReforgeImport'] = "Import from wowreforge";
 	$locale['RF_WoWReforgeExport'] = "Optimise reforge using wowreforge.com";
 	$locale['RF_WoWReforgeImportHelp'] = "Paste an URL to a wowreforge.com setup into the input below.";
+	$locale['RF_WoWReforgeExportHelp'] = "Exports your current character profile to wowreforge.com.";
 	$locale['RF_WoWReforge_UnableToParse'] = "Unable to parse reforge setup from URL! URL was: $";
 	$locale['RF_Optimise'] = "Optimise";
 	$locale['RF_Apply'] = "Apply";

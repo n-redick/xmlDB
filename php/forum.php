@@ -274,7 +274,20 @@
 			if( $this->permissions->mayDeleteAnyThreads($thread['ThreadHookID']) ) {
 				$actions = "<a class='button button_light fo_header_action' href='javascript:g_deleteThread({$threadId})'>Delete</a>";
 			}
-			if( $this->permissions->mayPost()) {
+			if( $this->permissions->mayLockAnyThreads($thread['ThreadHookID']) ) {
+				$lockStr = "";
+				$lockJS = "";
+				if( ($thread["Flag"]&ThreadDatabase::FLAG_LOCKED) == 0 ) {
+					$lockStr = "Lock";
+					$lockJS = "g_lockThread";
+				}
+				else {
+					$lockStr = "Unlock";
+					$lockJS = "g_unlockThread";
+				}
+				$actions = "<a class='button button_light fo_header_action' href='javascript:{$lockJS}({$threadId})'>{$lockStr}</a>";
+			}
+			if( $this->permissions->mayPost() && ($thread["Flag"]&ThreadDatabase::FLAG_LOCKED) == 0 ) {
 				$actions .= "<a class='button button_light fo_header_action' href='?thread={$threadId}&reply#bottom'>Reply</a>";
 			}
 			
@@ -382,7 +395,7 @@
 			}
 			
 			$actions = "";
-			if( $this->permissions->mayEditPostsFrom($post['AuthorID'], $thread['ThreadHookID']) ) {
+			if( $this->permissions->mayEditPostsFrom($post['AuthorID'], $thread['ThreadHookID'])  && ($thread["Flag"]&ThreadDatabase::FLAG_LOCKED) == 0  ) {
 				$actions = "<a class='fo_post_header_action' href='?thread={$thread['ID']}&page={$page}&edit={$post['ID']}#{$threadIndex}'>Edit</a>";
 			}
 			
@@ -439,7 +452,7 @@
 			$codes = array(
 				"Links" => array( "[url]http://example.org[/url]", "[url=http://example.org]click here[/url]"),
 				"Images" => array( "[img]http://chardev.org/images/site/favico.png[/img]"),
-				"Text" => array( "[i]underline[/i]", "[b]italic[/b]", "[u]bold[/u]"),
+				"Text" => array( "[i]underline[/i]", "[b]italic[/b]", "[u]bold[/u]", "[color=ff0000]green[/color]"),
 				"Items" => array( "[item]192[/item]", "http://www.wowhead.com/item=13385")
 			);
 			
@@ -474,12 +487,17 @@
 		public static function threadLink( $thread, $maxLength = 50, $showLastPost=false )
 		{
 			$title = shorten(htmlspecialchars_decode($thread['Title'],ENT_QUOTES),$maxLength);
+			$prefix = "";
 			$cssClass = "";
 			if( $thread['Flag'] & ThreadDatabase::FLAG_THREAD_STICKY )  {
 				$cssClass = "forum_topic_sticky_link";
 			}
 			else if( $thread['Flag'] & ThreadDatabase::FLAG_THREAD_ANNOUNCEMENT ) {
 				$cssClass = "forum_topic_announcement_link";
+			}
+			else if( $thread['Flag'] & ThreadDatabase::FLAG_LOCKED ) {
+				$cssClass = "forum_topic_locked_link";
+				$prefix = "Locked: ";
 			}
 			
 			$add = "";
@@ -493,7 +511,7 @@
 						class='fo_link {$cssClass}' 
 						href='?thread={$thread['ID']}{$add}'
 					>
-						{$title}
+						{$prefix}{$title}
 					</a>";
 		}
 		
@@ -513,6 +531,9 @@
 				else if( $dif <= 7 ) {
 					$dateStr = $dif." days ago";
 				}
+				else {
+					$dateStr = date("M jS Y",$timestamp);
+				}
 				
 				return $dateStr . " at " . date("g:i A",$timestamp);
 			}
@@ -531,6 +552,8 @@
 			$str = preg_replace("/\[i\](.*?)\[\/i\]/i","<i>$1</i>",$str);
 			//	underline
 			$str = preg_replace("/\[u\](.*?)\[\/u\]/i","<u>$1</u>",$str);
+			// color
+			$str = preg_replace("/\[color=(.*?)\](.*?)\[\/color\]/i","<span style='color:#$1'>$2</span>",$str);
 			//	quote
 			$str = preg_replace("/\[quote\](.*?)\[\/quote\]/i","<i>&bdquo;$1&rdquo;</i>",$str);
 			//	center

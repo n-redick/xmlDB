@@ -1,5 +1,4 @@
 var Compression = {
-
 	__urlCharacters: {
 		0:'A',
 		1:'B',
@@ -107,7 +106,7 @@ var Compression = {
 				}
 			}
 		} 
-		return this.__binaryStringToCompressed(binary);
+		return Compression.__binaryStringToCompressed(binary);
 	},
 	__densifiedTreeDistribution: function( talents ) {
 		

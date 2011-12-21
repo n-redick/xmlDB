@@ -1,14 +1,19 @@
 /**
  * @constructor
- * @returns {ItemListGui}
+ * @param {Object} categories
  */
 function ItemListGui( categories ) {
 	ListGui.call(this, categories );
 
+	this.propagateParent = DOM.createAt(this.filterCollapsable.content, 'div', {'class': 'il_prop'});
+	this.propagateCheckbox = DOM.createAt(this.propagateParent, 'input', {'type': 'checkbox', 'class': 'il_prop_check', 'checked': true});
+	DOM.createAt(this.propagateParent, 'span', {'text': 'Use custom filters for all slots', 'class': 'il_prop_note'});
 }
-ItemListGui.prototype = new ListGui();
+ItemListGui.prototype = new ListGui(null);
 ItemListGui.prototype.staticLinks = false;
 ItemListGui.prototype.dpsAndDelay = false;
+ItemListGui.prototype.propagateCheckbox = null;
+ItemListGui.prototype.propagateParent = null;
 
 ItemListGui.prototype.setProperty = function(property, value) {
 	if( property == 'showDpsAndDelay' ) {

@@ -1,7 +1,6 @@
 /**
  * @constructor
  * @param {Array} serialized
- * @returns {Shapeform}
  */
 function Shapeform( serialized ) {
 	var i, s;

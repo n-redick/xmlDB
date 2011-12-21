@@ -1,6 +1,5 @@
 /**
  * @constructor
- * @returns {ShapeSelector}
  */
 function ShapeSelector() {
 	this.node = document.createElement("div");
@@ -18,11 +17,11 @@ ShapeSelector.prototype = {
 		this.eventMgr.addPropagator(event, propagator);
 	},
 	update: function( availableShapeforms, currentShapeformId ) {
-		var parent,div;
+		var pNode,div;
 		Tools.removeChilds(this.node);
 		if( availableShapeforms != null && availableShapeforms.length != 0 )
 		{
-			parent = document.createElement("div");
+			pNode = document.createElement("div");
 			for (var i = 0; i < availableShapeforms.length; i++) 
 			{
 				div = document.createElement("div");
@@ -32,7 +31,7 @@ ShapeSelector.prototype = {
 					( availableShapeforms[i].id == currentShapeformId ? "" : "g/" )+
 					"small/" + availableShapeforms[i].icon + ".png)";
 				
-				parent.appendChild(div);
+				pNode.appendChild(div);
 
 				Listener.add( 
 						div, 
@@ -46,7 +45,7 @@ ShapeSelector.prototype = {
 				Listener.add( div, "click", this.__onClick, this, [availableShapeforms[i].id]);
 				this._showMoonkin = true;
 			}
-			this.node.appendChild(parent);
+			this.node.appendChild(pNode);
 			Tools.clearBoth(this.node);
 		}
 	}

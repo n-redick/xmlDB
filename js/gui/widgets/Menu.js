@@ -4,7 +4,6 @@
  * @param cssClass
  * @param handler
  * @param scope
- * @returns {Menu}
  */
 function Menu( linkNames, cssClass, handler, scope ) {
 	var div = document.createElement("div");

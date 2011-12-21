@@ -1,10 +1,9 @@
 /**
  * @constructor
  * @param size
- * @returns {StackedDiv}
  */
 function StackedDiv( size ) {
-	this.items = new Array(size);
+	this.items = [];
 	this.node = document.createElement("div");
 	for( var i = 0; i < size; i++ ) {
 		this.items[i] = document.createElement("div");
@@ -16,24 +15,30 @@ function StackedDiv( size ) {
 	this.shown = 0;
 }
 
-StackedDiv.prototype.items = null;
-StackedDiv.prototype.node = null;
-StackedDiv.prototype.shown = 0;
-StackedDiv.prototype.onChangeHandler = null;
-
-StackedDiv.prototype.show = function( index ) {
-	if( index == this.shown ) {
-		return;
+StackedDiv.prototype = { 
+	/** @type{Array} **/
+	items: null, 
+	/** @type{Element} **/
+	node: null, 
+	/** @type{number} **/
+	shown: 0, 
+	/** @type{Handler} **/
+	onChangeHandler: null,
+	
+	show: function( index ) {
+		if( index == this.shown ) {
+			return;
+		}
+		var old = this.shown;
+		this.items[index].style.display = "block";
+		this.items[old].style.display = "none";
+		this.shown = index;
+		if( this.onChangeHandler ) {
+			this.onChangeHandler.notify([index,old]);
+		}
+	},
+	
+	setOnChangeHandler: function(handler, scope){
+		this.onChangeHandler = new Handler(handler, scope);
 	}
-	var old = this.shown;
-	this.items[index].style.display = "block";
-	this.items[old].style.display = "none";
-	this.shown = index;
-	if( this.onChangeHandler ) {
-		this.onChangeHandler[0].apply(this.onChangeHandler[1],[index,old]);
-	}
-};
-
-StackedDiv.prototype.setOnChangeHandler = function(handler, scope){
-	this.onChangeHandler = [handler, scope];
 };

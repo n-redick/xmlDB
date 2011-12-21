@@ -290,11 +290,12 @@ var ItemTooltip = {
 			html += Tools.addTr1(locale['Durability']+": "+itm.durability+"/"+itm.durability);	
 		}
 		
-		if ( itm.chrClassMask != 0 && itm.chrClassMask < 2048 && itm.chrClassMask > 0) {
-			var sz_classes = "";
+		if ( itm.chrClassMask != 0 && (itm.chrClassMask&1535)!=1535 && itm.chrClassMask > 0) {
+			var sz_classes = "", sz_coloredClasses = "";
 			for ( i = 0; i < 11; i++) {
 				if ( (itm.chrClassMask & (1<<i)) != 0) {
 					sz_classes += (sz_classes ? ", " : "") + locale['a_class'][i];
+					sz_coloredClasses += (sz_coloredClasses ? ", " : "") + "<span class='character_class_"+(i+1)+"'>" + locale['a_class'][i] + "</span>";
 				}
 			}
 			if (sz_classes) {
@@ -302,7 +303,7 @@ var ItemTooltip = {
 					html += Tools.addTr1("<span class='red'>"+locale['Classes'] + ": " + sz_classes + "</span>");
 				}
 				else {
-					html += Tools.addTr1(locale['Classes'] + ": " + sz_classes);
+					html += Tools.addTr1(locale['Classes'] + ": " + sz_coloredClasses);
 				}
 			}
 		}
@@ -503,7 +504,7 @@ var ItemTooltip = {
 							"<div class='" + (equipped>=req ? "tooltip_set_bonus_active" : "tooltip_set_bonus_inactive") + "'>" + 
 							"(" + req + ") " + locale['Set'] + ": " +
 							( g_settings.isPlanner ? "" : "<a class='tooltip_spell_desc_link' href='?spell="+itm.itemSet.bonuses[i].id+"'>" ) +
-							TextIO.nl2br(itm.itemSet.bonuses[i].getDescription(character)) + 
+							itm.itemSet.bonuses[i].getDescription(character).join("<br />") + 
 							( g_settings.isPlanner ? "" : "</a>" ) + 
 							"</div>");
 					}

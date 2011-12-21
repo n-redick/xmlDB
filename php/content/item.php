@@ -10,26 +10,9 @@
 </script>"; 
 ?>
 <script type="text/javascript">
-	var g_item = null;
-	var tt = new TooltipImpl();
 	function g_onLoad() {
-		var iconNode = document.getElementById('item_icon');
-		var img;
-		if(g_serialized) {
-			g_item = new Item(g_serialized);
-			
-			tt.show(ItemTooltip.getHTML(g_item));
-			
-			document.getElementById('item_parent').appendChild(tt.div);
-			
-			tt.div.style.position = "relative";
-			
-			img = document.createElement('img');
-			img.className = 'dbi_icon';
-			img.src = 'images/icons/large/' + g_item.icon + '.png';
-			iconNode.appendChild(img);
-
-		}
+		
+		g_addItemTooltipTo(g_serialized, 'item_parent', 'item_icon');
 	}
 </script>
 
@@ -38,6 +21,9 @@
 	$g_content = "
 <div class='dbi_w'>
 <div class='dbi_header'>
+	<div class='dbi_title'>
+		Item Database
+	</div>
 	<div class='dbi_search_c'>
 		<form action='?items' method='POST'>
 			<input class='input' name='name'/>
