@@ -1,0 +1,32 @@
+######################################################################
+### xmlDB() Class
+### ------------------------------------------------------------------
+### Author: J. Taniguchi
+### Date: 2012.01.25
+### Contact: j.taniguchi@taniguchi-blog.com
+### License: See attached license file.
+### Contributers: 
+### 	name:Nico Redick   email: nico.redick@assuran.de
+######################################################################
+
+######################################################################
+### CHANGE LOG
+### ------------------------------------------------------------------
+###	FIX:	fixed an error in the Result of xml_fetch_all and 
+###	  		xml_fetch_specific_row (Nico Redick)
+### UPDATE: add executetime function (Nico Redick)
+### UPDATE: add xml_get_specific_row function (Nico Redick)
+###
+###
+###
+###
+######################################################################
+
+xmlDB is an php file which gives you the possibility to create a
+small xml Database.
+Most of the xmlDB commands are based an the php mysql class, so 
+it is easy to learn.
+
+The code is commented and simple written so its easy to understand
+
+We are happy for any new Contributers!

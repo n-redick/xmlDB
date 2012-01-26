@@ -38,7 +38,7 @@
 */
 
 ### INCLUDE XMLDB CLASS BEFORE INITIALIZING IT ----------------------
-require_once('lib/XmlDb.php');
+require_once('lib/xmlDB.php');
 
 ### INITIALIZE DATABASE. --------------------------------------------
 $db = new XmlDb();
