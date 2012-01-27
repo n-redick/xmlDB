@@ -32,4 +32,14 @@ it is easy to learn.
 
 The code is commented and simple written so its easy to understand
 
-We are happy for any new Contributers!
+Today Nico started the first Extended Version of xmlDB, called xmlDB_SQL
+it will give you a xml_query($query) command which can parse an SQL Query 
+string to xmlDB functions.
+
+Some will say this should be in the main xmlDB file, but we discussed 
+this and our conclusion was to keep xmlDB als small as possible with
+no function not truly needed.(so it can be used for mobile devices without
+performance loss)
+
+If you have any Ideas to Extend xmlDB or think there is a 
+core function missing feel free to write it!
