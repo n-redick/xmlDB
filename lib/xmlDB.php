@@ -47,10 +47,11 @@ class xmlDB
 	private $connected = false;					// tracks user validation.
 	private $starttime = '';					// tracks begin of function execution
 	private $endtime = '';						// tracks end of function execution
+	private $affected_rows = 0;					// tracks affacted rows
 	
 	public $timeanalysis = false;				// checks if execution times should be tracked
 	
-	
+
 	// ---------------------------------------------------------------
 	// CONSTRUCTOR
 	// ---------------------------------------------------------------
