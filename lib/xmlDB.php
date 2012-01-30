@@ -7,7 +7,7 @@
 ### Contact: j.taniguchi@taniguchi-blog.com
 ### License: See attached license file.
 ### Contributers: 
-### 	name:Nico Redick   email: nico.redick@assuran.de
+### 	name:Nico Redick   email: coding@assuran.de
 ######################################################################
 
 ######################################################################
@@ -50,15 +50,14 @@ class xmlDB
 	private $affected_rows = 0;					// tracks affacted rows
 	
 	public $timeanalysis = false;				// checks if execution times should be tracked
-	
-
 	// ---------------------------------------------------------------
 	// CONSTRUCTOR
 	// ---------------------------------------------------------------
-	public function XmlDb()
+	public function xmlDB()
 	{
-		// do nothing.	
+		
 	}
+	
 
 	
 	// ---------------------------------------------------------------
@@ -181,7 +180,7 @@ class xmlDB
 		else
 		{
 			// create database (directory)
-			echo $patch = dirname(__DIR__) . '/db/';
+			$patch = dirname(__DIR__) . '/db/';
 			
 			if(!file_exists($patch))
 			{
@@ -1231,7 +1230,10 @@ class xmlDB
 	   }
 	}
 		
-	
+	public function xml_set_error($error)
+	{
+		$this->error_message = $error;
+	}
 	// ---------------------------------------------------------------
 	// DISPLAY DATABASE ERROR ALERTS AS STRING.
 	// ---------------------------------------------------------------

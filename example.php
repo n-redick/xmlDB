@@ -41,7 +41,7 @@
 require_once('lib/xmlDB.php');
 
 ### INITIALIZE DATABASE. --------------------------------------------
-$db = new XmlDb();
+$db = new xmlDB();
 
 ### CONNECT TO DATABASE. --------------------------------------------
 $db->xml_connect('root','root');
