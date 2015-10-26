@@ -4,7 +4,7 @@
 ### ------------------------------------------------------------------
 ### Author: N. Redick
 ### Date: 2012.01.27
-### Contact: coding@assuran.de
+### Contact: nico.redick@tu-dortmund.de
 ### License: See attached license file.
 ###
 ######################################################################

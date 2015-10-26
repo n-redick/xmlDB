@@ -7,7 +7,7 @@
 ### Contact: j.taniguchi@taniguchi-blog.com
 ### License: See attached license file.
 ### Contributers: 
-### 	name:Nico Redick   email: coding@assuran.de
+### 	name:Nico Redick : nico.redick@tu-dortmund.de
 ######################################################################
 
 ######################################################################
